@@ -7,13 +7,17 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-11
+
 ### Changed
 
-- More secure session handling: connected AI assistants can no longer accidentally access another user's data.
-- Stronger authentication before tool access.
-- More reliable OAuth discovery for AI assistants connecting to Dynamoi.
-- Campaign analytics now consistently show accurate spend amounts.
-- Better MCP directory compatibility for wider AI assistant discoverability.
+- Hosted endpoint is now `https://dynamoi.com/mcp` for a cleaner one-URL setup across AI assistants.
+- Simplified endpoint behavior: `/api/mcp` has been removed, and `/mcp` is now the single MCP endpoint.
+- More secure session handling so connected AI assistants cannot accidentally cross over between user sessions.
+- Stronger authentication checks before any tool access.
+- More reliable OAuth discovery during assistant connection flows.
+- Campaign analytics now return consistent spend values.
+- Better MCP directory compatibility for broader AI assistant discoverability.
 
 ## [0.1.0] - 2026-02-10
 

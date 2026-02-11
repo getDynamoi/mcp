@@ -82,15 +82,14 @@ packages/mcp/                              # PUBLIC npm package (@dynamoi/mcp)
 
 apps/main/
   app/
+    mcp/
+      route.ts                           # Canonical MCP HTTP endpoint
     oauth/
       consent/
         page.tsx                           # Supabase OAuth consent UI
     .well-known/
       oauth-protected-resource/
         route.ts                           # RFC 9728 Protected Resource Metadata (root)
-    api/
-      mcp/
-        route.ts                           # MCP HTTP endpoint (wraps packages/mcp)
     lib/
       domains/
         mcp/                               # PRIVATE adapter layer
@@ -202,7 +201,7 @@ Supabase OAuth Server
   ↓ Returns JWT access token (with custom aud claim)
 AI Client
   ↓ Calls MCP endpoint with Bearer token
-apps/main/app/api/mcp/route.ts
+apps/main/app/mcp/route.ts
   ↓ Verifies JWT via JWKS, validates audience, resolves user, handles tool call
 ```
 
@@ -239,11 +238,11 @@ MCP's authorization spec requires tokens to be bound to the resource they were i
 **Fix:** Implement a Supabase Custom Access Token Hook that sets `aud` to the canonical MCP resource identifier:
 
 ```
-aud: "https://dynamoi.com/api/mcp"
+aud: "https://dynamoi.com/mcp"
 ```
 
 The MCP server then validates:
-1. `aud` matches `"https://dynamoi.com/api/mcp"`
+1. `aud` matches `"https://dynamoi.com/mcp"`
 2. This confirms the token was issued specifically for the MCP resource
 
 This aligns with MCP's "token must be issued for this specific resource" requirement and prevents token misuse across services.
@@ -255,7 +254,7 @@ This aligns with MCP's "token must be issued for this specific resource" require
 Per Supabase's documented checklist + MCP requirements, verify:
 1. Signature via JWKS (asymmetric JWTs: ES256 or RS256)
 2. `iss` matches Supabase project URL
-3. `aud` matches `"https://dynamoi.com/api/mcp"` (via custom access token hook)
+3. `aud` matches `"https://dynamoi.com/mcp"` (via custom access token hook)
 4. `exp` is not past
 5. `client_id` is an allowed, registered client
 
@@ -269,7 +268,7 @@ MCP spec requires this. Serve at the standard well-known location:
 
 ```json
 {
-  "resource": "https://dynamoi.com/api/mcp",
+  "resource": "https://dynamoi.com/mcp",
   "authorization_servers": [
     "https://<project-ref>.supabase.co/auth/v1"
   ],
@@ -1161,7 +1160,7 @@ The npm package exists primarily for AI discoverability — it feeds model train
 For MCP directory compatibility, publish `packages/mcp/server.json` using the official registry schema and include both:
 
 - `packages[0]` pointing to npm package `@dynamoi/mcp` with Streamable HTTP transport
-- `remotes[0]` pointing to hosted endpoint `https://dynamoi.com/api/mcp`
+- `remotes[0]` pointing to hosted endpoint `https://dynamoi.com/mcp`
 
 **Build:** `tsup` — emits ESM + `.d.ts`, bundles internal files.
 
@@ -1179,7 +1178,7 @@ For MCP directory compatibility, publish `packages/mcp/server.json` using the of
 The README should lead with how to connect to the hosted service, not installation instructions:
 
 - What Dynamoi is (one paragraph, non-developer language, focused on music promotion)
-- **How to connect** (hosted endpoint URL `https://dynamoi.com/api/mcp`, OAuth setup)
+- **How to connect** (hosted endpoint URL `https://dynamoi.com/mcp`, OAuth setup)
 - Tool index with plain-English descriptions (what each tool does, not schema details)
 - Supported platforms: Meta Ads + Google/YouTube Ads (TikTok, Snapchat coming soon)
 - Link to dynamoi.com for business info, pricing, getting started
@@ -1195,11 +1194,11 @@ Full submission checklist with 70+ targets, canonical copy blocks, and submissio
 - Description: "Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue — through automated Meta and Google ad campaigns. No agency fees — your subscription converts 100% to ad credit. Works with ChatGPT, Claude, Gemini, and other AI assistants."
 - Tags: music-promotion, youtube-growth, spotify-marketing, record-label-tools, artist-marketing, ad-automation
 - Auth: OAuth 2.1 (Supabase)
-- Remote URL: `https://dynamoi.com/api/mcp`
+- Remote URL: `https://dynamoi.com/mcp`
 - License: MIT
 - Repo: `getDynamoi/mcp` (public)
 
-### Marketing Landing Page (`/mcp`)
+### Marketing Landing Page (`/mcp-server`)
 
 A dedicated, indexable page on dynamoi.com:
 - Headline: "Connect Dynamoi to ChatGPT, Claude, and Gemini"
@@ -1208,6 +1207,8 @@ A dedicated, indexable page on dynamoi.com:
 - FAQ in artist language ("promote my single", "release on Friday", "how much does it cost")
 - Connect button that links to setup instructions
 - SEO-optimized for "music promotion AI", "promote music with ChatGPT", etc.
+
+Why this path: `/mcp` is the canonical remote MCP endpoint, so marketing content should live on a separate URL.
 
 ---
 
@@ -1270,7 +1271,7 @@ Minimal UI components:
 - Build `/oauth/consent` page (dark-mode design system)
 - Implement RFC 9728 endpoint at `/.well-known/oauth-protected-resource`
 - Implement JWT verification via JWKS in `packages/mcp/src/auth/verify-token.ts` (including `aud` validation)
-- Build MCP HTTP endpoint at `/api/mcp/route.ts` (streamable HTTP transport, Node.js runtime)
+- Build MCP HTTP endpoint at `/mcp/route.ts` (streamable HTTP transport, Node.js runtime)
 - Implement private adapter (`apps/main/app/lib/domains/mcp/adapter.ts`)
 - Implement all 8 read tool handlers (including `dynamoi_list_artists`)
 - Implement static MCP resources (pricing, countries, content types, statuses)
@@ -1308,7 +1309,7 @@ Minimal UI components:
 
 **Scope:** Production readiness.
 
-- Rate limiting (best-effort in-memory at `/api/mcp`)
+- Rate limiting (best-effort in-memory at `/mcp`)
 - Circuit breaker/backoff for Meta/Google mutations (MCP-only)
 - Audit logging (integrate with `domains/audit`) including campaign creation
 - Sentry logging for `PlatformFailureError` + unknown only (validation/business warn-only)
@@ -1362,7 +1363,7 @@ Acceptable options:
 
 Use the repo’s deterministic script first to validate protocol + auth without any LLM behavior:
 
-- Script: `bun scripts/mcp/smoke.ts --url http://localhost:3000/api/mcp --token <OAUTH_ACCESS_TOKEN>`
+- Script: `bun scripts/mcp/smoke.ts --url http://localhost:3000/mcp --token <OAUTH_ACCESS_TOKEN>`
 - Optional:
   - `--artist-id <uuid>` to also call `dynamoi_get_platform_status`
   - `--sse` to also sanity-check Streamable HTTP GET (SSE)
@@ -1373,7 +1374,7 @@ The script prints `OK` on success and a single error message on failure.
 To obtain `<OAUTH_ACCESS_TOKEN>` locally:
 - Preferred: enable **Dynamic Client Registration** (DCR) for the Supabase OAuth server so test clients can self-register.
 - If DCR is not enabled (Supabase returns `registration_endpoint: null`), create a Supabase OAuth client manually and run:
-  - `bun scripts/mcp/oauth-token.ts --mcp-url http://localhost:3000/api/mcp --client-id <SUPABASE_OAUTH_CLIENT_ID>`
+  - `bun scripts/mcp/oauth-token.ts --mcp-url http://localhost:3000/mcp --client-id <SUPABASE_OAUTH_CLIENT_ID>`
 
 To avoid repeated manual approval clicks during local testing:
 - Use `--refresh-cache <path>` when running `oauth-token.ts`. The first run will still require one approval click, then the refresh token is cached and subsequent runs are fully automated.
@@ -1398,7 +1399,7 @@ Setup:
 
 Notes:
 - Gemini CLI file system tools operate within a configured `rootDirectory`. If you run Gemini from an empty clean room directory, it cannot “discover” Dynamoi repos in other directories.
-- For Docker-based sandboxing, use `http://host.docker.internal:<dev-port>/api/mcp` (example: `http://host.docker.internal:3000/api/mcp`) when the client is sandboxed in a container.
+- For Docker-based sandboxing, use `http://host.docker.internal:<dev-port>/mcp` (example: `http://host.docker.internal:3000/mcp`) when the client is sandboxed in a container.
 - If Supabase DCR is not enabled, Gemini CLI may require an explicit OAuth client ID. In that case, add an `oauth` block to the server config:
   - `"oauth": { "clientId": "<SUPABASE_OAUTH_CLIENT_ID>", "scopes": ["email","profile"] }`
 - **Gemini schema compatibility:** Gemini CLI (via `parametersJsonSchema`) is sensitive to schema size and certain JSON Schema keywords. In practice:
@@ -1422,7 +1423,7 @@ Example `.gemini/settings.json` (clean room, MCP-only):
   },
   "mcpServers": {
     "dynamoi-local": {
-      "httpUrl": "http://localhost:3000/api/mcp",
+      "httpUrl": "http://localhost:3000/mcp",
       "timeout": 30000,
       "trust": false,
       "includeTools": [
@@ -1449,12 +1450,12 @@ Example `.gemini/settings.json` (clean room, MCP-only):
 ```
 
 If you need Docker sandboxing instead:
-- Replace the MCP URL with `http://host.docker.internal:3000/api/mcp` (or your chosen dev port)
+- Replace the MCP URL with `http://host.docker.internal:3000/mcp` (or your chosen dev port)
 - Set `"tools": { "sandbox": "docker", ... }`
 
 #### Protocol + Auth Conformance Checklist
 
-1. Unauthed request to `/api/mcp`:
+1. Unauthed request to `/mcp`:
    - Expect `401` with `WWW-Authenticate` including `resource_metadata=".../.well-known/oauth-protected-resource"`.
 2. Fetch `/.well-known/oauth-protected-resource`:
    - Confirm it exists and returns RFC 9728 protected resource metadata pointing at the Supabase auth server.
@@ -1462,7 +1463,7 @@ If you need Docker sandboxing instead:
    - Open `/oauth/consent?authorization_id=...` from an OAuth flow.
    - Approve and confirm redirect to client callback.
 4. Token validation:
-   - Call `/api/mcp` with Bearer token.
+   - Call `/mcp` with Bearer token.
    - In production, verify canonical `aud` is required.
 
 #### MCP “Happy Path” Flow (Read + Write)
@@ -1512,7 +1513,7 @@ Then a realistic workflow:
 - GitHub Actions: build → test → publish on merge
 - npm publish `@dynamoi/mcp` v0.1.0
 - Submit to all 8 directories
-- Create `/mcp` landing page on dynamoi.com
+- Create `/mcp-server` landing page on dynamoi.com
 - Update dynamoi.com SEO (keywords, meta tags)
 - `bun validate` passes
 
@@ -1633,7 +1634,7 @@ Changes from external review + internal feedback:
 **Auth:**
 - Fixed Supabase OAuth endpoint URLs (added `/oauth/` path segment, corrected OIDC discovery path)
 - Replaced custom `campaigns` scope with standard `email profile` (Supabase doesn't support custom scopes)
-- Added RFC 8707 audience binding via Supabase Custom Access Token Hook (`aud: "https://dynamoi.com/api/mcp"`)
+- Added RFC 8707 audience binding via Supabase Custom Access Token Hook (`aud: "https://dynamoi.com/mcp"`)
 - Moved Protected Resource Metadata to standard `/.well-known/oauth-protected-resource` (was incorrectly under `/api/`)
 - Enabled Dynamic Client Registration with restrictions (was deferred)
 

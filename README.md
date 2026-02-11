@@ -9,7 +9,7 @@
 Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue — through automated Meta and Google ad campaigns. Your $300/month subscription converts 100% to ad credit, with a 100% match your first month ($600 to launch your first campaigns). No agency fees, no retainers, cancel anytime.
 
 **Website:** [dynamoi.com](https://dynamoi.com)
-**Hosted endpoint:** `https://dynamoi.com/api/mcp`
+**Hosted endpoint:** `https://dynamoi.com/mcp`
 **Auth:** OAuth 2.1
 
 ---
@@ -20,7 +20,7 @@ Connect your AI assistant to Dynamoi's hosted MCP server — no installation nee
 
 **Endpoint:**
 ```
-https://dynamoi.com/api/mcp
+https://dynamoi.com/mcp
 ```
 
 **Auth:** OAuth 2.1 via Supabase. Your AI assistant handles the connection flow automatically — just approve access when prompted.

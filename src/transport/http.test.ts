@@ -18,7 +18,7 @@ function makeInitializeBody() {
 
 describe("mcp/transport session binding", () => {
 	test("reusing a session across different auth contexts is rejected", async () => {
-		const initReq = new Request("http://example.com/api/mcp", {
+		const initReq = new Request("http://example.com/mcp", {
 			body: JSON.stringify(makeInitializeBody()),
 			headers: { "content-type": "application/json" },
 			method: "POST",
@@ -37,7 +37,7 @@ describe("mcp/transport session binding", () => {
 			throw new Error("Expected mcp-session-id header on initialize response");
 		}
 
-		const nextReq = new Request("http://example.com/api/mcp", {
+		const nextReq = new Request("http://example.com/mcp", {
 			body: JSON.stringify({ id: 2, jsonrpc: "2.0", method: "tools/list" }),
 			headers: { "content-type": "application/json", "mcp-session-id": sid },
 			method: "POST",

@@ -6,7 +6,7 @@ If you are new: read this first, then use `packages/mcp/docs/spec.md` as the ful
 
 ## Big Picture
 
-We ship one **hosted MCP endpoint** (`/api/mcp`) inside the main Next.js app. The public MCP package (`@dynamoi/mcp`) defines the **tool contract** (names, schemas, annotations, output shapes) and provides the Streamable HTTP transport glue.
+We ship one **hosted MCP endpoint** (`/mcp`) inside the main Next.js app. The public MCP package (`@dynamoi/mcp`) defines the **tool contract** (names, schemas, annotations, output shapes) and provides the Streamable HTTP transport glue.
 
 The Next.js app provides the **implementation** (auth, RBAC, domain calls, money formatting, platform calls).
 
@@ -25,7 +25,7 @@ Public contract (published):
   - `src/auth/*`: JWT verification + OAuth protected-resource helpers
 
 Private implementation (not published):
-- `apps/main/app/api/mcp/route.ts`: HTTP entrypoint, auth, rate limiting, protocol compatibility tweaks
+- `apps/main/app/mcp/route.ts`: canonical HTTP entrypoint
 - `apps/main/app/lib/domains/mcp/adapter.ts`: maps tool calls to tool handlers
 - `apps/main/app/lib/domains/mcp/tools/*`: tool handlers (validate, call domain actions, serialize safe outputs)
 - `apps/main/app/oauth/consent/page.tsx`: local consent UI used by Supabase OAuth server
@@ -33,8 +33,8 @@ Private implementation (not published):
 
 ## Request Flow (Runtime)
 
-1. Client calls `POST /api/mcp` (Streamable HTTP JSON-RPC).
-2. `apps/main/app/api/mcp/route.ts`:
+1. Client calls `POST /mcp` (Streamable HTTP JSON-RPC).
+2. `apps/main/app/mcp/route.ts` (canonical entrypoint, re-exporting shared handlers):
    - extracts Bearer token
    - verifies JWT (JWKS) and checks `aud` against allowlist (stricter in prod)
    - resolves the Supabase user for the token
@@ -55,7 +55,7 @@ We intentionally rely on structured logs + Sentry so audits stay simple and repr
 
 ### Log Surfaces
 
-- Route-level MCP logs: `surface == "main.api.mcp.route"`
+- Route-level MCP logs: `surface == "main.mcp.http.route"`
 - Tool/domain MCP logs: `surface == "main.domains.mcp.server"`
 
 ### High-Signal Events

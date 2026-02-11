@@ -81,7 +81,7 @@ spotify-streams, facebook-ads, instagram-ads
 | npm package | `@dynamoi/mcp` |
 | License | MIT |
 | Auth | OAuth 2.1 (Supabase) |
-| Hosted endpoint | `https://dynamoi.com/api/mcp` |
+| Hosted endpoint | `https://dynamoi.com/mcp` |
 | Website | `https://dynamoi.com` |
 | GitHub | `https://github.com/getDynamoi/mcp` |
 | Supported platforms | Meta Ads (Facebook/Instagram), Google Ads (YouTube) |
