@@ -1,62 +1,72 @@
 {
-  "$schema": "https://www.schemastore.org/package",
-  "name": "@dynamoi/mcp",
-  "version": "0.1.0",
-  "type": "module",
-  "license": "MIT",
-  "description": "Dynamoi MCP server contract for managing Meta and Google ad campaigns through AI assistants.",
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "music-promotion",
-    "youtube-growth",
-    "spotify-marketing",
-    "meta-ads",
-    "google-ads",
-    "campaign-management"
-  ],
-  "homepage": "https://dynamoi.com",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/getDynamoi/mcp.git"
-  },
-  "bugs": {
-    "url": "https://github.com/getDynamoi/mcp/issues"
-  },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
-    "jose": "^6.1.0",
-    "zod": "4.3.6"
-  },
-  "devDependencies": {
-    "@types/node": "25.2.0",
-    "@changesets/cli": "^2.29.8",
-    "tsup": "^8.5.1",
-    "typescript": "5.9.3"
-  }
+	"$schema": "https://www.schemastore.org/package",
+	"name": "@dynamoi/mcp",
+	"version": "0.1.0",
+	"mcpName": "io.github.getdynamoi/dynamoi",
+	"type": "module",
+	"license": "MIT",
+	"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns with no agency fees.",
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"music-promotion",
+		"youtube-growth",
+		"spotify-marketing",
+		"meta-ads",
+		"google-ads",
+		"campaign-management",
+		"record-label-tools",
+		"artist-marketing",
+		"ad-automation",
+		"youtube-ads",
+		"music-advertising",
+		"spotify-streams",
+		"facebook-ads",
+		"instagram-ads"
+	],
+	"homepage": "https://dynamoi.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/getDynamoi/mcp.git"
+	},
+	"bugs": {
+		"url": "https://github.com/getDynamoi/mcp/issues"
+	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"server.json",
+		"README.md",
+		"CHANGELOG.md",
+		"LICENSE"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"changeset": "changeset",
+		"changeset:version": "changeset version",
+		"changeset:publish": "changeset publish"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.26.0",
+		"jose": "^6.1.0",
+		"zod": "4.3.6"
+	},
+	"devDependencies": {
+		"@types/node": "25.2.0",
+		"@changesets/cli": "^2.29.8",
+		"typescript": "5.9.3",
+		"tsup": "^8.5.1"
+	}
 }

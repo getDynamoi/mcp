@@ -20,6 +20,7 @@ import type {
 	SearchData,
 	UpdateBudgetData,
 } from "../types";
+import { DYNAMOI_MCP_VERSION } from "../version";
 import { DYNAMOI_MCP_INSTRUCTIONS } from "./instructions";
 import { registerDynamoiPrompts } from "./prompts";
 import {
@@ -73,7 +74,7 @@ export function createDynamoiMcpServer(options: {
 	const server = new McpServer(
 		{
 			name: "dynamoi",
-			version: "0.0.0",
+			version: DYNAMOI_MCP_VERSION,
 			websiteUrl: "https://dynamoi.com",
 		},
 		{ instructions: DYNAMOI_MCP_INSTRUCTIONS },
@@ -145,7 +146,8 @@ export function createDynamoiMcpServer(options: {
 		"platform-pricing",
 		"dynamoi://platform/pricing",
 		{
-			description: "Dynamoi pricing tiers and budget minimums.",
+			description:
+				"Dynamoi pricing, activation bonus, ad credit structure, and campaign budget minimums.",
 			mimeType: "application/json",
 			title: "Pricing",
 		},
@@ -154,10 +156,26 @@ export function createDynamoiMcpServer(options: {
 				{
 					mimeType: "application/json",
 					text: JSON.stringify({
-						budgetMinimums: {
-							smartCampaign: { dailyUsd: 10, totalUsd: 100 },
-							youtube: { dailyUsd: 10, totalUsd: 50 },
+						activationBonus: {
+							amountUsd: 600,
+							note: "100% match on first month — pay $300, get $600 ad credit",
 						},
+						budgetMinimums: {
+							smartCampaign: {
+								dailyUsd: 10,
+								note: "Meta Ads for Spotify promotion",
+								totalUsd: 100,
+							},
+							youtube: {
+								dailyUsd: 10,
+								note: "Google Ads for YouTube channel growth",
+								totalUsd: 50,
+							},
+						},
+						creditRollover: "Credits roll over for 12 months",
+						includes:
+							"Unlimited team seats, unlimited artists, white-glove support, free smart link landing pages",
+						noContracts: true,
 						tiers: [
 							{
 								name: "Plus",

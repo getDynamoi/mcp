@@ -1,4 +1,4 @@
-export type ProtectedResourceMetadata = {
+type ProtectedResourceMetadata = {
 	resource: string;
 	authorization_servers: string[];
 	scopes_supported: string[];

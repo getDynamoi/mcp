@@ -4,7 +4,7 @@ export type VerifiedAccessToken = {
 	sub: string;
 	iss: string;
 	aud: string | string[] | undefined;
-	exp: number | undefined;
+	exp: number;
 	clientId: string | null;
 };
 
@@ -44,6 +44,7 @@ export async function verifyAccessToken(
 ): Promise<VerifiedAccessToken> {
 	const jwks = getRemoteJwks(options.jwksUrl);
 	const verifyOptions: JWTVerifyOptions = {
+		algorithms: ["ES256", "RS256"],
 		audience: options.audienceAllowlist,
 		issuer: options.issuer,
 	};
@@ -54,8 +55,14 @@ export async function verifyAccessToken(
 	if (!sub) {
 		throw new Error("JWT missing sub");
 	}
-	const iss = typeof payload.iss === "string" ? payload.iss : options.issuer;
-	const exp = typeof payload.exp === "number" ? payload.exp : undefined;
+	const iss = typeof payload.iss === "string" ? payload.iss : null;
+	if (!iss) {
+		throw new Error("JWT missing iss");
+	}
+	const exp = typeof payload.exp === "number" ? payload.exp : null;
+	if (!exp) {
+		throw new Error("JWT missing exp");
+	}
 	const aud = payload.aud as string | string[] | undefined;
 
 	return {
