@@ -45,6 +45,12 @@ export type ListArtistsData = {
 	nextCursor?: string;
 };
 
+export type ListArtistsSummaryData = {
+	summary: string;
+	totalCount: number;
+	nextCursor?: string;
+};
+
 export type SearchResultType = "artist" | "campaign" | "smartlink";
 export type SearchData = {
 	results: Array<{
@@ -55,6 +61,34 @@ export type SearchData = {
 		artistName?: string;
 	}>;
 	nextCursor?: string;
+};
+
+export type SearchSummaryData = {
+	summary: string;
+	totalCount: number;
+	nextCursor?: string;
+};
+
+export type GetCurrentUserData = {
+	id: string;
+	email?: string;
+	name?: string;
+	isSuperAdmin: boolean;
+	organizations: Array<{
+		id: string;
+		name: string;
+		role: AccessRole;
+	}>;
+	artists: Array<{
+		id: string;
+		name: string;
+		role: AccessRole;
+		organizationId?: string;
+	}>;
+};
+
+export type GetCurrentUserSummaryData = {
+	summary: string;
 };
 
 export type GetArtistData = {
@@ -83,6 +117,10 @@ export type GetArtistData = {
 	organization?: { id: string; name: string };
 };
 
+export type GetArtistSummaryData = {
+	summary: string;
+};
+
 export type ListCampaignsJsonData = {
 	campaigns: Array<{
 		id: string;
@@ -101,6 +139,7 @@ export type ListCampaignsJsonData = {
 export type ListCampaignsSummaryData = {
 	summary: string;
 	totalCount: number;
+	nextCursor?: string;
 };
 
 export type GetCampaignData = {
@@ -129,6 +168,10 @@ export type GetCampaignData = {
 	nextAction?: string;
 };
 
+export type GetCampaignSummaryData = {
+	report: string;
+};
+
 export type GetCampaignAnalyticsJsonData = {
 	campaignId: string;
 	contentTitle: string;
@@ -144,6 +187,18 @@ export type GetCampaignAnalyticsJsonData = {
 	};
 	byPlatform?: Array<{
 		platform: "META" | "GOOGLE";
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+		daily?: Array<{
+			date: string;
+			impressions: number;
+			clicks: number;
+			spend: MoneyDisplay;
+		}>;
+	}>;
+	daily?: Array<{
+		date: string;
 		impressions: number;
 		clicks: number;
 		spend: MoneyDisplay;
@@ -173,6 +228,10 @@ export type GetBillingData = {
 	};
 };
 
+export type GetBillingSummaryData = {
+	summary: string;
+};
+
 export type GetPlatformStatusData = {
 	platforms: {
 		spotify: { connected: boolean; artistName?: string; artistUrl?: string };
@@ -193,6 +252,14 @@ export type GetPlatformStatusData = {
 	onboardingComplete: boolean;
 	missingForSmartCampaign: string[];
 	missingForYouTube: string[];
+	warnings?: string[];
+	actionRequired?: string[];
+};
+
+export type GetPlatformStatusSummaryData = {
+	summary: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type PauseResumePlatformResult = {
@@ -229,6 +296,12 @@ export type MediaAssetSummary = {
 
 export type ListMediaAssetsData = {
 	assets: MediaAssetSummary[];
+	nextCursor?: string;
+};
+
+export type ListMediaAssetsSummaryData = {
+	summary: string;
+	totalCount: number;
 	nextCursor?: string;
 };
 

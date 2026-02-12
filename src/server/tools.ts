@@ -4,22 +4,31 @@ export const ToolFormatSchema = z.enum(["json", "summary"]);
 
 export const DynamoiListArtistsInputSchema = z.object({
 	cursor: z.string().optional(),
+	format: ToolFormatSchema.optional(),
 	limit: z.number().int().min(1).max(50).optional(),
 });
 
 export const DynamoiSearchInputSchema = z.object({
+	artistId: z.string().uuid().optional(),
 	cursor: z.string().optional(),
+	format: ToolFormatSchema.optional(),
 	limit: z.number().int().min(1).max(50).optional(),
 	query: z.string().trim().optional(),
 	type: z.enum(["artist", "campaign", "smartlink"]).optional(),
 });
 
+export const DynamoiGetCurrentUserInputSchema = z.object({
+	format: ToolFormatSchema.optional(),
+});
+
 export const DynamoiGetArtistInputSchema = z.object({
 	artistId: z.string().uuid(),
+	format: ToolFormatSchema.optional(),
 });
 
 export const DynamoiListCampaignsInputSchema = z.object({
 	artistId: z.string().uuid(),
+	campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]).optional(),
 	cursor: z.string().optional(),
 	format: ToolFormatSchema.optional(),
 	limit: z.number().int().min(1).max(50).optional(),
@@ -28,6 +37,7 @@ export const DynamoiListCampaignsInputSchema = z.object({
 
 export const DynamoiGetCampaignInputSchema = z.object({
 	campaignId: z.string().uuid(),
+	format: ToolFormatSchema.optional(),
 });
 
 export const DateRangeSchema = z.object({
@@ -39,14 +49,17 @@ export const DynamoiGetCampaignAnalyticsInputSchema = z.object({
 	campaignId: z.string().uuid(),
 	dateRange: DateRangeSchema.optional(),
 	format: ToolFormatSchema.optional(),
+	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
 });
 
 export const DynamoiGetBillingInputSchema = z.object({
 	artistId: z.string().uuid(),
+	format: ToolFormatSchema.optional(),
 });
 
 export const DynamoiGetPlatformStatusInputSchema = z.object({
 	artistId: z.string().uuid(),
+	format: ToolFormatSchema.optional(),
 });
 
 export const DynamoiPauseCampaignInputSchema = z.object({
@@ -74,6 +87,7 @@ const LocationTargetSchema = z.object({
 export const DynamoiListMediaAssetsInputSchema = z.object({
 	artistId: z.string().uuid(),
 	cursor: z.string().optional(),
+	format: ToolFormatSchema.optional(),
 	limit: z.number().int().min(1).max(50).optional(),
 });
 
@@ -209,6 +223,15 @@ export const DynamoiLaunchCampaignInputSchema = z
 	});
 
 export const PHASE_1_TOOL_DEFINITIONS = [
+	{
+		description:
+			"Get the currently authenticated Dynamoi account context — user ID, email, and accessible organizations/artists with resolved roles.",
+		destructiveHint: false,
+		name: "dynamoi_get_current_user",
+		openWorldHint: false,
+		readOnlyHint: true,
+		schema: DynamoiGetCurrentUserInputSchema,
+	},
 	{
 		description:
 			"List all music artists and YouTube channels the user manages. Returns each artist's subscription tier, billing status, active campaign count, and the user's role.",

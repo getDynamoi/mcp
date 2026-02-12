@@ -7,6 +7,20 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-12
+
+### Added
+
+- New `dynamoi_get_current_user` tool so assistants can quickly understand who is connected and which artists/organizations they can access.
+- New `summary` response format across read tools for cleaner assistant-ready outputs.
+- Daily analytics granularity option for campaign analytics, including daily breakdowns across Meta and Google.
+
+### Changed
+
+- Search now supports optional `artistId` scoping so assistants can stay focused on one artist when needed.
+- Campaign listing now supports optional `campaignType` filtering (`SMART_CAMPAIGN` or `YOUTUBE`).
+- Read tool responses are more consistent across assistants, with improved summary-mode output and pagination behavior.
+
 ## [0.2.1] - 2026-02-12
 
 ### Fixed

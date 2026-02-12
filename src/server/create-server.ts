@@ -5,19 +5,28 @@ import {
 import * as z from "zod/v4";
 import type {
 	GetArtistData,
+	GetArtistSummaryData,
 	GetBillingData,
+	GetBillingSummaryData,
 	GetCampaignAnalyticsJsonData,
 	GetCampaignAnalyticsSummaryData,
 	GetCampaignData,
+	GetCampaignSummaryData,
+	GetCurrentUserData,
+	GetCurrentUserSummaryData,
 	GetPlatformStatusData,
+	GetPlatformStatusSummaryData,
 	LaunchCampaignData,
 	ListArtistsData,
+	ListArtistsSummaryData,
 	ListCampaignsJsonData,
 	ListCampaignsSummaryData,
 	ListMediaAssetsData,
+	ListMediaAssetsSummaryData,
 	PauseResumeCampaignData,
 	ResultEnvelope,
 	SearchData,
+	SearchSummaryData,
 	UpdateBudgetData,
 } from "../types";
 import { DYNAMOI_MCP_VERSION } from "../version";
@@ -30,13 +39,24 @@ import {
 } from "./tools";
 
 export type Phase3Adapter = {
-	listArtists(input: unknown): Promise<ResultEnvelope<ListArtistsData>>;
-	search(input: unknown): Promise<ResultEnvelope<SearchData>>;
-	getArtist(input: unknown): Promise<ResultEnvelope<GetArtistData>>;
+	getCurrentUser(
+		input: unknown,
+	): Promise<ResultEnvelope<GetCurrentUserData | GetCurrentUserSummaryData>>;
+	listArtists(
+		input: unknown,
+	): Promise<ResultEnvelope<ListArtistsData | ListArtistsSummaryData>>;
+	search(
+		input: unknown,
+	): Promise<ResultEnvelope<SearchData | SearchSummaryData>>;
+	getArtist(
+		input: unknown,
+	): Promise<ResultEnvelope<GetArtistData | GetArtistSummaryData>>;
 	listCampaigns(
 		input: unknown,
 	): Promise<ResultEnvelope<ListCampaignsJsonData | ListCampaignsSummaryData>>;
-	getCampaign(input: unknown): Promise<ResultEnvelope<GetCampaignData>>;
+	getCampaign(
+		input: unknown,
+	): Promise<ResultEnvelope<GetCampaignData | GetCampaignSummaryData>>;
 	getCampaignAnalytics(
 		input: unknown,
 	): Promise<
@@ -44,10 +64,14 @@ export type Phase3Adapter = {
 			GetCampaignAnalyticsJsonData | GetCampaignAnalyticsSummaryData
 		>
 	>;
-	getBilling(input: unknown): Promise<ResultEnvelope<GetBillingData>>;
+	getBilling(
+		input: unknown,
+	): Promise<ResultEnvelope<GetBillingData | GetBillingSummaryData>>;
 	getPlatformStatus(
 		input: unknown,
-	): Promise<ResultEnvelope<GetPlatformStatusData>>;
+	): Promise<
+		ResultEnvelope<GetPlatformStatusData | GetPlatformStatusSummaryData>
+	>;
 
 	pauseCampaign(
 		input: unknown,
@@ -57,7 +81,9 @@ export type Phase3Adapter = {
 	): Promise<ResultEnvelope<PauseResumeCampaignData>>;
 	updateBudget(input: unknown): Promise<ResultEnvelope<UpdateBudgetData>>;
 
-	listMediaAssets(input: unknown): Promise<ResultEnvelope<ListMediaAssetsData>>;
+	listMediaAssets(
+		input: unknown,
+	): Promise<ResultEnvelope<ListMediaAssetsData | ListMediaAssetsSummaryData>>;
 	launchCampaign(input: unknown): Promise<ResultEnvelope<LaunchCampaignData>>;
 };
 
@@ -100,6 +126,8 @@ export function createDynamoiMcpServer(options: {
 			},
 			async (input: unknown) => {
 				switch (def.name) {
+					case "dynamoi_get_current_user":
+						return asTextResult(await options.adapter.getCurrentUser(input));
 					case "dynamoi_list_artists":
 						return asTextResult(await options.adapter.listArtists(input));
 					case "dynamoi_search":
