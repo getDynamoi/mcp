@@ -53,7 +53,7 @@ Principles:
   "partial_success".
 - Prefer read tools first before write tools. For writes, confirm intent and restate
   what will change.
-- All money values returned are display values. Do not attempt to infer internal costs.
+- Money values are shown in USD as presented in Dynamoi.
 - Budget minimums: $10/day (daily), $100 total (Smart Campaign), $50 total (YouTube).
 
 Common workflows:

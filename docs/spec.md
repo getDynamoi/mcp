@@ -961,7 +961,7 @@ Principles:
 - Never claim you changed something unless the tool returned status: "success" or "partial_success".
 - Prefer read tools first (list/get/analytics) before write tools (pause/resume/update budget/launch).
 - For write actions, confirm intent and restate what will change (campaign name, new status/budget).
-- Do not attempt to infer or compute "real" platform spend. All money values returned are display values.
+- Money values are shown in USD as presented in Dynamoi.
 - Budget amounts are in USD. Daily minimum is $10/day. Total minimum is $100 for Meta Ads campaigns and $50 for YouTube Ads campaigns.
 ```
 

@@ -129,7 +129,6 @@ Campaign minimums: $10/day (daily) · $100 total (Smart Campaign for Spotify) ·
 
 - **OAuth 2.1** — authorization code flow with PKCE, no shared secrets
 - **Role-based access** — viewers get read-only, editors get full control
-- **No raw data exposure** — all spend values are client-facing, no internal cost data
 - **Token revocation** — manage connected apps from your Dynamoi settings
 
 ---

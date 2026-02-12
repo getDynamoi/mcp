@@ -7,6 +7,23 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-12
+
+### Added
+
+- `dynamoi_list_artists` now includes `organizationName` when available.
+
+### Changed
+
+- `dynamoi_get_current_user` now returns lightweight counts (organizationCount and artistCount) instead of full roster lists.
+- Summary-mode outputs are standardized under a `summary` key across tools.
+- Read tools may include `warnings` and `actionRequired` for onboarding blockers (when applicable).
+
+### Removed
+
+- Removed wording in public docs that could be misinterpreted as describing internal spend calculations.
+
+
 ## [0.3.0] - 2026-02-12
 
 ### Added

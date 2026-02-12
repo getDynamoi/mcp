@@ -37,6 +37,7 @@ export type ListArtistsData = {
 	artists: Array<{
 		id: string;
 		name: string;
+		organizationName?: string;
 		tier: ArtistTier;
 		billingStatus: BillingStatus;
 		activeCampaignCount: number;
@@ -70,25 +71,21 @@ export type SearchSummaryData = {
 };
 
 export type GetCurrentUserData = {
-	id: string;
-	email?: string;
-	name?: string;
-	isSuperAdmin: boolean;
-	organizations: Array<{
+	user: {
 		id: string;
-		name: string;
-		role: AccessRole;
-	}>;
-	artists: Array<{
-		id: string;
-		name: string;
-		role: AccessRole;
-		organizationId?: string;
-	}>;
+		email?: string;
+		name?: string;
+		isSuperAdmin: boolean;
+	};
+	organizationCount: number;
+	artistCount: number;
+	hints: string[];
 };
 
 export type GetCurrentUserSummaryData = {
 	summary: string;
+	organizationCount: number;
+	artistCount: number;
 };
 
 export type GetArtistData = {
@@ -115,10 +112,14 @@ export type GetArtistData = {
 		};
 	};
 	organization?: { id: string; name: string };
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type GetArtistSummaryData = {
 	summary: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type ListCampaignsJsonData = {
@@ -166,10 +167,14 @@ export type GetCampaignData = {
 	smartLinkUrl?: string;
 	blockedReason?: string;
 	nextAction?: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type GetCampaignSummaryData = {
-	report: string;
+	summary: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type GetCampaignAnalyticsJsonData = {
@@ -207,7 +212,7 @@ export type GetCampaignAnalyticsJsonData = {
 };
 
 export type GetCampaignAnalyticsSummaryData = {
-	report: string;
+	summary: string;
 	warnings?: string[];
 };
 
@@ -226,10 +231,14 @@ export type GetBillingData = {
 		campaignsAllowed: number;
 		remainingBudget: MoneyDisplay;
 	};
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type GetBillingSummaryData = {
 	summary: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type GetPlatformStatusData = {

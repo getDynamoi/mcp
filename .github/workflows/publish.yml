@@ -1,13 +1,18 @@
 name: publish
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   publish:
-    name: Publish @dynamoi/mcp (Manual)
+    name: Publish @dynamoi/mcp
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: npm-publish
+      cancel-in-progress: false
 
     steps:
       - name: Checkout
@@ -42,6 +47,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish (Changesets)
+        # `changeset publish` is a no-op unless package.json has a version
+        # higher than what's already on npm.
         run: bun run changeset:publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
