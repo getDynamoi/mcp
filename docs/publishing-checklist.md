@@ -17,11 +17,15 @@ All public-facing descriptions must use these approved blocks. Do not improvise.
 
 ### Short Description (MCP directories, app stores, package.json)
 
-> Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns with no agency fees.
+> Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns for artists, labels, and YouTube creators — no agency fees.
 
 ### Long Description (README intro, detailed listings)
 
 > Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue — through automated Meta and Google ad campaigns. Your $300/month subscription converts 100% to ad credit, with a 100% match your first month ($600 to launch your first campaigns). No agency fees, no retainers, cancel anytime.
+
+### Company Bio (directory profiles, about sections)
+
+> Dynamoi gives AI assistants the power to run sophisticated ad campaigns for music artists, labels, and YouTube creators. Describe a release or channel to promote — Dynamoi automates deployment across Meta and Google, then optimizes daily for what actually matters: Spotify saves and YouTube AdSense revenue, not impressions and vanity metrics. Every dollar of subscription converts to ad credit.
 
 ### GitHub Awesome-List PR Description (one line)
 
@@ -115,19 +119,19 @@ Optimize the canonical sources that all directories link back to.
 
 ### Wave 2: Official MCP Registry (unlocks aggregators)
 
-- [ ] **Official MCP Registry** — publish via `mcp-publisher` CLI
+- [x] **Official MCP Registry** — publish via `mcp-publisher` CLI
 
 ### Wave 3: Top MCP Directories
 
-- [ ] **Smithery** — publish hosted HTTPS server
-- [ ] **Glama** — add server via in-directory flow
-- [ ] **PulseMCP** — submit form
-- [ ] **mcp.so** — submit form
-- [ ] **Cursor Directory** — self-serve listing
+- [x] **Smithery** — published at https://smithery.ai/server/dynamoi/music-youtube-marketing-mcp
+- [~] **Glama** — submitted 2026-02-12, pending review
+- [~] **PulseMCP** — auto-ingests from Official MCP Registry weekly, published 2026-02-12
+- [~] **mcp.so** — submitted 2026-02-12, unclear if submission went through — follow up
+- [~] **Cursor Directory** — submitted 2026-02-12, follow up to confirm published
 
 ### Wave 4: GitHub Awesome Lists (PRs)
 
-- [ ] **punkpeye/awesome-mcp-servers** (80.6k stars)
+- [~] **punkpeye/awesome-mcp-servers** (80.6k stars) — PR #1959 submitted 2026-02-12
 - [ ] **modelcontextprotocol/servers** (78.3k stars)
 - [ ] **appcypher/awesome-mcp-servers** (5.1k stars)
 - [ ] **wong2/awesome-mcp-servers** (3.5k stars)
@@ -372,7 +376,7 @@ Optimize the canonical sources that all directories link back to.
 ### npm package.json description (live)
 
 ```
-"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns with no agency fees."
+"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns for artists, labels, and YouTube creators — no agency fees."
 ```
 
 ### server.json description (live, ≤100 chars)
