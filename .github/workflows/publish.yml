@@ -15,6 +15,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js (npm auth)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          scope: "@dynamoi"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -28,6 +35,11 @@ jobs:
 
       - name: Build
         run: bun run build
+
+      - name: Verify npm auth
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish (Changesets)
         run: bun run changeset:publish
