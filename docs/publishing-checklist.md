@@ -109,9 +109,9 @@ music-advertising, spotify-streams, facebook-ads, instagram-ads
 Optimize the canonical sources that all directories link back to.
 
 - [x] **npm package metadata** — homepage, repository, bugs, keywords, description, first-paragraph link to dynamoi.com
-- [ ] **GitHub public mirror** — topics, About section, social preview image, README with one-liner + keywords in first 10 lines
+- [x] **GitHub public mirror** — topics, About section, social preview image, README with one-liner + keywords in first 10 lines
 - [x] **Add `mcpName` in `package.json` + `server.json` at package root** (required for Official MCP Registry)
-- [ ] **`llms.txt` / `llms-full.txt`** — add MCP server details, tool list, hosted endpoint, auth method
+- [x] **`llms.txt` / `llms-full.txt`** — add MCP server details, tool list, hosted endpoint, auth method
 
 ### Wave 2: Official MCP Registry (unlocks aggregators)
 

@@ -7,6 +7,13 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-12
+
+### Fixed
+
+- Improved OAuth reconnect reliability for AI assistants by allowing secure localhost callback origins used during native auth handoffs.
+- Cleaned up the consent screen app title so connected assistants display clearer, more user-friendly naming.
+
 ## [0.2.0] - 2026-02-11
 
 ### Changed

@@ -3,7 +3,7 @@
   "name": "io.github.getdynamoi/dynamoi",
   "title": "Dynamoi",
   "description": "Promote music on Spotify and grow YouTube channels through AI-powered Meta and Google ad campaigns.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "websiteUrl": "https://dynamoi.com",
   "repository": {
     "url": "https://github.com/getDynamoi/mcp",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "@dynamoi/mcp",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "transport": {
         "type": "streamable-http",
         "url": "https://dynamoi.com/mcp"
