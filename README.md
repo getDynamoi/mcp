@@ -47,8 +47,9 @@ White-glove onboarding and ongoing support included — need help setting up you
 | `dynamoi_search` | Search across artists, ad campaigns, and smart links by name or URL |
 | `dynamoi_get_artist` | Artist or YouTube channel profile — connected platforms, subscription tier, billing status |
 | `dynamoi_list_campaigns` | List campaigns with content title, type, budget, status, and platforms |
-| `dynamoi_get_campaign` | Full campaign details — budget, targeting, per-platform status, blocked reasons |
+| `dynamoi_get_campaign` | Full campaign details — budget, targeting, per-platform status, blocked reasons (by default includes countryCount; pass includeCountries=true for full list) |
 | `dynamoi_get_campaign_analytics` | Performance metrics — impressions, clicks, spend, CPC, CPM, CTR by platform |
+| `dynamoi_get_artist_analytics` | Artist-level rollup analytics across all campaigns — totals + optional daily rows by platform |
 | `dynamoi_get_billing` | Credit balance, subscription tier, billing status, and recent spend |
 | `dynamoi_get_platform_status` | Connection health for Spotify, Meta, and YouTube — status, expiry, next steps |
 

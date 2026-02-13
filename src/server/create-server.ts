@@ -4,6 +4,8 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import type {
+	GetArtistAnalyticsJsonData,
+	GetArtistAnalyticsSummaryData,
 	GetArtistData,
 	GetArtistSummaryData,
 	GetBillingData,
@@ -51,6 +53,11 @@ export type Phase3Adapter = {
 	getArtist(
 		input: unknown,
 	): Promise<ResultEnvelope<GetArtistData | GetArtistSummaryData>>;
+	getArtistAnalytics(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<GetArtistAnalyticsJsonData | GetArtistAnalyticsSummaryData>
+	>;
 	listCampaigns(
 		input: unknown,
 	): Promise<ResultEnvelope<ListCampaignsJsonData | ListCampaignsSummaryData>>;
@@ -134,6 +141,10 @@ export function createDynamoiMcpServer(options: {
 						return asTextResult(await options.adapter.search(input));
 					case "dynamoi_get_artist":
 						return asTextResult(await options.adapter.getArtist(input));
+					case "dynamoi_get_artist_analytics":
+						return asTextResult(
+							await options.adapter.getArtistAnalytics(input),
+						);
 					case "dynamoi_list_campaigns":
 						return asTextResult(await options.adapter.listCampaigns(input));
 					case "dynamoi_get_campaign":

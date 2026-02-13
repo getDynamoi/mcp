@@ -1,12 +1,40 @@
 import { describe, expect, test } from "bun:test";
 import {
+	DynamoiGetArtistAnalyticsInputSchema,
+	DynamoiGetCampaignInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiPauseCampaignInputSchema,
 	DynamoiResumeCampaignInputSchema,
 	DynamoiUpdateBudgetInputSchema,
+	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
 	PHASE_3_TOOL_DEFINITIONS,
 } from "./tools";
+
+describe("mcp/tools phase 1 definitions", () => {
+	test("read tools include required annotations", () => {
+		for (const def of PHASE_1_TOOL_DEFINITIONS) {
+			expect(def.readOnlyHint).toBe(true);
+			expect(def.destructiveHint).toBe(false);
+			expect(def.openWorldHint).toBe(false);
+		}
+	});
+
+	test("get campaign schema supports includeCountries", () => {
+		const parsed = DynamoiGetCampaignInputSchema.parse({
+			campaignId: "00000000-0000-0000-0000-000000000000",
+			includeCountries: true,
+		});
+		expect(parsed.includeCountries).toBe(true);
+	});
+
+	test("get artist analytics schema accepts uuid artistId", () => {
+		const parsed = DynamoiGetArtistAnalyticsInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+		});
+		expect(parsed.artistId).toBe("00000000-0000-0000-0000-000000000000");
+	});
+});
 
 describe("mcp/tools phase 2 definitions", () => {
 	test("write tools include required annotations", () => {

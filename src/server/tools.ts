@@ -38,6 +38,7 @@ export const DynamoiListCampaignsInputSchema = z.object({
 export const DynamoiGetCampaignInputSchema = z.object({
 	campaignId: z.string().uuid(),
 	format: ToolFormatSchema.optional(),
+	includeCountries: z.boolean().optional(),
 });
 
 export const DateRangeSchema = z.object({
@@ -47,6 +48,13 @@ export const DateRangeSchema = z.object({
 
 export const DynamoiGetCampaignAnalyticsInputSchema = z.object({
 	campaignId: z.string().uuid(),
+	dateRange: DateRangeSchema.optional(),
+	format: ToolFormatSchema.optional(),
+	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
+});
+
+export const DynamoiGetArtistAnalyticsInputSchema = z.object({
+	artistId: z.string().uuid(),
 	dateRange: DateRangeSchema.optional(),
 	format: ToolFormatSchema.optional(),
 	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
@@ -270,7 +278,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get full details for a campaign — budget, targeting countries, per-platform status for Meta and Google, smart link URL, and any blocked reasons with suggested next actions.",
+			"Get full details for a campaign — budget, targeting, per-platform status for Meta and Google, smart link URL, and any blocked reasons with suggested next actions. By default, targeting returns a countryCount; pass includeCountries=true to include the full country list.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
@@ -285,6 +293,15 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		openWorldHint: false,
 		readOnlyHint: true,
 		schema: DynamoiGetCampaignAnalyticsInputSchema,
+	},
+	{
+		description:
+			"Get performance analytics for an artist across all their campaigns — impressions, clicks, and billable ad spend with optional daily breakdowns per platform.",
+		destructiveHint: false,
+		name: "dynamoi_get_artist_analytics",
+		openWorldHint: false,
+		readOnlyHint: true,
+		schema: DynamoiGetArtistAnalyticsInputSchema,
 	},
 	{
 		description:
@@ -339,7 +356,7 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 export const PHASE_3_TOOL_DEFINITIONS = [
 	{
 		description:
-			"List an artist's uploaded creative assets (images and videos) available for campaign launches. Use this to select media before launching a Smart Campaign.",
+			"List an artist's uploaded creative assets (images and videos) available for campaign launches. Includes width/height (when available) and a computed aspect ratio to help pick the right creative.",
 		destructiveHint: false,
 		name: "dynamoi_list_media_assets",
 		openWorldHint: false,

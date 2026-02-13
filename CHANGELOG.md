@@ -7,6 +7,18 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-02-13
+
+### Added
+
+- New `dynamoi_get_artist_analytics` tool to get artist-level rollup analytics across all campaigns, with optional daily breakdowns by platform.
+- Media asset outputs now include dimensions (width/height when available) and a computed aspect ratio to make creative selection easier.
+
+### Changed
+
+- `dynamoi_get_campaign` targeting is smaller by default in JSON mode: country targeting returns `countryCount` unless you pass `includeCountries=true`.
+- `dynamoi_list_media_assets` summary mode no longer prints long asset URLs by default (use JSON mode when you need full URLs).
+
 ## [0.4.0] - 2026-02-12
 
 ### Added

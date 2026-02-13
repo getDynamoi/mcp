@@ -8,6 +8,7 @@ export type { Phase3Adapter } from "./server/create-server";
 export { createDynamoiMcpServer } from "./server/create-server";
 export {
 	DateRangeSchema,
+	DynamoiGetArtistAnalyticsInputSchema,
 	DynamoiGetArtistInputSchema,
 	DynamoiGetBillingInputSchema,
 	DynamoiGetCampaignAnalyticsInputSchema,
@@ -34,6 +35,8 @@ export type {
 	BillingStatus,
 	CampaignDisplayStatus,
 	CampaignType,
+	GetArtistAnalyticsJsonData,
+	GetArtistAnalyticsSummaryData,
 	GetArtistData,
 	GetArtistSummaryData,
 	GetBillingData,

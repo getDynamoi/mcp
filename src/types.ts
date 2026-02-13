@@ -153,7 +153,11 @@ export type GetCampaignData = {
 	budgetType: "DAILY" | "TOTAL";
 	locationTargets:
 		| { mode: "GLOBAL" }
-		| { mode: "COUNTRIES"; countries: Array<{ code: string; name: string }> };
+		| {
+				mode: "COUNTRIES";
+				countryCount: number;
+				countries?: Array<{ code: string; name: string }>;
+		  };
 	platforms: Array<{
 		name: "META" | "GOOGLE";
 		status: string;
@@ -212,6 +216,44 @@ export type GetCampaignAnalyticsJsonData = {
 };
 
 export type GetCampaignAnalyticsSummaryData = {
+	summary: string;
+	warnings?: string[];
+};
+
+export type GetArtistAnalyticsJsonData = {
+	artistId: string;
+	campaignCount: number;
+	dateRange: { start: string; end: string };
+	totals: {
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+		cpc: MoneyDisplay | null;
+		cpm: MoneyDisplay | null;
+		ctr: number | null;
+	};
+	byPlatform?: Array<{
+		platform: "META" | "GOOGLE";
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+		daily?: Array<{
+			date: string;
+			impressions: number;
+			clicks: number;
+			spend: MoneyDisplay;
+		}>;
+	}>;
+	daily?: Array<{
+		date: string;
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+	}>;
+	warnings?: string[];
+};
+
+export type GetArtistAnalyticsSummaryData = {
 	summary: string;
 	warnings?: string[];
 };
@@ -300,6 +342,7 @@ export type MediaAssetSummary = {
 	fileName?: string;
 	width?: number;
 	height?: number;
+	aspectRatio?: string;
 	createdAt: string;
 };
 
