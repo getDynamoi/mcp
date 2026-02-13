@@ -132,28 +132,15 @@ Optimize the canonical sources that all directories link back to.
 ### Wave 4: GitHub Awesome Lists (PRs)
 
 - [~] **punkpeye/awesome-mcp-servers** (80.6k stars) — PR #1959 submitted 2026-02-12
-- [ ] **modelcontextprotocol/servers** (78.3k stars)
-- [ ] **appcypher/awesome-mcp-servers** (5.1k stars)
-- [ ] **wong2/awesome-mcp-servers** (3.5k stars)
-- [ ] **cline/mcp-marketplace** (754 stars)
-- [ ] **TensorBlock/awesome-mcp-servers** (539 stars)
+- [x] **modelcontextprotocol/servers** (78.3k stars) — N/A, reference repo only, we published to their registry instead
+- [~] **appcypher/awesome-mcp-servers** (5.1k stars) — PR #303 submitted 2026-02-12
+- [x] **wong2/awesome-mcp-servers** (3.5k stars) — N/A, redirects to Official MCP Registry
+- [ ] **cline/mcp-marketplace** (754 stars) — low priority, niche
+- [ ] **TensorBlock/awesome-mcp-servers** (539 stars) — low priority, unclear process
 
 ### Wave 5: Remaining MCP Directories
 
-- [ ] **mcpmarket.com**
-- [ ] **mcpservers.org**
-- [ ] **mcpservers.com**
-- [ ] **mcpserverslist.com**
-- [ ] **mcpserve.com**
-- [ ] **mcpserver.directory**
-- [ ] **mcpindex.net**
-- [ ] **MCP Server Hub (.net)**
-- [ ] **MCP Server Hub (.com)**
-- [ ] **Model Context Protocol Directory (mcpserverdirectory.org)**
-- [ ] **mcpserver.dev**
-- [ ] **AwesomeMCPServer.com**
-- [ ] **MCP Servers Hub (alt, mcp-servers-hub.net)**
-- [ ] **MCPera**
+Skipped — low DA sites with minimal backlink value. The Official MCP Registry, npm, GitHub, and Smithery provide far more SEO value. Many submission forms were broken or sites were down (2026-02-12).
 
 ### Wave 6: ChatGPT / AI Platforms
 
