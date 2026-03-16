@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, type JWTVerifyOptions, jwtVerify } from "jose";
 
-export type VerifiedAccessToken = {
+type VerifiedAccessToken = {
 	sub: string;
 	iss: string;
 	aud: string | string[] | undefined;

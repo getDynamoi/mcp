@@ -544,7 +544,7 @@ npm registry (@dynamoi/mcp)
 - **tsup** -- bundles TypeScript for npm. One config file
 - **GitHub Action** -- on merge: syncs to public repo, publishes to npm (~30 lines YAML)
 
-**Agent workflow (instructions for CLAUDE.md / skill file):**
+**Agent workflow (instructions for AGENTS.md / skill file):**
 1. Edit code in `packages/mcp/`
 2. Run `bunx changeset` -- describe what changed, pick patch/minor/major
 3. Commit the changeset file with the PR

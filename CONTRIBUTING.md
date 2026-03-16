@@ -7,7 +7,7 @@ This repository is primarily intended as the public MCP contract for Dynamoi. Th
 ## Development
 
 Requirements:
-- Bun (see `.github/workflows/validate.yml` for the pinned version)
+- Bun (see root `package.json` `packageManager` for the pinned version)
 
 Common commands:
 - Install: `bun install`
@@ -21,4 +21,3 @@ We use Semantic Versioning and Keep a Changelog.
 - Create a Changeset: `bun run changeset`
 - Apply version bumps (maintainers): `bun run changeset:version`
 - Publish (maintainers / CI): `bun run changeset:publish`
-

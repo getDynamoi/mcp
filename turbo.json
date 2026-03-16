@@ -1,0 +1,18 @@
+{
+	"$schema": "https://turborepo.dev/schema.v2.json",
+	"extends": ["//"],
+	"tasks": {
+		"build": {
+			"outputs": ["dist/**"],
+			"inputs": [
+				"$TURBO_DEFAULT$",
+				"src/**",
+				"package.json",
+				"tsconfig.json",
+				"tsup.config.ts",
+				"server.json"
+			],
+			"description": "Build @dynamoi/mcp for workspace consumers"
+		}
+	}
+}
