@@ -103,12 +103,13 @@ function asTextResult(envelope: unknown) {
 
 export function createDynamoiMcpServer(options: {
 	adapter: Phase3Adapter;
+	websiteUrl?: string;
 }): McpServer {
 	const server = new McpServer(
 		{
 			name: "dynamoi",
 			version: DYNAMOI_MCP_VERSION,
-			websiteUrl: "https://dynamoi.com",
+			websiteUrl: options.websiteUrl ?? "https://dynamoi.com",
 		},
 		{ instructions: DYNAMOI_MCP_INSTRUCTIONS },
 	);

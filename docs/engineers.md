@@ -36,7 +36,7 @@ Private implementation (not published):
 1. Client calls `POST /mcp` (Streamable HTTP JSON-RPC).
 2. `apps/main/app/mcp/route.ts` (canonical entrypoint, re-exporting shared handlers):
    - extracts Bearer token
-   - verifies JWT (JWKS) and checks `aud` against allowlist (stricter in prod)
+   - verifies JWT (JWKS) and checks `aud` against the current deployment resource allowlist (stricter in hosted environments)
    - resolves the Supabase user for the token
    - builds the MCP adapter (`createMcpAdapter({ user, clientId })`)
    - runs `handleMcpHttpRequest(...)` from `@dynamoi/mcp` (sessions are bound to `sub+clientId` via `sessionContextKey`)
@@ -150,6 +150,12 @@ Important: Gemini is sensitive to tool schema size and some JSON Schema keywords
 ### 1) Port Collisions / Wrong Worktree On Port 3000
 
 If a different worktree is bound to the port you think you’re using, OAuth metadata/JWKS fetches can return HTML or 404, and the auth flow will look random.
+
+For hosted or white-label testing, remember that the route now advertises the current deployment origin for:
+
+- `/.well-known/oauth-protected-resource`
+- `WWW-Authenticate` `resource_metadata`
+- MCP server `websiteUrl`
 
 Fix: run the correct branch on a fixed port in tmux (recommended), then use the deterministic scripts.
 

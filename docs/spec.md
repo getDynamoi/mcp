@@ -247,14 +247,14 @@ The MCP server then validates:
 
 This aligns with MCP's "token must be issued for this specific resource" requirement and prevents token misuse across services.
 
-**Local development note:** For localhost testing, we allow `aud: "authenticated"` (Supabase default) so we can test end-to-end without relying on the access token hook. Production MUST require the canonical resource-bound audience.
+**Local development note:** For localhost testing, we allow `aud: "authenticated"` (Supabase default) so we can test end-to-end without relying on the access token hook. Hosted deployments should require the current deployment's MCP resource audience. During white-label rollout, the server may temporarily also accept the legacy `https://dynamoi.com/mcp` audience until the Supabase hook emits deployment-specific values.
 
 ### Token Validation
 
 Per Supabase's documented checklist + MCP requirements, verify:
 1. Signature via JWKS (asymmetric JWTs: ES256 or RS256)
 2. `iss` matches Supabase project URL
-3. `aud` matches `"https://dynamoi.com/mcp"` (via custom access token hook)
+3. `aud` matches the current deployment MCP resource (via custom access token hook)
 4. `exp` is not past
 5. `client_id` is an allowed, registered client
 
@@ -268,7 +268,7 @@ MCP spec requires this. Serve at the standard well-known location:
 
 ```json
 {
-  "resource": "https://dynamoi.com/mcp",
+  "resource": "https://<current-deployment-origin>/mcp",
   "authorization_servers": [
     "https://<project-ref>.supabase.co/auth/v1"
   ],
@@ -283,13 +283,14 @@ In Next.js App Router: `apps/main/app/.well-known/oauth-protected-resource/route
 **Also include in 401 responses:**
 
 ```
-WWW-Authenticate: Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="email profile"
+WWW-Authenticate: Bearer resource_metadata="https://<current-deployment-origin>/.well-known/oauth-protected-resource", scope="email profile"
 ```
 
 #### Canonical URL Rules
 
-- In production, always advertise `https://dynamoi.com/.well-known/oauth-protected-resource` (do not derive from request host headers behind proxies).
+- Advertise the current deployment origin of the hosted endpoint.
 - In localhost/dev, it is fine to advertise the request-derived origin.
+- During the white-label audience migration, it is acceptable to temporarily accept the legacy `https://dynamoi.com/mcp` audience in addition to the deployment-specific resource.
 
 ### Dynamic Client Registration
 
@@ -1464,7 +1465,8 @@ If you need Docker sandboxing instead:
    - Approve and confirm redirect to client callback.
 4. Token validation:
    - Call `/mcp` with Bearer token.
-   - In production, verify canonical `aud` is required.
+   - Verify the deployment-specific MCP `aud` is required.
+   - If the white-label migration fallback is still present, also verify the legacy `https://dynamoi.com/mcp` audience remains temporarily accepted.
 
 #### MCP “Happy Path” Flow (Read + Write)
 
