@@ -74,7 +74,7 @@ We intentionally rely on structured logs + Sentry so audits stay simple and repr
 ### Where To Query
 
 Use the copy/paste queries in:
-- `agents/skills/querying-data/references/cli-examples.md` → **MCP Server UX Audit (Axiom)**
+- `agents/skills/querying-data/references/observability-queries.md` → **MCP Server UX Audit (Axiom)**
 
 ### Sentry Behavior
 
