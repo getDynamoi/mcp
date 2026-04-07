@@ -20,7 +20,10 @@ describe("mcp/transport session binding", () => {
 	test("reusing a session across different auth contexts is rejected", async () => {
 		const initReq = new Request("http://example.com/mcp", {
 			body: JSON.stringify(makeInitializeBody()),
-			headers: { "content-type": "application/json" },
+			headers: {
+				accept: "application/json, text/event-stream",
+				"content-type": "application/json",
+			},
 			method: "POST",
 		});
 
@@ -39,7 +42,11 @@ describe("mcp/transport session binding", () => {
 
 		const nextReq = new Request("http://example.com/mcp", {
 			body: JSON.stringify({ id: 2, jsonrpc: "2.0", method: "tools/list" }),
-			headers: { "content-type": "application/json", "mcp-session-id": sid },
+			headers: {
+				accept: "application/json, text/event-stream",
+				"content-type": "application/json",
+				"mcp-session-id": sid,
+			},
 			method: "POST",
 		});
 
