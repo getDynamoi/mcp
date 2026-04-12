@@ -723,7 +723,7 @@ Annotations:
 **Error classification:**
 - `ValidationError` → return Result error with user message, kind: "validation"
 - `BusinessRuleError` → return Result error with user message, kind: "business"
-- `PlatformFailureError` → return Result error with actionable message, kind: "platform", log to Sentry
+- `PlatformFailureError` → return Result error with actionable message, kind: "platform", log at error level
 
 #### `dynamoi_resume_campaign`
 
@@ -1313,7 +1313,7 @@ Minimal UI components:
 - Rate limiting (best-effort in-memory at `/mcp`)
 - Circuit breaker/backoff for Meta/Google mutations (MCP-only)
 - Audit logging (integrate with `domains/audit`) including campaign creation
-- Sentry logging for `PlatformFailureError` + unknown only (validation/business warn-only)
+- Error-level structured logging for `PlatformFailureError` + unknown only (validation/business warn-only)
 - **Connected Apps revocation page** (`/settings/connected-apps` redirects to `/<locale>/settings/connected-apps`) — list authorized clients, revoke grants
 - Server instructions + prompts (dynamic resources already implemented)
 - Load testing
@@ -1495,7 +1495,7 @@ Then a realistic workflow:
 - Rate limit:
   - Rapid tool calls should trigger `429` with `Retry-After`.
 - Platform failure classification:
-  - When Meta/Google rejects a mutation, tool should return error kind: `platform` (and log to Sentry).
+  - When Meta/Google rejects a mutation, tool should return error kind: `platform` and emit error-level logs.
 - Circuit breaker:
   - Repeated platform failures should temporarily block and return a retry-after style message.
 - Margin leakage:
@@ -1604,9 +1604,9 @@ Token → resolveUserFromToken() → User (AUTHENTICATED | SUPER_ADMIN)
 ### Error Classification
 
 ```
-ValidationError      → user input error, return message, kind: "validation", no Sentry
-BusinessRuleError    → business logic violation, return message, kind: "business", no Sentry
-PlatformFailureError → Meta/Google API rejection, return actionable message, kind: "platform", log to Sentry
+ValidationError      → user input error, return message, kind: "validation", warning-level only
+BusinessRuleError    → business logic violation, return message, kind: "business", warning-level only
+PlatformFailureError → Meta/Google API rejection, return actionable message, kind: "platform", log at error level
 ```
 
 ### Onboarding Requirements

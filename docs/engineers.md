@@ -51,7 +51,7 @@ Private implementation (not published):
 
 ## Monitoring MCP UX (No Dashboard Needed)
 
-We intentionally rely on structured logs + Sentry so audits stay simple and reproducible.
+We rely on structured error-level logs and Axiom so audits stay simple and reproducible.
 
 ### Log Surfaces
 
@@ -76,10 +76,10 @@ We intentionally rely on structured logs + Sentry so audits stay simple and repr
 Use the copy/paste queries in:
 - `.agents/skills/querying-data/references/observability-queries.md` → **MCP Server UX Audit (Axiom)**
 
-### Sentry Behavior
+### Error Logging Behavior
 
-- Validation/business failures remain warning-level (not Sentry noise).
-- Platform/unknown failures continue through error-level logging and are sent to Sentry with enriched MCP context (client/tool/user/timing).
+- Validation/business failures remain warning-level.
+- Platform/unknown failures continue through error-level structured logs with enriched MCP context (client/tool/user/timing).
 
 ## Adding Or Modifying A Tool (Safe Checklist)
 

@@ -55,7 +55,7 @@ MCP (Model Context Protocol) is the de facto standard for AI agent-to-tool conne
 - 97M+ SDK downloads
 - Donated to Linux Foundation's AAIF (Dec 2025)
 - Adopted by every major AI company: Anthropic, OpenAI, Google, Microsoft
-- Companies shipping MCP servers: Stripe (25 tools), Notion (16 tools), Sentry (~16 tools), Figma, Cloudflare, Linear, Intercom
+- Companies shipping MCP servers: Stripe (25 tools), Notion (16 tools), Figma, Cloudflare, Linear, Intercom
 
 ### Other Protocols (Less Relevant)
 
@@ -120,10 +120,6 @@ The MCP server package only. Tools, auth middleware, transport layer. No busines
 - 25 tools across 11 categories
 - `search_stripe_resources` cross-cutting search is powerful pattern
 - `search_stripe_documentation` searches their own docs
-
-**Sentry:**
-- "Intentionally consolidated rather than bloated with single-purpose functions"
-- Search-oriented tools that return rich context
 
 **Community Meta Ads MCP (29 tools):**
 - 1:1 API mapping. What NOT to do -- Dynamoi already handles Meta complexity internally
@@ -261,7 +257,7 @@ The same role resolution functions from `apps/main/app/lib/domains/artist/access
 
 ### API Keys vs OAuth
 
-Industry pattern (Stripe, Notion, Sentry): **support both**.
+Industry pattern (Stripe, Notion): **support both**.
 
 | Transport | Auth Method |
 |---|---|
@@ -688,8 +684,6 @@ This flips the funnel. Instead of SEO → landing page → signup → learn dash
 - [Stripe MCP Docs](https://docs.stripe.com/mcp)
 - [Notion MCP Tools](https://developers.notion.com/docs/mcp-supported-tools)
 - [Notion Hosted MCP: Inside Look](https://www.notion.com/blog/notions-hosted-mcp-server-an-inside-look)
-- [Sentry MCP Server](https://docs.sentry.io/product/sentry-mcp/)
-- [Sentry MCP GitHub](https://github.com/getsentry/sentry-mcp)
 - [Meta Ads MCP (Pipeboard)](https://github.com/pipeboard-co/meta-ads-mcp)
 - [Google Ads MCP](https://github.com/cohnen/mcp-google-ads)
 - [MCP "Too Many Tools" Problem](https://demiliani.com/2025/09/04/model-context-protocol-and-the-too-many-tools-problem/)
