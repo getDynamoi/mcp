@@ -250,11 +250,30 @@ export type GetArtistAnalyticsJsonData = {
 		clicks: number;
 		spend: MoneyDisplay;
 	}>;
+	strongestCampaign?: {
+		campaignId: string;
+		contentTitle: string;
+		status: string;
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+	};
 	warnings?: string[];
 };
 
 export type GetArtistAnalyticsSummaryData = {
 	summary: string;
+	campaignCount?: number;
+	dateRange?: { start: string; end: string };
+	hasDailyBreakdown?: boolean;
+	strongestCampaign?: {
+		campaignId: string;
+		contentTitle: string;
+		status: string;
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay;
+	};
 	warnings?: string[];
 };
 

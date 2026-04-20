@@ -55,12 +55,15 @@ Principles:
 - Prefer read tools first before write tools. For writes, confirm intent and restate
   what will change.
 - When a user asks for a daily breakdown, pass granularity=DAILY on the analytics tool call.
+- When a user asks for a written rollup, strongest campaign, or review-ready analytics summary, prefer format=summary on the analytics tool call.
+- If a read tool already returned the requested answer in summary form, answer the user directly instead of chaining more read tools.
 - Money values are shown in USD as presented in Dynamoi.
 - Budget minimums: $10/day (daily), $100 total (Smart Campaign), $50 total (YouTube).
 
 Common workflows:
 - Discovery: dynamoi_list_artists → dynamoi_list_campaigns → dynamoi_get_campaign →
   dynamoi_get_campaign_analytics
+- Artist performance summary: dynamoi_get_artist_analytics with granularity=DAILY when requested. If that response already includes the strongest campaign, do not call more analytics tools.
 - Diagnose stuck campaign: dynamoi_get_campaign → dynamoi_get_platform_status →
   propose next steps
 - Pause/resume: dynamoi_get_campaign (confirm) → dynamoi_pause_campaign or resume

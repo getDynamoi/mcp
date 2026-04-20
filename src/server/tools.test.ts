@@ -41,6 +41,15 @@ describe("mcp/tools phase 1 definitions", () => {
 		});
 		expect(parsed.artistId).toBe("00000000-0000-0000-0000-000000000000");
 	});
+
+	test("artist analytics metadata guides direct summary answers", () => {
+		const definition = PHASE_1_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_get_artist_analytics",
+		);
+		expect(definition).toBeDefined();
+		expect(definition?.description).toContain("Pass format=summary");
+		expect(definition?.description).toContain("stop and answer");
+	});
 });
 
 describe("mcp/tools phase 2 definitions", () => {
