@@ -148,5 +148,17 @@ describe("mcp/tools phase 3 definitions", () => {
 		expect(definition).toBeDefined();
 		expect(definition?.description).toContain("check context");
 		expect(definition?.description).toContain("generic Instagram");
+		expect(definition?.description).toContain("Never use");
+	});
+
+	test("launch campaign metadata tells ChatGPT to stop after a successful launch", () => {
+		const definition = PHASE_3_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_launch_campaign",
+		);
+		expect(definition).toBeDefined();
+		expect(definition?.description).toContain("After a successful launch");
+		expect(definition?.description).toContain(
+			"answer from the returned campaign details directly",
+		);
 	});
 });

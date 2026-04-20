@@ -144,6 +144,7 @@ export type ListCampaignsSummaryData = {
 };
 
 export type GetCampaignData = {
+	summary: string;
 	id: string;
 	contentTitle: string;
 	contentType: "TRACK" | "ALBUM" | "PLAYLIST" | "VIDEO";
@@ -377,6 +378,7 @@ export type ListMediaAssetsSummaryData = {
 };
 
 export type LaunchCampaignData = {
+	summary: string;
 	id: string;
 	contentTitle: string;
 	campaignType: CampaignType;

@@ -218,7 +218,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Do not use this to 'check context' before answering generic Instagram, lyrics, or marketing-advice questions.",
+			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
 		destructiveHint: false,
 		name: "dynamoi_get_current_user",
 		openWorldHint: false,
@@ -227,7 +227,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Do not use this for generic advice or to inspect account context unless the user actually asked about their Dynamoi roster.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -245,7 +245,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first. Do not use this for generic advice questions that do not require account-specific data.",
+			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first. Never use this for generic advice questions that do not require account-specific data, including Instagram growth, songwriting, or lyrics prompts.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist",
 		openWorldHint: false,
@@ -254,7 +254,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that.",
+			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that. Never use this to personalize generic marketing advice.",
 		destructiveHint: false,
 		name: "dynamoi_list_campaigns",
 		openWorldHint: false,
@@ -263,7 +263,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Do not use this for a campaign list; use dynamoi_list_campaigns instead. Pass includeCountries=true only when the full country list is needed.",
+			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Do not use this for a campaign list; use dynamoi_list_campaigns instead. Pass includeCountries=true only when the full country list is needed. After a successful launch or budget/status mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
@@ -299,7 +299,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription state.",
+			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription state. Never use this to personalize generic Instagram or marketing-advice questions.",
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,
@@ -350,7 +350,7 @@ export const PHASE_3_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
+			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
 		destructiveHint: false,
 		name: "dynamoi_launch_campaign",
 		openWorldHint: true,
