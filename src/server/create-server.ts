@@ -158,7 +158,7 @@ export function createDynamoiMcpServer(options: {
 			},
 			async (input: unknown) => {
 				switch (def.name) {
-					case "dynamoi_get_current_user":
+					case "dynamoi_get_account_overview":
 						return asTextResult(await options.adapter.getCurrentUser(input));
 					case "dynamoi_list_artists":
 						return asTextResult(await options.adapter.listArtists(input));

@@ -153,7 +153,7 @@ describe("mcp/tools phase 3 definitions", () => {
 
 	test("current user metadata discourages generic advice context fishing", () => {
 		const definition = PHASE_1_TOOL_DEFINITIONS.find(
-			(def) => def.name === "dynamoi_get_current_user",
+			(def) => def.name === "dynamoi_get_account_overview",
 		);
 		expect(definition).toBeDefined();
 		expect(definition?.description).toContain("explicitly asks");
