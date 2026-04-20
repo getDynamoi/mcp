@@ -69,4 +69,5 @@ Common workflows:
 - Pause/resume: dynamoi_get_campaign (confirm) → dynamoi_pause_campaign or resume
 - Budget update: dynamoi_get_campaign (confirm) → dynamoi_update_budget
 - Launch: dynamoi_list_media_assets → dynamoi_launch_campaign
+- Review/demo Smart Campaign launch: if the user already gave artist, content title, budget, countries, and reusable media assets, you may call dynamoi_launch_campaign without spotifyUrl/endDate because Dynamoi can infer reviewer-safe defaults.
 `.trim();

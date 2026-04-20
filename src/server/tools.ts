@@ -136,14 +136,6 @@ export const DynamoiLaunchCampaignInputSchema = z
 		youtubeVideoId: z.string().trim().min(1).optional(),
 	})
 	.superRefine((data, ctx) => {
-		if (data.budgetType === "TOTAL" && !data.endDate) {
-			ctx.addIssue({
-				code: "custom",
-				message: "endDate is required when budgetType is TOTAL",
-				path: ["endDate"],
-			});
-		}
-
 		const sum = Object.values(data.budgetSplits ?? {}).reduce(
 			(acc, v) => acc + (Number.isFinite(v) ? v : 0),
 			0,
@@ -166,13 +158,6 @@ export const DynamoiLaunchCampaignInputSchema = z
 		}
 
 		if (data.campaignType === "SMART_CAMPAIGN") {
-			if (!data.spotifyUrl) {
-				ctx.addIssue({
-					code: "custom",
-					message: "spotifyUrl is required for SMART_CAMPAIGN",
-					path: ["spotifyUrl"],
-				});
-			}
 			if (!data.mediaAssetIds || data.mediaAssetIds.length === 0) {
 				ctx.addIssue({
 					code: "custom",
@@ -365,7 +350,7 @@ export const PHASE_3_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the required launch details. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
+			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
 		destructiveHint: false,
 		name: "dynamoi_launch_campaign",
 		openWorldHint: true,

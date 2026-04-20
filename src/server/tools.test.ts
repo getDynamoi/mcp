@@ -109,22 +109,34 @@ describe("mcp/tools phase 3 definitions", () => {
 		}
 	});
 
-	test("launch campaign requires endDate for TOTAL", () => {
-		expect(() =>
-			DynamoiLaunchCampaignInputSchema.parse({
-				adCopy: "hello world",
-				artistId: "00000000-0000-0000-0000-000000000000",
-				budgetAmount: 100,
-				budgetSplits: { GOOGLE: 0, META: 100 },
-				budgetType: "TOTAL",
-				campaignType: "SMART_CAMPAIGN",
-				clientRequestId: "00000000-0000-0000-0000-000000000000",
-				contentTitle: "Song",
-				contentType: "TRACK",
-				mediaAssetIds: ["00000000-0000-0000-0000-000000000000"],
-				spotifyUrl: "https://open.spotify.com/track/abc",
-				useAiGeneratedCopy: true,
-			}),
-		).toThrow();
+	test("launch campaign schema accepts review-style smart campaign inputs", () => {
+		const parsed = DynamoiLaunchCampaignInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			budgetAmount: 100,
+			budgetSplits: { GOOGLE: 0, META: 100 },
+			budgetType: "TOTAL",
+			campaignType: "SMART_CAMPAIGN",
+			clientRequestId: "00000000-0000-0000-0000-000000000000",
+			contentTitle: "Song",
+			contentType: "TRACK",
+			locationTargets: [
+				{ code: "US", name: "United States" },
+				{ code: "CA", name: "Canada" },
+			],
+			mediaAssetIds: ["00000000-0000-0000-0000-000000000000"],
+			useAiGeneratedCopy: true,
+		});
+
+		expect(parsed.endDate).toBeUndefined();
+		expect(parsed.spotifyUrl).toBeUndefined();
+	});
+
+	test("launch campaign metadata documents reviewer-safe defaults", () => {
+		const definition = PHASE_3_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_launch_campaign",
+		);
+		expect(definition).toBeDefined();
+		expect(definition?.description).toContain("omit spotifyUrl and endDate");
+		expect(definition?.description).toContain("reviewer-safe defaults");
 	});
 });
