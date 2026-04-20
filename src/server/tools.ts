@@ -17,8 +17,16 @@ export const DynamoiSearchInputSchema = z.object({
 	type: z.enum(["artist", "campaign", "smartlink"]).optional(),
 });
 
+const DynamoiGetCurrentUserIntentSchema = z.enum([
+	"account_overview",
+	"artist_access_check",
+	"organization_access_check",
+	"platform_connection_check",
+]);
+
 export const DynamoiGetCurrentUserInputSchema = z.object({
 	format: ToolFormatSchema.optional(),
+	intent: DynamoiGetCurrentUserIntentSchema,
 });
 
 export const DynamoiGetArtistInputSchema = z.object({
@@ -218,7 +226,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
+			"Use this when the user explicitly asks about the signed-in Dynamoi account itself, such as who is logged in, how many organizations or artists it can access, or whether account-level platform connections exist. Always pass intent to match that explicit account question. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
 		destructiveHint: false,
 		name: "dynamoi_get_current_user",
 		openWorldHint: false,

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
 	DynamoiGetArtistAnalyticsInputSchema,
 	DynamoiGetCampaignInputSchema,
+	DynamoiGetCurrentUserInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiPauseCampaignInputSchema,
 	DynamoiResumeCampaignInputSchema,
@@ -40,6 +41,15 @@ describe("mcp/tools phase 1 definitions", () => {
 			artistId: "00000000-0000-0000-0000-000000000000",
 		});
 		expect(parsed.artistId).toBe("00000000-0000-0000-0000-000000000000");
+	});
+
+	test("current user schema requires explicit account intent", () => {
+		expect(() => DynamoiGetCurrentUserInputSchema.parse({})).toThrow();
+
+		const parsed = DynamoiGetCurrentUserInputSchema.parse({
+			intent: "account_overview",
+		});
+		expect(parsed.intent).toBe("account_overview");
 	});
 
 	test("artist analytics metadata guides direct summary answers", () => {
@@ -146,6 +156,8 @@ describe("mcp/tools phase 3 definitions", () => {
 			(def) => def.name === "dynamoi_get_current_user",
 		);
 		expect(definition).toBeDefined();
+		expect(definition?.description).toContain("explicitly asks");
+		expect(definition?.description).toContain("Always pass intent");
 		expect(definition?.description).toContain("check context");
 		expect(definition?.description).toContain("generic Instagram");
 		expect(definition?.description).toContain("Never use");
