@@ -95,8 +95,32 @@ export type Phase3Adapter = {
 };
 
 function asTextResult(envelope: unknown) {
+	const plainText = (() => {
+		if (!envelope || typeof envelope !== "object") {
+			return JSON.stringify(envelope);
+		}
+
+		const status = (envelope as { status?: unknown }).status;
+		if (status === "error") {
+			const message = (envelope as { message?: unknown }).message;
+			return typeof message === "string" && message.trim().length > 0
+				? message
+				: JSON.stringify(envelope);
+		}
+
+		const data = (envelope as { data?: unknown }).data;
+		if (data && typeof data === "object") {
+			const summary = (data as { summary?: unknown }).summary;
+			if (typeof summary === "string" && summary.trim().length > 0) {
+				return summary;
+			}
+		}
+
+		return JSON.stringify(envelope);
+	})();
+
 	return {
-		content: [{ text: JSON.stringify(envelope), type: "text" as const }],
+		content: [{ text: plainText, type: "text" as const }],
 		structuredContent: envelope as Record<string, unknown>,
 	};
 }

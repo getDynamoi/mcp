@@ -20,6 +20,13 @@ describe("mcp/tools phase 1 definitions", () => {
 		}
 	});
 
+	test("read tool descriptions follow review-friendly metadata guidance", () => {
+		for (const def of PHASE_1_TOOL_DEFINITIONS) {
+			expect(def.description.startsWith("Use this when")).toBe(true);
+			expect(def.description).toContain("Do not use");
+		}
+	});
+
 	test("get campaign schema supports includeCountries", () => {
 		const parsed = DynamoiGetCampaignInputSchema.parse({
 			campaignId: "00000000-0000-0000-0000-000000000000",
@@ -42,6 +49,13 @@ describe("mcp/tools phase 2 definitions", () => {
 			expect(def.readOnlyHint).toBe(false);
 			expect(def.destructiveHint).toBe(false);
 			expect(def.openWorldHint).toBe(true);
+		}
+	});
+
+	test("write tool descriptions follow review-friendly metadata guidance", () => {
+		for (const def of PHASE_2_TOOL_DEFINITIONS) {
+			expect(def.description.startsWith("Use this when")).toBe(true);
+			expect(def.description).toContain("Do not use");
 		}
 	});
 
@@ -76,6 +90,13 @@ describe("mcp/tools phase 3 definitions", () => {
 			expect(typeof def.readOnlyHint).toBe("boolean");
 			expect(def.destructiveHint).toBe(false);
 			expect(typeof def.openWorldHint).toBe("boolean");
+		}
+	});
+
+	test("phase 3 tool descriptions follow review-friendly metadata guidance", () => {
+		for (const def of PHASE_3_TOOL_DEFINITIONS) {
+			expect(def.description.startsWith("Use this when")).toBe(true);
+			expect(def.description).toContain("Do not use");
 		}
 	});
 

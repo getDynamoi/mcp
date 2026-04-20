@@ -233,7 +233,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Get the currently authenticated Dynamoi account context — user ID, email, and accessible organizations/artists with resolved roles.",
+			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that.",
 		destructiveHint: false,
 		name: "dynamoi_get_current_user",
 		openWorldHint: false,
@@ -242,7 +242,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"List all music artists and YouTube channels the user manages. Returns each artist's subscription tier, billing status, active campaign count, and the user's role.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -251,7 +251,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Search across artists, ad campaigns, and smart links by name or URL. Find a specific Spotify release, YouTube campaign, or artist profile.",
+			"Use this when the user mentions an artist, release, campaign, or smart link but you do not yet know the exact record to inspect. Do not use this for analytics summaries or billing questions once you already know the target record.",
 		destructiveHint: false,
 		name: "dynamoi_search",
 		openWorldHint: false,
@@ -260,7 +260,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get a music artist or YouTube channel profile — connected platforms (Spotify, Meta, YouTube), subscription tier, billing status, and whether they're ready to launch campaigns.",
+			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist",
 		openWorldHint: false,
@@ -269,7 +269,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"List ad campaigns for an artist — each campaign's content title, type (Smart Campaign for Spotify or YouTube for channel growth), budget, status, and platforms. Supports status filtering and pagination.",
+			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that.",
 		destructiveHint: false,
 		name: "dynamoi_list_campaigns",
 		openWorldHint: false,
@@ -278,7 +278,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get full details for a campaign — budget, targeting, per-platform status for Meta and Google, smart link URL, and any blocked reasons with suggested next actions. By default, targeting returns a countryCount; pass includeCountries=true to include the full country list.",
+			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Do not use this for a campaign list; use dynamoi_list_campaigns instead. Pass includeCountries=true only when the full country list is needed.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
@@ -287,7 +287,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get performance analytics for a campaign — impressions, clicks, ad spend, CPC, CPM, and CTR. Optionally filter by date range. Returns per-platform breakdowns for Meta Ads and Google Ads.",
+			"Use this when the user asks how one campaign is performing across impressions, clicks, spend, CPC, CPM, or CTR. Do not use this for artist-wide performance across multiple campaigns; use dynamoi_get_artist_analytics instead.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign_analytics",
 		openWorldHint: false,
@@ -296,7 +296,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get performance analytics for an artist across all their campaigns — impressions, clicks, and billable ad spend with optional daily breakdowns per platform.",
+			"Use this when the user wants artist-level performance across all campaigns, optionally with daily breakdowns. Do not use this for one campaign's metrics; use dynamoi_get_campaign_analytics instead.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist_analytics",
 		openWorldHint: false,
@@ -305,7 +305,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Get an artist's billing summary — subscription tier, ad credit balance, billing status, and recent spend. Shows remaining credits and campaign usage for the current period.",
+			"Use this when the user asks about billing state, credit balance, promo limits, or whether billing is blocking launches for one artist. Do not use this for campaign analytics or platform connection troubleshooting.",
 		destructiveHint: false,
 		name: "dynamoi_get_billing",
 		openWorldHint: false,
@@ -314,7 +314,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Check connection health for Spotify, Meta (Facebook/Instagram), and YouTube. Shows connection status, token expiry, and what steps remain before campaigns can launch on each platform.",
+			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription state.",
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,
@@ -326,7 +326,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 export const PHASE_2_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Pause a running campaign, stopping ad delivery on Meta (Facebook/Instagram) and/or Google (YouTube). Returns per-platform results.",
+			"Use this when the user explicitly wants to pause a running campaign and stop ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
 		destructiveHint: false,
 		name: "dynamoi_pause_campaign",
 		openWorldHint: true,
@@ -335,7 +335,7 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Resume a paused campaign, restarting ad delivery on Meta and/or Google. Returns per-platform results.",
+			"Use this when the user explicitly wants to resume a paused campaign and restart ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
 		destructiveHint: false,
 		name: "dynamoi_resume_campaign",
 		openWorldHint: true,
@@ -344,7 +344,7 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Change a campaign's daily or total budget amount in USD. For total-budget campaigns, the end date can also be updated. Cannot switch between daily and total budget types.",
+			"Use this when the user explicitly wants to change a campaign budget, and optionally the end date for total-budget campaigns. Do not use this for read-only budget checks; this updates live campaign settings.",
 		destructiveHint: false,
 		name: "dynamoi_update_budget",
 		openWorldHint: true,
@@ -356,7 +356,7 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 export const PHASE_3_TOOL_DEFINITIONS = [
 	{
 		description:
-			"List an artist's uploaded creative assets (images and videos) available for campaign launches. Includes width/height (when available) and a computed aspect ratio to help pick the right creative.",
+			"Use this when the user wants to choose from uploaded images or videos that can be reused in a campaign launch. Do not use this when the user only wants campaign status or analytics. Use format=json only when you need asset IDs or URLs for a follow-up launch.",
 		destructiveHint: false,
 		name: "dynamoi_list_media_assets",
 		openWorldHint: false,
@@ -365,7 +365,7 @@ export const PHASE_3_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Launch a new campaign to promote a Spotify release (track, album, or playlist via Meta Ads) or grow a YouTube channel (via Google Ads with AdSense revenue optimization). Provide a client-generated request ID for safe retries.",
+			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the required launch details. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
 		destructiveHint: false,
 		name: "dynamoi_launch_campaign",
 		openWorldHint: true,

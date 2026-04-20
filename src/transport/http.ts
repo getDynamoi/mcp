@@ -131,7 +131,7 @@ export async function handleMcpHttpRequest(
 			});
 			cleanupTransports(Date.now());
 		},
-		sessionIdGenerator: isInit ? () => randomUUID() : undefined,
+		...(isInit ? { sessionIdGenerator: () => randomUUID() } : {}),
 	});
 
 	const server = options.createServer();

@@ -53,6 +53,7 @@
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
+		"typecheck": "tsgo --noEmit -p tsconfig.json",
 		"changeset": "changeset",
 		"changeset:version": "changeset version",
 		"changeset:publish": "changeset publish"
