@@ -287,7 +287,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks how one campaign is performing across impressions, clicks, spend, CPC, CPM, or CTR. Do not use this for artist-wide performance across multiple campaigns; use dynamoi_get_artist_analytics instead.",
+			"Use this when the user asks how one campaign is performing across impressions, clicks, spend, CPC, CPM, or CTR. Pass granularity=DAILY when the user asks for a daily breakdown. Do not use this for artist-wide performance across multiple campaigns; use dynamoi_get_artist_analytics instead.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign_analytics",
 		openWorldHint: false,
@@ -296,7 +296,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants artist-level performance across all campaigns, optionally with daily breakdowns. Do not use this for one campaign's metrics; use dynamoi_get_campaign_analytics instead.",
+			"Use this when the user wants artist-level performance across all campaigns, including 30-day rollups or daily breakdowns. Pass granularity=DAILY when the user asks for a daily breakdown. If they also want the strongest campaign, start here for the artist rollup and then use dynamoi_get_campaign_analytics for any campaign-level comparison. Do not use this for one campaign's metrics; use dynamoi_get_campaign_analytics instead.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist_analytics",
 		openWorldHint: false,
