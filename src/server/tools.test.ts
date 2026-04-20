@@ -138,5 +138,15 @@ describe("mcp/tools phase 3 definitions", () => {
 		expect(definition).toBeDefined();
 		expect(definition?.description).toContain("omit spotifyUrl and endDate");
 		expect(definition?.description).toContain("reviewer-safe defaults");
+		expect(definition?.description).toContain("Do not invent placeholder");
+	});
+
+	test("current user metadata discourages generic advice context fishing", () => {
+		const definition = PHASE_1_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_get_current_user",
+		);
+		expect(definition).toBeDefined();
+		expect(definition?.description).toContain("check context");
+		expect(definition?.description).toContain("generic Instagram");
 	});
 });

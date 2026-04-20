@@ -63,6 +63,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 					"",
 					"Ask any missing questions first (links, creative, budget, countries, dates).",
 					"For review/demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may proceed without asking for spotifyUrl or endDate.",
+					"When those review/demo fields are omitted, do not invent placeholder spotifyUrl or endDate values; omit them and let Dynamoi infer them.",
 					"Then propose the simplest campaign plan that fits today’s supported platforms:",
 					"- Smart Campaign (Meta) for Spotify/Apple Music releases",
 					"- YouTube campaign for videos",

@@ -218,7 +218,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that.",
+			"Use this when you need a quick overview of the signed-in Dynamoi account and how many organizations or artists it can access. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Do not use this to 'check context' before answering generic Instagram, lyrics, or marketing-advice questions.",
 		destructiveHint: false,
 		name: "dynamoi_get_current_user",
 		openWorldHint: false,
@@ -227,7 +227,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Do not use this for generic advice or to inspect account context unless the user actually asked about their Dynamoi roster.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -245,7 +245,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first.",
+			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first. Do not use this for generic advice questions that do not require account-specific data.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist",
 		openWorldHint: false,
@@ -350,7 +350,7 @@ export const PHASE_3_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
+			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
 		destructiveHint: false,
 		name: "dynamoi_launch_campaign",
 		openWorldHint: true,
