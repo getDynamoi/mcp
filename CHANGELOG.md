@@ -7,6 +7,18 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-05-01
+
+### Added
+
+- Added MCP prompts and resources that help assistants explain free Smart Links, find Smart Link URLs, and distinguish free Smart Links from paid managed advertising.
+
+### Changed
+
+- Smart Link create/get/list/search summaries now prioritize release title, artist name, public URL, status, and next actions for more natural assistant replies.
+- `dynamoi_search` summary rows keep artist and campaign IDs for follow-up tool calls while keeping Smart Link internal IDs out of user-facing summaries.
+- Smart Link tool descriptions and runtime instructions now tell assistants to lead with public URLs and avoid internal IDs unless the user asks.
+
 ## [0.5.2] - 2026-05-01
 
 ### Fixed
