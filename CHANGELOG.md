@@ -7,6 +7,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-05-01
+
+### Fixed
+
+- Synced the MCP server card package metadata to the published package version so registry consumers see the current npm release.
+
 ## [0.5.1] - 2026-05-01
 
 ### Fixed
