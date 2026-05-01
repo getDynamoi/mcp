@@ -6,6 +6,7 @@ type VerifiedAccessToken = {
 	aud: string | string[] | undefined;
 	exp: number;
 	clientId: string | null;
+	scopes: string[];
 };
 
 type VerifyAccessTokenOptions = {
@@ -39,6 +40,24 @@ function extractClientId(payload: Record<string, unknown>): string | null {
 	return null;
 }
 
+function extractScopes(payload: Record<string, unknown>): string[] {
+	const scope = payload["scope"];
+	if (typeof scope === "string") {
+		return scope
+			.split(/\s+/)
+			.map((part) => part.trim())
+			.filter((part) => part.length > 0);
+	}
+	const scopes = payload["scopes"];
+	if (Array.isArray(scopes)) {
+		return scopes.filter(
+			(scopeValue): scopeValue is string =>
+				typeof scopeValue === "string" && scopeValue.trim().length > 0,
+		);
+	}
+	return [];
+}
+
 export async function verifyAccessToken(
 	options: VerifyAccessTokenOptions,
 ): Promise<VerifiedAccessToken> {
@@ -70,6 +89,7 @@ export async function verifyAccessToken(
 		clientId: extractClientId(payload as Record<string, unknown>),
 		exp,
 		iss,
+		scopes: extractScopes(payload as Record<string, unknown>),
 		sub,
 	};
 }

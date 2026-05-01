@@ -2,10 +2,22 @@
 export {
 	buildProtectedResourceMetadata,
 	buildWwwAuthenticateHeader,
+	DYNAMOI_MCP_SCOPES,
 } from "./auth/protected-resource";
 export { verifyAccessToken } from "./auth/verify-token";
 export type { Phase3Adapter } from "./server/create-server";
 export { createDynamoiMcpServer } from "./server/create-server";
+export {
+	DynamoiCreateSmartLinkFromSpotifyInputSchema,
+	DynamoiGetSmartLinkAnalyticsInputSchema,
+	DynamoiGetSmartLinkArtistSettingsInputSchema,
+	DynamoiGetSmartLinkInputSchema,
+	DynamoiListSmartLinksInputSchema,
+	DynamoiPublishSmartLinkInputSchema,
+	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
+	DynamoiUpdateSmartLinkInputSchema,
+	PHASE_4_TOOL_DEFINITIONS,
+} from "./server/smart-link-tools";
 export {
 	DateRangeSchema,
 	DynamoiGetArtistAnalyticsInputSchema,
@@ -35,6 +47,7 @@ export type {
 	BillingStatus,
 	CampaignDisplayStatus,
 	CampaignType,
+	CreateSmartLinkFromSpotifyData,
 	GetArtistAnalyticsJsonData,
 	GetArtistAnalyticsSummaryData,
 	GetArtistData,
@@ -49,6 +62,10 @@ export type {
 	GetCurrentUserSummaryData,
 	GetPlatformStatusData,
 	GetPlatformStatusSummaryData,
+	GetSmartLinkAnalyticsData,
+	GetSmartLinkAnalyticsSummaryData,
+	GetSmartLinkData,
+	GetSmartLinkSummaryData,
 	LaunchCampaignData,
 	ListArtistsData,
 	ListArtistsSummaryData,
@@ -56,13 +73,20 @@ export type {
 	ListCampaignsSummaryData,
 	ListMediaAssetsData,
 	ListMediaAssetsSummaryData,
+	ListSmartLinksData,
+	ListSmartLinksSummaryData,
 	MediaAssetSummary,
 	MoneyDisplay,
 	PauseResumeCampaignData,
 	PauseResumePlatformResult,
+	PublishSmartLinkData,
 	ResultEnvelope,
 	SearchData,
 	SearchResultType,
 	SearchSummaryData,
+	SmartLinkSettingsData,
+	SmartLinkSummary,
 	UpdateBudgetData,
+	UpdateSmartLinkArtistSettingsData,
+	UpdateSmartLinkData,
 } from "./types";

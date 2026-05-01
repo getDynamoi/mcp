@@ -1,12 +1,12 @@
 # Dynamoi
 
-**Manage your music promotion and YouTube growth campaigns through ChatGPT, Claude, Gemini, and other AI assistants. Automated Meta and Google ad campaigns — no agency fees, no contracts.**
+**Manage your music promotion and YouTube growth campaigns through ChatGPT, Claude, Gemini, and other AI assistants. Free Smart Links and analytics; managed advertising on Meta, YouTube, and TikTok runs your campaigns end-to-end.**
 
 [![npm](https://img.shields.io/npm/v/@dynamoi/mcp)](https://www.npmjs.com/package/@dynamoi/mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 
-Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue — through automated Meta and Google ad campaigns. Your $300/month subscription converts 100% to ad credit, with a 100% match your first month ($600 to launch your first campaigns). No agency fees, no retainers, cancel anytime.
+Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. Managed advertising is separate: $300/month for Dynamoi to run your music campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard. First month: $600 launch budget. Cancel anytime.
 
 **Website:** [dynamoi.com](https://dynamoi.com)
 **Hosted endpoint:** `https://dynamoi.com/mcp`
@@ -30,7 +30,7 @@ https://dynamoi.com/mcp
 ## How It Works
 
 1. **Connect** — Point your AI assistant to Dynamoi's hosted endpoint. OAuth handles sign-in automatically.
-2. **Describe what you want** — Tell your AI to promote a Spotify release, grow a YouTube channel, check campaign performance, or adjust budgets.
+2. **Describe what you want** — Tell your AI to create a free Spotify Smart Link, promote a release, grow a YouTube channel, check performance, or adjust budgets.
 3. **Dynamoi handles the rest** — Campaigns run from Dynamoi-managed ad accounts. Complete a one-time platform connection, then the AI-powered engine deploys and optimizes your ads daily.
 
 White-glove onboarding and ongoing support included — need help setting up your Meta partnership or configuring your YouTube playlist? Our team walks you through every step, no extra charge.
@@ -52,6 +52,10 @@ White-glove onboarding and ongoing support included — need help setting up you
 | `dynamoi_get_artist_analytics` | Artist-level rollup analytics across all campaigns — totals + optional daily rows by platform |
 | `dynamoi_get_billing` | Credit balance, subscription tier, billing status, and recent spend |
 | `dynamoi_get_platform_status` | Connection health for Spotify, Meta, and YouTube — status, expiry, next steps |
+| `dynamoi_list_smart_links` | List free Smart Links for one artist with publish, render, claim, and public URL status |
+| `dynamoi_get_smart_link` | Full Smart Link details — release metadata, public URL, statuses, theme, and next actions |
+| `dynamoi_get_smart_link_analytics` | Aggregate Smart Link visits and clicks with optional daily rows and capped breakdowns |
+| `dynamoi_get_smart_link_artist_settings` | Artist-level Smart Link defaults including theme and validated tracking pixel IDs |
 
 ### Write Tools
 
@@ -60,12 +64,17 @@ White-glove onboarding and ongoing support included — need help setting up you
 | `dynamoi_pause_campaign` | Pause a running campaign on Meta and/or Google |
 | `dynamoi_resume_campaign` | Resume a paused campaign on Meta and/or Google |
 | `dynamoi_update_budget` | Change campaign budget amount in USD (daily or total) |
+| `dynamoi_update_smart_link` | Update a Smart Link custom description and queue rerendering |
+| `dynamoi_update_smart_link_artist_settings` | Update artist-level Smart Link theme and validated Meta, TikTok, or Google Ads pixel IDs |
+| `dynamoi_publish_smart_link` | Publish an eligible Smart Link and queue rendering |
+| `dynamoi_unpublish_smart_link` | Unpublish a Smart Link and queue public artifact removal |
 
 ### Workflow Tools
 
 | Tool | Description |
 |---|---|
 | `dynamoi_list_media_assets` | Browse uploaded creative assets for campaign launches |
+| `dynamoi_create_smart_link_from_spotify` | Create or return an existing free Smart Link from a Spotify artist, album, or track URL |
 | `dynamoi_launch_campaign` | Launch a new Spotify promotion or YouTube growth campaign |
 
 ---
@@ -74,7 +83,7 @@ White-glove onboarding and ongoing support included — need help setting up you
 
 ### Music Artists
 
-Promote singles, albums, and playlists to new listeners on Spotify. Dynamoi creates targeted Facebook and Instagram ads that drive real streams — no bots, no pay-for-play. Smart link landing pages are included free and unlimited for every release (Spotify, Apple Music, YouTube Music, and 80+ platforms). Works with any distributor — DistroKid, TuneCore, CD Baby, UnitedMasters, AWAL, or direct through a label. Set a budget, pick your target countries, and launch through your AI assistant.
+Promote singles, albums, and playlists to new listeners on Spotify. Dynamoi creates targeted Facebook and Instagram ads that drive real streams — no bots, no pay-for-play. Campaign records may include landing-page routing or existing smart-link URLs when those assets are already available. Works with any distributor — DistroKid, TuneCore, CD Baby, UnitedMasters, AWAL, or direct through a label. Set a budget, pick your target countries, and start the launch workflow through your AI assistant.
 
 ### Record Labels
 
@@ -92,22 +101,24 @@ Campaigns require playlists so one paid view leads to multiple organic views as 
 
 Unlike smart-link-only services like Feature.fm, Linkfire, Hypeddit, and ToneDen, Dynamoi is an end-to-end music and YouTube promotion system:
 
-- **No agency fees** — $300/month converts 100% to ad credit. First month: 100% match ($600 ad credit). No retainers, no contracts, cancel anytime.
-- **More than landing pages** — free unlimited smart links are just the starting point. Dynamoi adds AI-powered ad campaigns, daily optimization, transparent analytics, and team management on top.
+- **Free Smart Links** — Smart Links have no per-link fee, no subscription requirement, and no upgrade gate. Create Spotify artist, album, and track links, manage themes and pixel IDs, publish pages, and read aggregate link analytics.
+- **Managed advertising** — paid campaigns and ad budgets are separate from Smart Links. Dynamoi runs campaigns across Meta, YouTube, and TikTok end-to-end when users choose managed advertising.
+- **More than landing pages** — free Smart Links are the starting point. Dynamoi adds approved ad campaigns, daily optimization, and team management on top.
 - **Dynamoi-managed ad accounts** — complete a one-time platform connection (Meta partnership or YouTube link), then everything runs automatically. No ad dashboards to manage.
 - **Revenue-optimized YouTube campaigns** — Google Ads can't see which views make money. Dynamoi merges ad costs with AdSense revenue to optimize bids per country based on real viewer revenue. The music industry spends millions on YouTube marketing with near-zero ROI — Dynamoi starts optimizing for it.
 - **White-glove support** — every client gets hands-on help with platform setup, channel optimization, and campaign strategy. Not a knowledge base — real support, step by step.
 - **Built for teams** — admin, editor, and viewer roles with unlimited seats. Granular permissions at organization and artist level. No per-seat charges.
-- **Transparent data** — real analytics on spend, performance, and efficiency. No black boxes.
 
 ---
 
 ## Pricing
 
-**$300/mo** — your subscription converts **100% to ad credit**. No agency fees, no retainers.
+**Free Smart Links** — no per-link fee, no subscription requirement, and no upgrade gate for Smart Links, themes, pixel IDs, publishing, and aggregate link analytics.
 
-- **100% match on your first month** — pay $300, get $600 in ad credit
-- Credits roll over for 12 months
+**$300/month** — managed advertising. Dynamoi runs your music campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard.
+
+- **First month $600 launch budget** — a one-time match to launch your first campaigns
+- Unused budget rolls over for 12 months
 - Unlimited team seats and unlimited artists included
 - No contracts, cancel anytime
 
@@ -141,6 +152,8 @@ The MCP server includes static resources to help AI assistants make better decis
 | Resource | What It Provides |
 |---|---|
 | `dynamoi://platform/pricing` | Tiers, activation bonus, credit structure, budget minimums |
+| `dynamoi://smart-links/free-plan` | Smart Link free-plan terms and the managed-advertising distinction |
+| `dynamoi://smart-links/capabilities` | Supported Spotify inputs, analytics, themes, pixels, publish, and unpublish behavior |
 | `dynamoi://platform/supported-countries` | Valid country codes for targeting |
 | `dynamoi://platform/content-types` | Track, Album, Playlist, Video + requirements |
 | `dynamoi://platform/campaign-statuses` | Status names, descriptions, valid transitions |
@@ -190,3 +203,8 @@ MIT — see [LICENSE](./LICENSE) for details.
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md).
+> **"Create a Smart Link for this Spotify track."**
+> → AI calls `dynamoi_create_smart_link_from_spotify`, returns the free Smart Link URL, and explains that creating the link does not create a paid campaign or spend ad budget.
+
+> **"Add my Meta pixel to my Smart Links."**
+> → AI confirms the pixel ID, calls `dynamoi_update_smart_link_artist_settings`, and queues rerendering for existing links.

@@ -60,6 +60,7 @@ export type SearchData = {
 		name: string;
 		status?: string;
 		artistName?: string;
+		resultReason?: string;
 	}>;
 	nextCursor?: string;
 };
@@ -80,6 +81,142 @@ export type GetCurrentUserData = {
 	organizationCount: number;
 	artistCount: number;
 	hints: string[];
+};
+
+export type SmartLinkClaimStatus =
+	| "auto_approved"
+	| "pending_ops_review"
+	| "approved_by_ops"
+	| "rejected";
+export type SmartLinkPublishState = "published" | "unpublished";
+export type SmartLinkTakedownStatus = "none" | "active" | "resolved";
+export type SmartLinkOdesliStatus = "pending" | "resolved" | "failed";
+export type SmartLinkRenderState =
+	| "queued"
+	| "rendering"
+	| "rendered"
+	| "failed";
+export type SmartLinkTheme = "classic" | "brutalist" | "aurora" | "cinematic";
+
+export type SmartLinkSummary = {
+	id: string;
+	artistId: string;
+	artistName: string;
+	releaseTitle: string;
+	releaseType: string;
+	releaseSlug: string;
+	spotifyUrl: string | null;
+	publicUrl: string;
+	localizedPublicUrls?: string[];
+	isPublic: boolean;
+	claimStatus: SmartLinkClaimStatus;
+	publishState: SmartLinkPublishState;
+	takedownStatus: SmartLinkTakedownStatus;
+	odesliStatus: SmartLinkOdesliStatus;
+	renderState: SmartLinkRenderState;
+	theme: SmartLinkTheme;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type SmartLinkSettingsData = {
+	artistId: string;
+	artistName: string;
+	isEnabled: boolean;
+	defaultTheme: SmartLinkTheme;
+	pixels: {
+		metaPixelId: string | null;
+		tiktokPixelId: string | null;
+		googleAdsConversionId: string | null;
+	};
+	availableThemes: SmartLinkTheme[];
+	summary?: string;
+};
+
+export type ListSmartLinksData = {
+	smartLinks: SmartLinkSummary[];
+	nextCursor?: string;
+};
+
+export type ListSmartLinksSummaryData = {
+	summary: string;
+	totalCount: number;
+	nextCursor?: string;
+};
+
+export type GetSmartLinkData = SmartLinkSummary & {
+	customDescription: string | null;
+	originalSpotifyUrl: string | null;
+	spotifyDiscographyId: string;
+	resourceUri: string;
+	settingsResourceUri: string;
+	nextActions: string[];
+	warnings?: string[];
+	actionRequired?: string[];
+};
+
+export type GetSmartLinkSummaryData = {
+	summary: string;
+	warnings?: string[];
+	actionRequired?: string[];
+};
+
+export type SmartLinkAnalyticsTotals = {
+	anonymousVisits: number;
+	streamingServiceClicks: number;
+	shareClicks: number;
+	promoteCtaClicks: number;
+};
+
+export type GetSmartLinkAnalyticsData = {
+	playLinkId: string;
+	artistId: string;
+	releaseTitle: string;
+	dateRange: { start: string; end: string };
+	totals: SmartLinkAnalyticsTotals;
+	daily?: Array<SmartLinkAnalyticsTotals & { date: string }>;
+	breakdowns?: {
+		serviceClicks?: Record<string, number>;
+		countryViews?: Record<string, number>;
+		countryClicks?: Record<string, number>;
+		referrerViews?: Record<string, number>;
+		referrerClicks?: Record<string, number>;
+		utmViews?: Record<string, number>;
+		utmClicks?: Record<string, number>;
+		deviceViews?: Record<string, number>;
+		deviceClicks?: Record<string, number>;
+		localeViews?: Record<string, number>;
+		localeClicks?: Record<string, number>;
+		themeViews?: Record<string, number>;
+		themeClicks?: Record<string, number>;
+	};
+	warnings?: string[];
+};
+
+export type GetSmartLinkAnalyticsSummaryData = {
+	summary: string;
+	warnings?: string[];
+};
+
+export type CreateSmartLinkFromSpotifyData = GetSmartLinkData & {
+	outcome: "created" | "existing";
+	workflowRunId: string | null;
+	workflowWarning: string | null;
+};
+
+export type UpdateSmartLinkData = GetSmartLinkData & {
+	renderRunId: string | null;
+	renderWarning: string | null;
+};
+
+export type UpdateSmartLinkArtistSettingsData = SmartLinkSettingsData & {
+	renderQueuedCount: number;
+	renderWarning: string | null;
+};
+
+export type PublishSmartLinkData = GetSmartLinkData & {
+	workflowRunId: string | null;
+	workflowWarning: string | null;
 };
 
 export type GetCurrentUserSummaryData = {
@@ -344,6 +481,8 @@ export type PauseResumeCampaignData = {
 	contentTitle: string;
 	newStatus: "PAUSED" | "ACTIVE";
 	platformResults: PauseResumePlatformResult[];
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type UpdateBudgetData = {
@@ -353,11 +492,14 @@ export type UpdateBudgetData = {
 	newBudget: MoneyDisplay;
 	budgetType: "DAILY" | "TOTAL";
 	endDate?: string;
+	warnings?: string[];
+	actionRequired?: string[];
 };
 
 export type MediaAssetSummary = {
 	id: string;
-	url: string;
+	url?: string;
+	urlExpiresAt?: string;
 	fileType: string;
 	fileName?: string;
 	width?: number;
@@ -386,5 +528,8 @@ export type LaunchCampaignData = {
 	budget: MoneyDisplay;
 	budgetType: "DAILY" | "TOTAL";
 	platforms: string[];
+	deliveryState: "ACTIVE" | "PENDING_REVIEW" | "CONTENT_VALIDATION";
+	isLive: boolean;
 	nextSteps: string[];
+	warnings?: string[];
 };

@@ -118,6 +118,10 @@ export async function handleMcpHttpRequest(
 		return response;
 	}
 
+	if (sessionId && !isInitializeRequest(options.parsedBody)) {
+		return jsonRpcSessionNotFound();
+	}
+
 	// Create a new transport per request. If the request is an initialize call,
 	// we attach a session ID generator so clients that support sessions can reuse it.
 	const isInit = isInitializeRequest(options.parsedBody);

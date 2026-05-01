@@ -14,6 +14,34 @@ function asTextPrompt(text: string) {
 
 export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
+		"dynamoi_create_free_smart_link",
+		{
+			argsSchema: {
+				artistId: z.string().uuid().optional(),
+				spotifyUrl: z.string().trim().optional(),
+			},
+			description:
+				"Create a free Smart Link from a Spotify artist, album, or track URL.",
+			title: "Create Free Smart Link",
+		},
+		(args) =>
+			asTextPrompt(
+				[
+					"Create a free Dynamoi Smart Link.",
+					args.artistId
+						? `Artist ID: ${args.artistId}`
+						: "If no artistId is provided, list artists first and ask me which artist owns the link.",
+					args.spotifyUrl
+						? `Spotify URL: ${args.spotifyUrl}`
+						: "Ask me for a Spotify artist, album, or track URL. Playlist URLs are not supported today.",
+					"",
+					"Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid campaign.",
+					"Once the artist and Spotify URL are known, use dynamoi_create_smart_link_from_spotify.",
+				].join("\n"),
+			),
+	);
+
+	server.registerPrompt(
 		"dynamoi_audit_campaigns",
 		{
 			argsSchema: {

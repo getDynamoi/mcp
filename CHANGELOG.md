@@ -7,6 +7,24 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-30
+
+### Added
+
+- New free Smart Link tools: `dynamoi_create_smart_link_from_spotify`, `dynamoi_list_smart_links`, `dynamoi_get_smart_link`, `dynamoi_get_smart_link_analytics`, `dynamoi_get_smart_link_artist_settings`, `dynamoi_update_smart_link`, `dynamoi_update_smart_link_artist_settings`, `dynamoi_publish_smart_link`, and `dynamoi_unpublish_smart_link`.
+- Smart Link MCP resources documenting free-plan terms, capabilities, Spotify inputs, themes, pixel policy, and status meanings.
+- OAuth protected-resource metadata now advertises the `dynamoi:smart_links.write` scope.
+
+### Changed
+
+- `dynamoi_search` now searches PlayLink-native Smart Links instead of legacy campaign SmartLink records.
+- Runtime instructions, package metadata, and public discovery copy now distinguish free Smart Links from paid managed advertising campaigns.
+
+### Fixed
+
+- Smart Link analytics breakdowns now aggregate across the requested date range instead of showing only the last day.
+- Creating a Smart Link from Spotify no longer returns a soft-deleted link as a successful existing result.
+
 ## [0.4.1] - 2026-02-13
 
 ### Added

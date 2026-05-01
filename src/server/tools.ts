@@ -1,21 +1,66 @@
 import * as z from "zod/v4";
+import {
+	AnyOutputEnvelopeSchema,
+	LaunchCampaignOutputEnvelopeSchema,
+	ListMediaAssetsOutputEnvelopeSchema,
+	PauseResumeOutputEnvelopeSchema,
+	UpdateBudgetOutputEnvelopeSchema,
+} from "./output-schemas";
 
 export const ToolFormatSchema = z.enum(["json", "summary"]);
+const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const UserIntentSummarySchema = z.string().trim().max(500).optional();
+const ClientRequestIdSchema = z.string().uuid().optional();
+const ExpectedCampaignStatusSchema = z
+	.enum([
+		"AWAITING_SMART_LINK",
+		"ACTIVE",
+		"ARCHIVED",
+		"CONTENT_VALIDATION",
+		"DEPLOYING",
+		"ENDED",
+		"FAILED",
+		"PAUSED",
+		"READY_FOR_REVIEW",
+		"SUBSCRIPTION_PAUSED",
+	])
+	.optional();
 
-export const DynamoiListArtistsInputSchema = z.object({
-	cursor: z.string().optional(),
-	format: ToolFormatSchema.optional(),
-	limit: z.number().int().min(1).max(50).optional(),
-});
+function isValidCalendarDate(value: string): boolean {
+	const date = new Date(`${value}T00:00:00.000Z`);
+	return (
+		Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+	);
+}
 
-export const DynamoiSearchInputSchema = z.object({
-	artistId: z.string().uuid().optional(),
-	cursor: z.string().optional(),
-	format: ToolFormatSchema.optional(),
-	limit: z.number().int().min(1).max(50).optional(),
-	query: z.string().trim().optional(),
-	type: z.enum(["artist", "campaign", "smartlink"]).optional(),
-});
+export const DynamoiListArtistsInputSchema = z
+	.object({
+		cursor: z.string().optional(),
+		format: ToolFormatSchema.optional(),
+		limit: z.number().int().min(1).max(50).optional(),
+	})
+	.strict();
+
+export const DynamoiSearchInputSchema = z
+	.object({
+		artistId: z.string().uuid().optional(),
+		cursor: z.string().optional(),
+		format: ToolFormatSchema.optional(),
+		includeArchived: z.boolean().optional(),
+		limit: z.number().int().min(1).max(50).optional(),
+		query: z.string().trim().max(120).optional(),
+		type: z.enum(["artist", "campaign", "smartlink"]).optional(),
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (!(data.type || data.query)) {
+			ctx.addIssue({
+				code: "custom",
+				message: "query is required when type is not specified",
+				path: ["query"],
+			});
+		}
+	});
 
 const DynamoiGetCurrentUserIntentSchema = z.enum([
 	"account_overview",
@@ -24,94 +69,157 @@ const DynamoiGetCurrentUserIntentSchema = z.enum([
 	"platform_connection_check",
 ]);
 
-export const DynamoiGetCurrentUserInputSchema = z.object({
-	format: ToolFormatSchema.optional(),
-	intent: DynamoiGetCurrentUserIntentSchema,
-});
+export const DynamoiGetCurrentUserInputSchema = z
+	.object({
+		format: ToolFormatSchema.optional(),
+		intent: DynamoiGetCurrentUserIntentSchema,
+	})
+	.strict();
 
-export const DynamoiGetArtistInputSchema = z.object({
-	artistId: z.string().uuid(),
-	format: ToolFormatSchema.optional(),
-});
+export const DynamoiGetArtistInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+	})
+	.strict();
 
-export const DynamoiListCampaignsInputSchema = z.object({
-	artistId: z.string().uuid(),
-	campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]).optional(),
-	cursor: z.string().optional(),
-	format: ToolFormatSchema.optional(),
-	limit: z.number().int().min(1).max(50).optional(),
-	status: z.string().trim().optional(),
-});
+export const DynamoiListCampaignsInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]).optional(),
+		cursor: z.string().optional(),
+		format: ToolFormatSchema.optional(),
+		limit: z.number().int().min(1).max(50).optional(),
+		status: z.string().trim().optional(),
+	})
+	.strict();
 
-export const DynamoiGetCampaignInputSchema = z.object({
-	campaignId: z.string().uuid(),
-	format: ToolFormatSchema.optional(),
-	includeCountries: z.boolean().optional(),
-});
+export const DynamoiGetCampaignInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+		includeCountries: z.boolean().optional(),
+	})
+	.strict();
 
-export const DateRangeSchema = z.object({
-	end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-	start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-});
+export const DateRangeSchema = z
+	.object({
+		end: IsoDateSchema,
+		start: IsoDateSchema,
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (!isValidCalendarDate(data.start)) {
+			ctx.addIssue({
+				code: "custom",
+				message: "start must be a valid calendar date",
+				path: ["start"],
+			});
+		}
+		if (!isValidCalendarDate(data.end)) {
+			ctx.addIssue({
+				code: "custom",
+				message: "end must be a valid calendar date",
+				path: ["end"],
+			});
+		}
+		if (
+			isValidCalendarDate(data.start) &&
+			isValidCalendarDate(data.end) &&
+			data.start > data.end
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "start must be on or before end",
+				path: ["start"],
+			});
+		}
+	});
 
-export const DynamoiGetCampaignAnalyticsInputSchema = z.object({
-	campaignId: z.string().uuid(),
-	dateRange: DateRangeSchema.optional(),
-	format: ToolFormatSchema.optional(),
-	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
-});
+export const DynamoiGetCampaignAnalyticsInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
+		dateRange: DateRangeSchema.optional(),
+		format: ToolFormatSchema.optional(),
+		granularity: z.enum(["TOTAL", "DAILY"]).optional(),
+	})
+	.strict();
 
-export const DynamoiGetArtistAnalyticsInputSchema = z.object({
-	artistId: z.string().uuid(),
-	dateRange: DateRangeSchema.optional(),
-	format: ToolFormatSchema.optional(),
-	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
-});
+export const DynamoiGetArtistAnalyticsInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		dateRange: DateRangeSchema.optional(),
+		format: ToolFormatSchema.optional(),
+		granularity: z.enum(["TOTAL", "DAILY"]).optional(),
+	})
+	.strict();
 
-export const DynamoiGetBillingInputSchema = z.object({
-	artistId: z.string().uuid(),
-	format: ToolFormatSchema.optional(),
-});
+export const DynamoiGetBillingInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+	})
+	.strict();
 
-export const DynamoiGetPlatformStatusInputSchema = z.object({
-	artistId: z.string().uuid(),
-	format: ToolFormatSchema.optional(),
-});
+export const DynamoiGetPlatformStatusInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+	})
+	.strict();
 
-export const DynamoiPauseCampaignInputSchema = z.object({
-	campaignId: z.string().uuid(),
-});
+export const DynamoiPauseCampaignInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		expectedCurrentStatus: ExpectedCampaignStatusSchema,
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
 
-export const DynamoiResumeCampaignInputSchema = z.object({
-	campaignId: z.string().uuid(),
-});
+export const DynamoiResumeCampaignInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		expectedCurrentStatus: ExpectedCampaignStatusSchema,
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
 
-export const DynamoiUpdateBudgetInputSchema = z.object({
-	budgetAmount: z.number().finite().positive(),
-	campaignId: z.string().uuid(),
-	endDate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/)
-		.optional(),
-});
+export const DynamoiUpdateBudgetInputSchema = z
+	.object({
+		budgetAmount: z.number().finite().positive(),
+		campaignId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		endDate: IsoDateSchema.optional(),
+		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
+		expectedCurrentEndDate: IsoDateSchema.optional(),
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
 
-const LocationTargetSchema = z.object({
-	code: z.string().min(1),
-	name: z.string().min(1),
-});
+const LocationTargetSchema = z
+	.object({
+		code: z.string().trim().min(1).max(8),
+		name: z.string().trim().min(1).max(120),
+	})
+	.strict();
 
-export const DynamoiListMediaAssetsInputSchema = z.object({
-	artistId: z.string().uuid(),
-	cursor: z.string().optional(),
-	format: ToolFormatSchema.optional(),
-	limit: z.number().int().min(1).max(50).optional(),
-});
+export const DynamoiListMediaAssetsInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		cursor: z.string().optional(),
+		format: ToolFormatSchema.optional(),
+		includeUrls: z.boolean().optional(),
+		limit: z.number().int().min(1).max(50).optional(),
+	})
+	.strict();
 
 export const DynamoiLaunchCampaignInputSchema = z
 	.object({
 		// Creative
-		adCopy: z.string().trim().optional(),
-		appleMusicUrl: z.string().trim().min(1).optional(),
+		adCopy: z.string().trim().max(500).optional(),
+		appleMusicUrl: z.string().trim().min(1).max(500).optional(),
 		artistId: z.string().uuid(),
 
 		// Budget
@@ -127,7 +235,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 		clientRequestId: z.string().uuid(),
 
 		// Content
-		contentTitle: z.string().trim().min(1),
+		contentTitle: z.string().trim().min(1).max(160),
 		contentType: z.enum(["TRACK", "ALBUM", "PLAYLIST", "VIDEO"]),
 		endDate: z
 			.string()
@@ -139,10 +247,12 @@ export const DynamoiLaunchCampaignInputSchema = z
 
 		// Smart Campaign creative selection (existing assets only in Phase 3)
 		mediaAssetIds: z.array(z.string().uuid()).optional(),
-		spotifyUrl: z.string().trim().min(1).optional(),
+		spotifyUrl: z.string().trim().min(1).max(500).optional(),
 		useAiGeneratedCopy: z.boolean().optional(),
-		youtubeVideoId: z.string().trim().min(1).optional(),
+		userIntentSummary: UserIntentSummarySchema,
+		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
 	})
+	.strict()
 	.superRefine((data, ctx) => {
 		const sum = Object.values(data.budgetSplits ?? {}).reduce(
 			(acc, v) => acc + (Number.isFinite(v) ? v : 0),
@@ -230,8 +340,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_account_overview",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetCurrentUserInputSchema,
+		title: "Get Account Overview",
 	},
 	{
 		description:
@@ -239,8 +351,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiListArtistsInputSchema,
+		title: "List Artists",
 	},
 	{
 		description:
@@ -248,8 +362,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_search",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiSearchInputSchema,
+		title: "Search Dynamoi",
 	},
 	{
 		description:
@@ -257,8 +373,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_artist",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetArtistInputSchema,
+		title: "Get Artist",
 	},
 	{
 		description:
@@ -266,8 +384,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_list_campaigns",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiListCampaignsInputSchema,
+		title: "List Campaigns",
 	},
 	{
 		description:
@@ -275,8 +395,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetCampaignInputSchema,
+		title: "Get Campaign",
 	},
 	{
 		description:
@@ -284,8 +406,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_campaign_analytics",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetCampaignAnalyticsInputSchema,
+		title: "Get Campaign Analytics",
 	},
 	{
 		description:
@@ -293,8 +417,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_artist_analytics",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetArtistAnalyticsInputSchema,
+		title: "Get Artist Analytics",
 	},
 	{
 		description:
@@ -302,8 +428,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_billing",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetBillingInputSchema,
+		title: "Get Billing",
 	},
 	{
 		description:
@@ -311,8 +439,10 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetPlatformStatusInputSchema,
+		title: "Get Platform Status",
 	},
 ] as const;
 
@@ -320,49 +450,63 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 	{
 		description:
 			"Use this when the user explicitly wants to pause a running campaign and stop ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
-		destructiveHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
 		name: "dynamoi_pause_campaign",
 		openWorldHint: true,
+		outputSchema: PauseResumeOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiPauseCampaignInputSchema,
+		title: "Pause Campaign",
 	},
 	{
 		description:
 			"Use this when the user explicitly wants to resume a paused campaign and restart ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
-		destructiveHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
 		name: "dynamoi_resume_campaign",
 		openWorldHint: true,
+		outputSchema: PauseResumeOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiResumeCampaignInputSchema,
+		title: "Resume Campaign",
 	},
 	{
 		description:
 			"Use this when the user explicitly wants to change a campaign budget, and optionally the end date for total-budget campaigns. Do not use this for read-only budget checks; this updates live campaign settings.",
-		destructiveHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
 		name: "dynamoi_update_budget",
 		openWorldHint: true,
+		outputSchema: UpdateBudgetOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiUpdateBudgetInputSchema,
+		title: "Update Campaign Budget",
 	},
 ] as const;
 
 export const PHASE_3_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user wants to choose from uploaded images or videos that can be reused in a campaign launch. Do not use this when the user only wants campaign status or analytics. Use format=json only when you need asset IDs or URLs for a follow-up launch.",
+			"Use this when the user wants to choose from uploaded images or videos that can be reused in a campaign launch. Do not use this when the user only wants campaign status or analytics. Use format=json when you need asset IDs for a follow-up launch. Request includeUrls only when the assistant must display or inspect public-safe asset URLs.",
 		destructiveHint: false,
 		name: "dynamoi_list_media_assets",
 		openWorldHint: false,
+		outputSchema: ListMediaAssetsOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiListMediaAssetsInputSchema,
+		title: "List Media Assets",
 	},
 	{
 		description:
-			"Use this when the user explicitly wants to launch a new Smart Campaign or YouTube Campaign and has provided the launch details. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more. Do not use this for recommendations or previews; this creates a real campaign or demo-safe simulated campaign.",
+			"Use this when the user explicitly wants to create a new Smart Campaign or YouTube Campaign and start the launch workflow with provided details. Ads are not necessarily live until the returned delivery state is ACTIVE. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more. Do not use this for recommendations or previews; this creates a real campaign workflow or demo-safe simulated campaign.",
 		destructiveHint: false,
+		idempotentHint: true,
 		name: "dynamoi_launch_campaign",
 		openWorldHint: true,
+		outputSchema: LaunchCampaignOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiLaunchCampaignInputSchema,
+		title: "Start Campaign Launch Workflow",
 	},
 ] as const;

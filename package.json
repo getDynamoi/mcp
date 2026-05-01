@@ -1,11 +1,11 @@
 {
 	"$schema": "https://www.schemastore.org/package",
 	"name": "@dynamoi/mcp",
-	"version": "0.4.1",
+	"version": "0.5.0",
 	"mcpName": "io.github.getDynamoi/dynamoi",
 	"type": "module",
 	"license": "MIT",
-	"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Automated Meta and Google ad campaigns for artists, labels, and YouTube creators — no agency fees.",
+	"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Free Smart Links and analytics; managed advertising on Meta, YouTube, and TikTok runs your campaigns end-to-end for $300/month.",
 	"keywords": [
 		"mcp",
 		"model-context-protocol",

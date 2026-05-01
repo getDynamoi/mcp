@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
+	DynamoiCreateSmartLinkFromSpotifyInputSchema,
+	DynamoiPublishSmartLinkInputSchema,
+	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
+	DynamoiUpdateSmartLinkInputSchema,
+	PHASE_4_TOOL_DEFINITIONS,
+} from "./smart-link-tools";
+import {
 	DynamoiGetArtistAnalyticsInputSchema,
 	DynamoiGetCampaignInputSchema,
 	DynamoiGetCurrentUserInputSchema,
@@ -18,6 +25,7 @@ describe("mcp/tools phase 1 definitions", () => {
 			expect(def.readOnlyHint).toBe(true);
 			expect(def.destructiveHint).toBe(false);
 			expect(def.openWorldHint).toBe(false);
+			expect(def.outputSchema).toBeDefined();
 		}
 	});
 
@@ -66,8 +74,11 @@ describe("mcp/tools phase 2 definitions", () => {
 	test("write tools include required annotations", () => {
 		for (const def of PHASE_2_TOOL_DEFINITIONS) {
 			expect(def.readOnlyHint).toBe(false);
-			expect(def.destructiveHint).toBe(false);
+			expect(def.destructiveHint).toBe(true);
+			expect(def.idempotentHint).toBe(true);
 			expect(def.openWorldHint).toBe(true);
+			expect(def.outputSchema).toBeDefined();
+			expect(def.title.length).toBeGreaterThan(0);
 		}
 	});
 
@@ -81,15 +92,44 @@ describe("mcp/tools phase 2 definitions", () => {
 	test("pause schema accepts uuid campaignId", () => {
 		const parsed = DynamoiPauseCampaignInputSchema.parse({
 			campaignId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			expectedCurrentStatus: "ACTIVE",
+			userIntentSummary: "Pause because the artist asked to stop delivery.",
 		});
 		expect(parsed.campaignId).toBe("00000000-0000-0000-0000-000000000000");
+		expect(parsed.clientRequestId).toBe("11111111-1111-4111-8111-111111111111");
 	});
 
 	test("resume schema accepts uuid campaignId", () => {
 		const parsed = DynamoiResumeCampaignInputSchema.parse({
 			campaignId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			expectedCurrentStatus: "PAUSED",
+			userIntentSummary: "Resume after confirming billing is ready.",
 		});
 		expect(parsed.campaignId).toBe("00000000-0000-0000-0000-000000000000");
+		expect(parsed.expectedCurrentStatus).toBe("PAUSED");
+	});
+
+	test("pause and resume schemas accept campaign read status guards", () => {
+		for (const expectedCurrentStatus of [
+			"AWAITING_SMART_LINK",
+			"CONTENT_VALIDATION",
+			"DEPLOYING",
+			"READY_FOR_REVIEW",
+			"ACTIVE",
+			"PAUSED",
+			"SUBSCRIPTION_PAUSED",
+			"ARCHIVED",
+			"FAILED",
+			"ENDED",
+		]) {
+			const parsed = DynamoiPauseCampaignInputSchema.parse({
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				expectedCurrentStatus,
+			});
+			expect(parsed.expectedCurrentStatus).toBe(expectedCurrentStatus);
+		}
 	});
 
 	test("update budget schema requires positive budgetAmount", () => {
@@ -100,6 +140,20 @@ describe("mcp/tools phase 2 definitions", () => {
 			}),
 		).toThrow();
 	});
+
+	test("update budget schema accepts idempotency and expected-state guards", () => {
+		const parsed = DynamoiUpdateBudgetInputSchema.parse({
+			budgetAmount: 250,
+			campaignId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			expectedCurrentBudgetAmount: 100,
+			expectedCurrentEndDate: "2026-05-15",
+			userIntentSummary: "Increase after checking campaign performance.",
+		});
+
+		expect(parsed.clientRequestId).toBe("11111111-1111-4111-8111-111111111111");
+		expect(parsed.expectedCurrentEndDate).toBe("2026-05-15");
+	});
 });
 
 describe("mcp/tools phase 3 definitions", () => {
@@ -109,6 +163,8 @@ describe("mcp/tools phase 3 definitions", () => {
 			expect(typeof def.readOnlyHint).toBe("boolean");
 			expect(def.destructiveHint).toBe(false);
 			expect(typeof def.openWorldHint).toBe("boolean");
+			expect(def.outputSchema).toBeDefined();
+			expect(def.title.length).toBeGreaterThan(0);
 		}
 	});
 
@@ -172,5 +228,85 @@ describe("mcp/tools phase 3 definitions", () => {
 		expect(definition?.description).toContain(
 			"answer from the returned campaign details directly",
 		);
+	});
+
+	test("schemas reject unknown properties", () => {
+		expect(() =>
+			DynamoiGetCampaignInputSchema.parse({
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				unexpected: true,
+			}),
+		).toThrow();
+	});
+});
+
+describe("mcp/tools phase 4 smart link definitions", () => {
+	test("smart link tools include required annotations and output schemas", () => {
+		for (const def of PHASE_4_TOOL_DEFINITIONS) {
+			expect(typeof def.readOnlyHint).toBe("boolean");
+			expect(typeof def.destructiveHint).toBe("boolean");
+			expect(typeof def.openWorldHint).toBe("boolean");
+			expect(def.outputSchema).toBeDefined();
+			expect(def.title.length).toBeGreaterThan(0);
+		}
+	});
+
+	test("smart link descriptions keep the free plan and paid campaign boundary clear", () => {
+		const createDefinition = PHASE_4_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_create_smart_link_from_spotify",
+		);
+		expect(createDefinition).toBeDefined();
+		expect(createDefinition?.description).toContain("Smart Links are free");
+		expect(createDefinition?.description).toContain(
+			"does not create a paid ad campaign",
+		);
+		expect(createDefinition?.description).toContain(
+			"playlist URLs are not supported",
+		);
+	});
+
+	test("create smart link schema accepts Spotify entrypoint inputs", () => {
+		const parsed = DynamoiCreateSmartLinkFromSpotifyInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			customDescription: "New release landing page",
+			spotifyUrl: "https://open.spotify.com/track/123",
+			userIntentSummary: "Create a free Smart Link for this track.",
+		});
+
+		expect(parsed.spotifyUrl).toContain("spotify.com");
+	});
+
+	test("smart link settings schema supports theme and validated pixel id fields only", () => {
+		const parsed = DynamoiUpdateSmartLinkArtistSettingsInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			metaPixelId: "1234567890",
+			theme: "aurora",
+		});
+
+		expect(parsed.theme).toBe("aurora");
+		expect(() =>
+			DynamoiUpdateSmartLinkArtistSettingsInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				script: "<script>alert(1)</script>",
+			}),
+		).toThrow();
+	});
+
+	test("smart link mutation schemas reject unknown properties", () => {
+		expect(() =>
+			DynamoiUpdateSmartLinkInputSchema.parse({
+				customDescription: "Hello",
+				playLinkId: "00000000-0000-0000-0000-000000000000",
+				theme: "classic",
+			}),
+		).toThrow();
+		expect(() =>
+			DynamoiPublishSmartLinkInputSchema.parse({
+				playLinkId: "00000000-0000-0000-0000-000000000000",
+				publicUrl: "https://play.dynamoi.com/x",
+			}),
+		).toThrow();
 	});
 });
