@@ -15,6 +15,15 @@ type HandleOptions = {
 	 * Recommended: `${sub}:${clientId ?? "unknown"}`.
 	 */
 	sessionContextKey: string;
+	/**
+	 * Whether initialize requests should create reusable MCP sessions.
+	 * Public capability discovery can run statelessly so an unauthenticated
+	 * discovery initialize does not produce a session ID that later collides with
+	 * an authenticated principal-bound session.
+	 *
+	 * Default: true.
+	 */
+	enableSessions?: boolean;
 };
 
 type TransportEntry = {
@@ -92,9 +101,12 @@ export async function handleMcpHttpRequest(
 	options: HandleOptions,
 ): Promise<Response> {
 	const nowMs = Date.now();
+	const enableSessions = options.enableSessions ?? true;
 	cleanupTransports(nowMs);
 
-	const sessionId = getHeader(options.request, "mcp-session-id");
+	const sessionId = enableSessions
+		? getHeader(options.request, "mcp-session-id")
+		: null;
 	const existing = sessionId ? transports.get(sessionId) : undefined;
 
 	if (existing) {
@@ -135,7 +147,9 @@ export async function handleMcpHttpRequest(
 			});
 			cleanupTransports(Date.now());
 		},
-		...(isInit ? { sessionIdGenerator: () => randomUUID() } : {}),
+		...(enableSessions && isInit
+			? { sessionIdGenerator: () => randomUUID() }
+			: {}),
 	});
 
 	const server = options.createServer();

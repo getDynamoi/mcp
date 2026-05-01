@@ -95,6 +95,87 @@ describe("mcp/transport session binding", () => {
 		expect(json.error?.message).toBe("Session not found");
 	});
 
+	test("stateless initialize requests do not create reusable session ids", async () => {
+		const request = new Request("http://example.com/mcp", {
+			body: JSON.stringify(makeInitializeBody()),
+			headers: {
+				accept: "application/json, text/event-stream",
+				"content-type": "application/json",
+			},
+			method: "POST",
+		});
+
+		const response = await handleMcpHttpRequest({
+			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
+			enableSessions: false,
+			parsedBody: makeInitializeBody(),
+			request,
+			sessionContextKey: "public-discovery",
+		});
+
+		expect(response.headers.get("mcp-session-id")).toBeNull();
+	});
+
+	test("stateless requests ignore stale session headers without evicting authenticated sessions", async () => {
+		const initReq = new Request("http://example.com/mcp", {
+			body: JSON.stringify(makeInitializeBody()),
+			headers: {
+				accept: "application/json, text/event-stream",
+				"content-type": "application/json",
+			},
+			method: "POST",
+		});
+		const authenticatedServer = new McpServer({
+			name: "test",
+			version: "0.0.0",
+		});
+		const initRes = await handleMcpHttpRequest({
+			createServer: () => authenticatedServer,
+			parsedBody: makeInitializeBody(),
+			request: initReq,
+			sessionContextKey: "user-discovery-test:client-x",
+		});
+		const sid = initRes.headers.get("mcp-session-id");
+		if (!sid) {
+			throw new Error("Expected mcp-session-id header on initialize response");
+		}
+
+		const discoveryBody = { id: 2, jsonrpc: "2.0", method: "tools/list" };
+		const discoveryResponse = await handleMcpHttpRequest({
+			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
+			enableSessions: false,
+			parsedBody: discoveryBody,
+			request: new Request("http://example.com/mcp", {
+				body: JSON.stringify(discoveryBody),
+				headers: {
+					accept: "application/json, text/event-stream",
+					"content-type": "application/json",
+					"mcp-session-id": sid,
+				},
+				method: "POST",
+			}),
+			sessionContextKey: "public-discovery",
+		});
+		expect(discoveryResponse.status).not.toBe(404);
+
+		const authenticatedBody = { id: 3, jsonrpc: "2.0", method: "tools/list" };
+		const authenticatedResponse = await handleMcpHttpRequest({
+			createServer: () => authenticatedServer,
+			parsedBody: authenticatedBody,
+			request: new Request("http://example.com/mcp", {
+				body: JSON.stringify(authenticatedBody),
+				headers: {
+					accept: "application/json, text/event-stream",
+					"content-type": "application/json",
+					"mcp-session-id": sid,
+				},
+				method: "POST",
+			}),
+			sessionContextKey: "user-discovery-test:client-x",
+		});
+		expect(authenticatedResponse.status).not.toBe(404);
+	});
+
 	test("invalid MCP protocol versions are rejected on session requests", async () => {
 		const initReq = new Request("http://example.com/mcp", {
 			body: JSON.stringify(makeInitializeBody()),
