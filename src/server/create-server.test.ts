@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import * as z from "zod/v4";
-import { asTextResult, asValidatedTextResult } from "./create-server";
+import {
+	asTextResult,
+	asValidatedTextResult,
+	createDynamoiMcpServer,
+	type Phase3Adapter,
+} from "./create-server";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
 
 describe("asTextResult", () => {
@@ -69,5 +76,56 @@ describe("asTextResult", () => {
 			},
 			status: "success",
 		});
+	});
+});
+
+describe("createDynamoiMcpServer", () => {
+	test("calls tools whose canonical output schemas are success/error unions", async () => {
+		const adapter = {
+			search: async () => ({
+				data: {
+					results: [],
+					summary: "No matching records found.",
+					totalCount: 0,
+				},
+				status: "success",
+			}),
+		} as unknown as Phase3Adapter;
+		const server = createDynamoiMcpServer({ adapter });
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.callTool({
+				arguments: {
+					format: "summary",
+					limit: 10,
+					query: "92 Keys",
+					type: "artist",
+				},
+				name: "dynamoi_search",
+			});
+
+			expect(result.isError).toBeUndefined();
+			expect(result.content).toEqual([
+				{ text: "No matching records found.", type: "text" },
+			]);
+			expect(result.structuredContent).toEqual({
+				data: {
+					results: [],
+					summary: "No matching records found.",
+					totalCount: 0,
+				},
+				status: "success",
+			});
+		} finally {
+			await client.close();
+		}
 	});
 });

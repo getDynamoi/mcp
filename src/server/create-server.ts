@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type * as z from "zod/v4";
+import * as z from "zod/v4";
 import type {
 	CreateSmartLinkFromSpotifyData,
 	GetArtistAnalyticsJsonData,
@@ -49,6 +49,12 @@ import {
 	PHASE_2_TOOL_DEFINITIONS,
 	PHASE_3_TOOL_DEFINITIONS,
 } from "./tools";
+
+const SdkToolOutputEnvelopeSchema = z
+	.object({
+		status: z.enum(["success", "partial_success", "error"]),
+	})
+	.passthrough();
 
 export type Phase3Adapter = {
 	getCurrentUser(
@@ -219,7 +225,10 @@ export function createDynamoiMcpServer(options: {
 				},
 				description: def.description,
 				inputSchema: def.schema,
-				outputSchema: def.outputSchema,
+				// The SDK's runtime output validator currently only normalizes object
+				// schemas; our canonical output schemas are unions of success/error
+				// envelopes and are validated below in asValidatedTextResult().
+				outputSchema: SdkToolOutputEnvelopeSchema,
 				title,
 			},
 			async (input: unknown) => {
