@@ -6,18 +6,7 @@ type ProtectedResourceMetadata = {
 	scopes_supported: string[];
 };
 
-export const DYNAMOI_MCP_SCOPES = [
-	"email",
-	"profile",
-	"dynamoi:read",
-	"dynamoi:campaign.write",
-	"dynamoi:campaign.launch",
-	"dynamoi:billing.read",
-	"dynamoi:platform.read",
-	"dynamoi:smart_links.write",
-	"dynamoi:audit.read",
-	"dynamoi:admin",
-] as const;
+export const DYNAMOI_MCP_SCOPES = ["email", "profile"] as const;
 
 export function buildProtectedResourceMetadata(options: {
 	resource: string;
@@ -43,7 +32,7 @@ export function buildWwwAuthenticateHeader(options: {
 	error?: "insufficient_scope" | "invalid_token";
 	scope?: string;
 }): string {
-	const scope = options.scope ?? "email profile dynamoi:read";
+	const scope = options.scope ?? "email profile";
 	const error = options.error ? `, error="${options.error}"` : "";
 	// RFC 6750 style with resource metadata extension.
 	return `Bearer resource_metadata="${options.resourceMetadataUrl}", scope="${scope}"${error}`;
