@@ -123,6 +123,7 @@ const SmartLinkDetailsOutputSchema = SmartLinkSummaryOutputSchema.extend({
 	resourceUri: z.string(),
 	settingsResourceUri: z.string(),
 	spotifyDiscographyId: z.string(),
+	summary: z.string(),
 	warnings: z.array(z.string()).optional(),
 }).strict();
 

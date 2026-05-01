@@ -14,6 +14,53 @@ function asTextPrompt(text: string) {
 
 export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
+		"dynamoi_find_smart_link_url",
+		{
+			argsSchema: {
+				artistId: z.string().uuid().optional(),
+				query: z.string().trim().optional(),
+			},
+			description:
+				"Find a user's free Smart Link URL and answer with public URLs, titles, and statuses.",
+			title: "Find Smart Link URL",
+		},
+		(args) =>
+			asTextPrompt(
+				[
+					"Find my Dynamoi Smart Link URL.",
+					args.artistId
+						? `Artist ID: ${args.artistId}`
+						: "If no artistId is provided, use dynamoi_search or dynamoi_list_artists to identify the artist first.",
+					args.query ? `Search query: ${args.query}` : "",
+					"",
+					"Use dynamoi_list_smart_links or dynamoi_search with type=smartlink.",
+					"In the final answer, show the release title, artist, public URL, and status. Do not show internal IDs unless I ask for them.",
+				]
+					.filter(Boolean)
+					.join("\n"),
+			),
+	);
+
+	server.registerPrompt(
+		"dynamoi_explain_free_smart_links",
+		{
+			argsSchema: {},
+			description:
+				"Explain Dynamoi free Smart Links and how they differ from paid managed advertising.",
+			title: "Explain Free Smart Links",
+		},
+		() =>
+			asTextPrompt(
+				[
+					"Explain Dynamoi free Smart Links.",
+					"Use MCP resources if needed, especially dynamoi://smart-links/free-plan and dynamoi://business/free-vs-paid.",
+					"Be clear: Smart Links are free, with no per-link fee, no subscription requirement, and no upgrade gate. Managed advertising and ad budgets are separate paid services.",
+					"Do not inspect my account data unless I ask about my artists, links, campaigns, billing, or settings.",
+				].join("\n"),
+			),
+	);
+
+	server.registerPrompt(
 		"dynamoi_create_free_smart_link",
 		{
 			argsSchema: {

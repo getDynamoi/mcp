@@ -263,6 +263,7 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 		expect(createDefinition?.description).toContain(
 			"playlist URLs are not supported",
 		);
+		expect(createDefinition?.description).toContain("lead with the public URL");
 	});
 
 	test("create smart link schema accepts Spotify entrypoint inputs", () => {

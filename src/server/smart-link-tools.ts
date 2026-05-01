@@ -182,7 +182,7 @@ export const DynamoiPublishSmartLinkInputSchema = z
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user wants to create a free Dynamoi Smart Link from a Spotify artist, album, or track URL/URI. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate.",
+			"Use this when the user wants to create a free Dynamoi Smart Link from a Spotify artist, album, or track URL/URI. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_link_from_spotify",
@@ -194,7 +194,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to list free Smart Links for one artist, including release title, public URL, publish state, claim state, render state, and theme. Do not use this for paid campaign lists; use dynamoi_list_campaigns for campaigns.",
+			"Use this when the user wants to list free Smart Links for one artist, including release title, public URL, publish state, claim state, render state, and theme. Do not use this for paid campaign lists; use dynamoi_list_campaigns for campaigns. In the final answer, show public URLs and avoid internal IDs unless asked.",
 		destructiveHint: false,
 		name: "dynamoi_list_smart_links",
 		openWorldHint: false,
@@ -205,7 +205,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions.",
+			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		name: "dynamoi_get_smart_link",
 		openWorldHint: false,

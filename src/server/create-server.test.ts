@@ -128,4 +128,55 @@ describe("createDynamoiMcpServer", () => {
 			await client.close();
 		}
 	});
+
+	test("uses Smart Link summaries as URL-first text while keeping IDs structured", () => {
+		const envelope = {
+			data: {
+				actionRequired: [],
+				artistId: "00000000-0000-0000-0000-000000000000",
+				artistName: "92 Keys",
+				claimStatus: "auto_approved",
+				createdAt: "2026-05-01T00:00:00.000Z",
+				customDescription: null,
+				id: "11111111-1111-4111-8111-111111111111",
+				isPublic: true,
+				localizedPublicUrls: [],
+				nextActions: [],
+				odesliStatus: "resolved",
+				originalSpotifyUrl: "https://open.spotify.com/track/abc",
+				publicUrl: "https://play.dynamoi.com/92-keys/song",
+				publishState: "published",
+				releaseSlug: "song",
+				releaseTitle: "Song",
+				releaseType: "track",
+				renderState: "rendered",
+				resourceUri:
+					"dynamoi://smart-link/11111111-1111-4111-8111-111111111111",
+				settingsResourceUri:
+					"dynamoi://artist/00000000-0000-0000-0000-000000000000/smart-link-settings",
+				spotifyDiscographyId: "22222222-2222-4222-8222-222222222222",
+				spotifyUrl: "https://open.spotify.com/track/abc",
+				summary: [
+					"# Song",
+					"Artist: 92 Keys",
+					"Public URL: https://play.dynamoi.com/92-keys/song",
+					"Status: public",
+				].join("\n"),
+				takedownStatus: "none",
+				theme: "classic",
+				updatedAt: "2026-05-01T00:00:00.000Z",
+			},
+			status: "success",
+		};
+
+		const result = asTextResult(envelope);
+
+		expect(result.content[0]?.text).toContain(
+			"Public URL: https://play.dynamoi.com/92-keys/song",
+		);
+		expect(result.content[0]?.text).not.toContain(
+			"11111111-1111-4111-8111-111111111111",
+		);
+		expect(result.structuredContent).toEqual(envelope);
+	});
 });

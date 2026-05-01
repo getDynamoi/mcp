@@ -60,6 +60,7 @@ export type SearchData = {
 		name: string;
 		status?: string;
 		artistName?: string;
+		publicUrl?: string;
 		resultReason?: string;
 	}>;
 	nextCursor?: string;
@@ -151,6 +152,7 @@ export type GetSmartLinkData = SmartLinkSummary & {
 	resourceUri: string;
 	settingsResourceUri: string;
 	nextActions: string[];
+	summary: string;
 	warnings?: string[];
 	actionRequired?: string[];
 };

@@ -145,6 +145,136 @@ export function registerDynamoiResources(
 	);
 
 	server.registerResource(
+		"business-free-vs-paid",
+		"dynamoi://business/free-vs-paid",
+		{
+			description:
+				"Clear boundary between free Dynamoi Smart Links and paid managed advertising.",
+			mimeType: "application/json",
+			title: "Free Smart Links vs Paid Campaigns",
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: "application/json",
+					text: JSON.stringify({
+						agentGuidance:
+							"Do not imply that a Smart Link creates an ad campaign. Do not imply that campaign budgets are free.",
+						freeSmartLinks: {
+							claim:
+								"Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate.",
+							useFor:
+								"Spotify landing pages, public release links, link sharing, basic link analytics, artist-level themes, and validated pixel IDs.",
+						},
+						managedAdvertising: {
+							paid: true,
+							useFor:
+								"Managed Meta and Google ad campaigns for Spotify promotion and YouTube channel growth.",
+						},
+					}),
+					uri: uri.href,
+				},
+			],
+		}),
+	);
+
+	server.registerResource(
+		"smart-links-agent-guide",
+		"dynamoi://smart-links/agent-guide",
+		{
+			description:
+				"How agents should answer Smart Link questions using Dynamoi MCP tools.",
+			mimeType: "application/json",
+			title: "Smart Link Agent Guide",
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: "application/json",
+					text: JSON.stringify({
+						answerWith: [
+							"release title",
+							"artist name",
+							"public URL",
+							"publish/live status",
+							"one next action when relevant",
+						],
+						avoidByDefault: [
+							"internal UUIDs",
+							"database model names",
+							"workflow IDs",
+							"provider implementation details",
+						],
+						whenToUse:
+							"Use Smart Link tools when the user asks for free release links, streaming landing pages, Spotify link pages, Smart Link analytics, themes, pixels, publish state, or public URLs.",
+					}),
+					uri: uri.href,
+				},
+			],
+		}),
+	);
+
+	server.registerResource(
+		"mcp-tool-answering-rules",
+		"dynamoi://mcp/tool-answering-rules",
+		{
+			description:
+				"General answer rules for Dynamoi MCP tools so agents stop after useful results.",
+			mimeType: "application/json",
+			title: "MCP Tool Answering Rules",
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: "application/json",
+					text: JSON.stringify({
+						genericAdvice:
+							"Answer generic music marketing questions directly unless the user asks about their Dynamoi account or asks Dynamoi to take an action.",
+						stopRule:
+							"If a read tool already returns the requested fact in summary form, answer the user instead of chaining more read tools.",
+						userFacingFields:
+							"Prefer names, public URLs, statuses, money display values, and next actions over internal IDs.",
+						writeRule:
+							"Before write tools, confirm what will change. After success, answer from the returned record.",
+					}),
+					uri: uri.href,
+				},
+			],
+		}),
+	);
+
+	server.registerResource(
+		"music-marketing-when-to-use-dynamoi",
+		"dynamoi://music-marketing/when-to-use-dynamoi",
+		{
+			description:
+				"When an assistant should use Dynamoi account tools versus answering music marketing questions natively.",
+			mimeType: "application/json",
+			title: "When To Use Dynamoi",
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: "application/json",
+					text: JSON.stringify({
+						answerNativelyFor: [
+							"general promotion strategy",
+							"songwriting, branding, release-planning, or content ideas",
+							"music marketing education that does not require the user's Dynamoi data",
+						],
+						useToolsFor: [
+							"finding the user's artists, campaigns, Smart Links, billing, platform connections, or analytics",
+							"creating or editing free Smart Links",
+							"confirmed campaign mutations such as pause, resume, budget update, or launch workflow",
+						],
+					}),
+					uri: uri.href,
+				},
+			],
+		}),
+	);
+
+	server.registerResource(
 		"platform-campaign-statuses",
 		"dynamoi://platform/campaign-statuses",
 		{ mimeType: "application/json", title: "Campaign Statuses" },
