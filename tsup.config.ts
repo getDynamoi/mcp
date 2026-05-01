@@ -16,7 +16,7 @@ export default defineConfig({
 		__DYNAMOI_MCP_VERSION__: JSON.stringify(pkg.version),
 	},
 	dts: true,
-	entry: ["src/index.ts"],
+	entry: ["src/index.ts", "src/auth/protected-resource.ts"],
 	external: ["@modelcontextprotocol/sdk", "jose", "zod"],
 	format: ["esm"],
 	minify: false,

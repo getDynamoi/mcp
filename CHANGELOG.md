@@ -7,6 +7,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-01
+
+### Fixed
+
+- Added the `@dynamoi/mcp/auth` sub-entrypoint so public/static discovery code can build OAuth protected-resource metadata without bundling Node-only MCP server transport code.
+
 ## [0.5.0] - 2026-04-30
 
 ### Added

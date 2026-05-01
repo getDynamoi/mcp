@@ -1,7 +1,7 @@
 {
 	"$schema": "https://www.schemastore.org/package",
 	"name": "@dynamoi/mcp",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"mcpName": "io.github.getDynamoi/dynamoi",
 	"type": "module",
 	"license": "MIT",
@@ -45,6 +45,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"default": "./dist/index.js"
+		},
+		"./auth": {
+			"types": "./dist/auth/protected-resource.d.ts",
+			"import": "./dist/auth/protected-resource.js",
+			"default": "./dist/auth/protected-resource.js"
 		}
 	},
 	"publishConfig": {
