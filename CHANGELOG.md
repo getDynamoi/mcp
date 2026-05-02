@@ -7,6 +7,13 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-02
+
+### Added
+
+- Added read-only campaign planning tools: `dynamoi_list_available_countries`, `dynamoi_get_onboarding_status`, `dynamoi_get_campaign_readiness`, and `dynamoi_get_campaign_deployment_status`.
+- Added campaign-type-aware targeting metadata so assistants distinguish Smart Campaign country availability from YouTube/Google Ads country targeting.
+
 ## [0.5.3] - 2026-05-01
 
 ### Added

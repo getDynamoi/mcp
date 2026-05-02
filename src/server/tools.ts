@@ -1,7 +1,11 @@
 import * as z from "zod/v4";
 import {
 	AnyOutputEnvelopeSchema,
+	GetCampaignDeploymentStatusOutputEnvelopeSchema,
+	GetCampaignReadinessOutputEnvelopeSchema,
+	GetOnboardingStatusOutputEnvelopeSchema,
 	LaunchCampaignOutputEnvelopeSchema,
+	ListAvailableCountriesOutputEnvelopeSchema,
 	ListMediaAssetsOutputEnvelopeSchema,
 	PauseResumeOutputEnvelopeSchema,
 	UpdateBudgetOutputEnvelopeSchema,
@@ -161,9 +165,56 @@ export const DynamoiGetBillingInputSchema = z
 	})
 	.strict();
 
+const LocationTargetSchema = z
+	.object({
+		code: z.string().trim().min(1).max(8),
+		name: z.string().trim().min(1).max(120),
+	})
+	.strict();
+
 export const DynamoiGetPlatformStatusInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+	})
+	.strict();
+
+export const DynamoiListAvailableCountriesInputSchema = z
+	.object({
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		cursor: z.string().optional(),
+		format: ToolFormatSchema.optional(),
+		limit: z.number().int().min(1).max(100).optional(),
+		query: z.string().trim().max(120).optional(),
+	})
+	.strict();
+
+export const DynamoiGetOnboardingStatusInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+	})
+	.strict();
+
+export const DynamoiGetCampaignReadinessInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		budgetAmount: z.number().finite().positive().optional(),
+		budgetType: z.enum(["DAILY", "TOTAL"]).optional(),
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		contentType: z.enum(["TRACK", "ALBUM", "PLAYLIST", "VIDEO"]).optional(),
+		endDate: IsoDateSchema.optional(),
+		format: ToolFormatSchema.optional(),
+		locationTargets: z.array(LocationTargetSchema).optional(),
+		mediaAssetIds: z.array(z.string().uuid()).optional(),
+		spotifyUrl: z.string().trim().min(1).max(500).optional(),
+		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
+	})
+	.strict();
+
+export const DynamoiGetCampaignDeploymentStatusInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
 	})
 	.strict();
@@ -195,13 +246,6 @@ export const DynamoiUpdateBudgetInputSchema = z
 		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
 		expectedCurrentEndDate: IsoDateSchema.optional(),
 		userIntentSummary: UserIntentSummarySchema,
-	})
-	.strict();
-
-const LocationTargetSchema = z
-	.object({
-		code: z.string().trim().min(1).max(8),
-		name: z.string().trim().min(1).max(120),
 	})
 	.strict();
 
@@ -443,6 +487,50 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		readOnlyHint: true,
 		schema: DynamoiGetPlatformStatusInputSchema,
 		title: "Get Platform Status",
+	},
+	{
+		description:
+			"Use this when the user asks which countries they can target for a Smart Campaign or YouTube campaign. Always pass campaignType because Smart Campaign and YouTube country catalogs are different. Do not use this for generic country marketing advice.",
+		destructiveHint: false,
+		name: "dynamoi_list_available_countries",
+		openWorldHint: false,
+		outputSchema: ListAvailableCountriesOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiListAvailableCountriesInputSchema,
+		title: "List Available Countries",
+	},
+	{
+		description:
+			"Use this when the user asks whether one artist is ready to create Smart Campaigns or YouTube campaigns, or what setup steps are still missing. This is artist-level readiness, not a campaign launch. Do not use this for generic marketing advice.",
+		destructiveHint: false,
+		name: "dynamoi_get_onboarding_status",
+		openWorldHint: false,
+		outputSchema: GetOnboardingStatusOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetOnboardingStatusInputSchema,
+		title: "Get Onboarding Status",
+	},
+	{
+		description:
+			"Use this when the user is planning a campaign and wants to know if the proposed inputs are ready before dynamoi_launch_campaign. This validates readiness and targeting without creating a campaign. Do not use this to create or mutate campaigns.",
+		destructiveHint: false,
+		name: "dynamoi_get_campaign_readiness",
+		openWorldHint: false,
+		outputSchema: GetCampaignReadinessOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetCampaignReadinessInputSchema,
+		title: "Get Campaign Readiness",
+	},
+	{
+		description:
+			"Use this when the user asks why an existing campaign is not live, where deployment stands, or what is blocking delivery. This reads local Dynamoi deployment state only. Do not use this for new campaign planning.",
+		destructiveHint: false,
+		name: "dynamoi_get_campaign_deployment_status",
+		openWorldHint: false,
+		outputSchema: GetCampaignDeploymentStatusOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetCampaignDeploymentStatusInputSchema,
+		title: "Get Campaign Deployment Status",
 	},
 ] as const;
 

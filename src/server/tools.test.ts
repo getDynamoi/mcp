@@ -9,8 +9,10 @@ import {
 import {
 	DynamoiGetArtistAnalyticsInputSchema,
 	DynamoiGetCampaignInputSchema,
+	DynamoiGetCampaignReadinessInputSchema,
 	DynamoiGetCurrentUserInputSchema,
 	DynamoiLaunchCampaignInputSchema,
+	DynamoiListAvailableCountriesInputSchema,
 	DynamoiPauseCampaignInputSchema,
 	DynamoiResumeCampaignInputSchema,
 	DynamoiUpdateBudgetInputSchema,
@@ -67,6 +69,31 @@ describe("mcp/tools phase 1 definitions", () => {
 		expect(definition).toBeDefined();
 		expect(definition?.description).toContain("Pass format=summary");
 		expect(definition?.description).toContain("stop and answer");
+	});
+
+	test("available countries schema requires campaignType", () => {
+		expect(() => DynamoiListAvailableCountriesInputSchema.parse({})).toThrow();
+		const parsed = DynamoiListAvailableCountriesInputSchema.parse({
+			campaignType: "SMART_CAMPAIGN",
+			query: "United",
+		});
+		expect(parsed.campaignType).toBe("SMART_CAMPAIGN");
+	});
+
+	test("campaign readiness schema accepts no-write preflight inputs", () => {
+		const parsed = DynamoiGetCampaignReadinessInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			budgetAmount: 100,
+			budgetType: "TOTAL",
+			campaignType: "YOUTUBE",
+			contentType: "VIDEO",
+			endDate: "2026-06-01",
+			locationTargets: [{ code: "US", name: "United States" }],
+			youtubeVideoId: "abc123",
+		});
+		expect(parsed.campaignType).toBe("YOUTUBE");
+		expect(parsed.endDate).toBe("2026-06-01");
+		expect(parsed.locationTargets?.[0]?.code).toBe("US");
 	});
 });
 

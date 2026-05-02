@@ -213,6 +213,113 @@ const SmartLinkAnalyticsSummaryOutputSchema = z
 	})
 	.strict();
 
+const AvailableCountryOutputSchema = z
+	.object({
+		code: z.string(),
+		dominantLanguage: z.string().optional(),
+		googleAdsId: z.number(),
+		name: z.string(),
+	})
+	.strict();
+
+const ListAvailableCountriesDataOutputSchema = z
+	.object({
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		countries: z.array(AvailableCountryOutputSchema),
+		nextCursor: z.string().optional(),
+		notes: z.array(z.string()),
+		source: z.enum(["SMART_CAMPAIGN_COUNTRIES", "GOOGLE_ADS_COUNTRIES"]),
+		totalCount: z.number(),
+	})
+	.strict();
+
+const SummaryCountOutputSchema = z
+	.object({
+		nextCursor: z.string().optional(),
+		summary: z.string(),
+		totalCount: z.number(),
+	})
+	.strict();
+
+const ProductReadinessOutputSchema = z
+	.object({
+		blockers: z.array(z.string()),
+		isReady: z.boolean(),
+		missingRequirements: z.array(z.string()),
+		nextAction: z.string().optional(),
+		warnings: z.array(z.string()),
+	})
+	.strict();
+
+const GetOnboardingStatusDataOutputSchema = z
+	.object({
+		artistId: z.string(),
+		artistName: z.string(),
+		overallNextAction: z.string().optional(),
+		smartCampaign: ProductReadinessOutputSchema,
+		youtube: ProductReadinessOutputSchema,
+	})
+	.strict();
+
+const SummaryWarningsActionsOutputSchema = z
+	.object({
+		actionRequired: z.array(z.string()).optional(),
+		summary: z.string(),
+		warnings: z.array(z.string()).optional(),
+	})
+	.strict();
+
+const NormalizedTargetingOutputSchema = z.union([
+	z.object({ mode: z.literal("GLOBAL") }).strict(),
+	z
+		.object({
+			countries: z.array(
+				z.object({ code: z.string(), name: z.string() }).strict(),
+			),
+			mode: z.literal("COUNTRIES"),
+		})
+		.strict(),
+]);
+
+const GetCampaignReadinessDataOutputSchema = z
+	.object({
+		artistId: z.string(),
+		artistName: z.string(),
+		blockingIssues: z.array(z.string()),
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		isReady: z.boolean(),
+		missingInputs: z.array(z.string()),
+		normalizedTargeting: NormalizedTargetingOutputSchema,
+		recommendedNextAction: z.string(),
+		warnings: z.array(z.string()),
+	})
+	.strict();
+
+const GetCampaignDeploymentStatusDataOutputSchema = z
+	.object({
+		artistId: z.string(),
+		artistName: z.string(),
+		blockers: z.array(z.string()),
+		campaignId: z.string(),
+		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		contentTitle: z.string(),
+		deliveryState: z.enum(["LIVE", "PENDING", "BLOCKED", "PAUSED", "ENDED"]),
+		nextAction: z.string().optional(),
+		platforms: z.array(
+			z
+				.object({
+					errorMessage: z.string().optional(),
+					linkedProviderId: z.string().optional(),
+					platform: z.enum(["META", "GOOGLE"]),
+					status: z.string(),
+				})
+				.strict(),
+		),
+		status: z.string(),
+		warnings: z.array(z.string()),
+	})
+	.strict();
+
 const CreateSmartLinkFromSpotifyDataOutputSchema =
 	SmartLinkDetailsOutputSchema.extend({
 		outcome: z.enum(["created", "existing"]),
@@ -303,6 +410,50 @@ export const ListMediaAssetsOutputEnvelopeSchema = z.union([
 export const LaunchCampaignOutputEnvelopeSchema = z.union([
 	z.object({
 		data: LaunchCampaignDataOutputSchema,
+		status: z.literal("success"),
+	}),
+	ErrorEnvelopeOutputSchema,
+]);
+
+export const ListAvailableCountriesOutputEnvelopeSchema = z.union([
+	z.object({
+		data: z.union([
+			ListAvailableCountriesDataOutputSchema,
+			SummaryCountOutputSchema,
+		]),
+		status: z.literal("success"),
+	}),
+	ErrorEnvelopeOutputSchema,
+]);
+
+export const GetOnboardingStatusOutputEnvelopeSchema = z.union([
+	z.object({
+		data: z.union([
+			GetOnboardingStatusDataOutputSchema,
+			SummaryWarningsActionsOutputSchema,
+		]),
+		status: z.literal("success"),
+	}),
+	ErrorEnvelopeOutputSchema,
+]);
+
+export const GetCampaignReadinessOutputEnvelopeSchema = z.union([
+	z.object({
+		data: z.union([
+			GetCampaignReadinessDataOutputSchema,
+			SummaryWarningsActionsOutputSchema,
+		]),
+		status: z.literal("success"),
+	}),
+	ErrorEnvelopeOutputSchema,
+]);
+
+export const GetCampaignDeploymentStatusOutputEnvelopeSchema = z.union([
+	z.object({
+		data: z.union([
+			GetCampaignDeploymentStatusDataOutputSchema,
+			SummaryWarningsActionsOutputSchema,
+		]),
 		status: z.literal("success"),
 	}),
 	ErrorEnvelopeOutputSchema,

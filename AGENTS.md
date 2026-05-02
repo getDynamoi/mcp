@@ -52,6 +52,10 @@ White-glove onboarding and ongoing support included — need help setting up you
 | `dynamoi_get_artist_analytics` | Artist-level rollup analytics across all campaigns — totals + optional daily rows by platform |
 | `dynamoi_get_billing` | Credit balance, subscription tier, billing status, and recent spend |
 | `dynamoi_get_platform_status` | Connection health for Spotify, Meta, and YouTube — status, expiry, next steps |
+| `dynamoi_list_available_countries` | Campaign-type-aware country targeting list for Smart Campaigns or YouTube campaigns |
+| `dynamoi_get_onboarding_status` | Artist readiness for Smart Campaigns and YouTube campaigns, with missing setup steps |
+| `dynamoi_get_campaign_readiness` | No-write launch preflight for proposed campaign inputs and targeting |
+| `dynamoi_get_campaign_deployment_status` | Existing campaign deployment/delivery state, platform links, blockers, and next action |
 | `dynamoi_list_smart_links` | List free Smart Links for one artist with publish, render, claim, and public URL status |
 | `dynamoi_get_smart_link` | Full Smart Link details — release metadata, public URL, statuses, theme, and next actions |
 | `dynamoi_get_smart_link_analytics` | Aggregate Smart Link visits and clicks with optional daily rows and capped breakdowns |
@@ -154,7 +158,8 @@ The MCP server includes static resources to help AI assistants make better decis
 | `dynamoi://platform/pricing` | Tiers, activation bonus, credit structure, budget minimums |
 | `dynamoi://smart-links/free-plan` | Smart Link free-plan terms and the managed-advertising distinction |
 | `dynamoi://smart-links/capabilities` | Supported Spotify inputs, analytics, themes, pixels, publish, and unpublish behavior |
-| `dynamoi://platform/supported-countries` | Valid country codes for targeting |
+| `dynamoi://platform/country-targeting` | Smart Campaign vs YouTube country-targeting rules |
+| `dynamoi://platform/supported-countries` | Legacy alias for campaign country-targeting rules |
 | `dynamoi://platform/content-types` | Track, Album, Playlist, Video + requirements |
 | `dynamoi://platform/campaign-statuses` | Status names, descriptions, valid transitions |
 

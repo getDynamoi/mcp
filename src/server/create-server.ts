@@ -11,9 +11,15 @@ import type {
 	GetCampaignAnalyticsJsonData,
 	GetCampaignAnalyticsSummaryData,
 	GetCampaignData,
+	GetCampaignDeploymentStatusData,
+	GetCampaignDeploymentStatusSummaryData,
+	GetCampaignReadinessData,
+	GetCampaignReadinessSummaryData,
 	GetCampaignSummaryData,
 	GetCurrentUserData,
 	GetCurrentUserSummaryData,
+	GetOnboardingStatusData,
+	GetOnboardingStatusSummaryData,
 	GetPlatformStatusData,
 	GetPlatformStatusSummaryData,
 	GetSmartLinkAnalyticsData,
@@ -23,6 +29,8 @@ import type {
 	LaunchCampaignData,
 	ListArtistsData,
 	ListArtistsSummaryData,
+	ListAvailableCountriesData,
+	ListAvailableCountriesSummaryData,
 	ListCampaignsJsonData,
 	ListCampaignsSummaryData,
 	ListMediaAssetsData,
@@ -94,6 +102,30 @@ export type Phase3Adapter = {
 		input: unknown,
 	): Promise<
 		ResultEnvelope<GetPlatformStatusData | GetPlatformStatusSummaryData>
+	>;
+	listAvailableCountries(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<
+			ListAvailableCountriesData | ListAvailableCountriesSummaryData
+		>
+	>;
+	getOnboardingStatus(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<GetOnboardingStatusData | GetOnboardingStatusSummaryData>
+	>;
+	getCampaignReadiness(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<GetCampaignReadinessData | GetCampaignReadinessSummaryData>
+	>;
+	getCampaignDeploymentStatus(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<
+			GetCampaignDeploymentStatusData | GetCampaignDeploymentStatusSummaryData
+		>
 	>;
 
 	pauseCampaign(
@@ -290,6 +322,31 @@ export function createDynamoiMcpServer(options: {
 					case "dynamoi_get_platform_status":
 						return asValidatedTextResult({
 							envelope: await options.adapter.getPlatformStatus(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_list_available_countries":
+						return asValidatedTextResult({
+							envelope: await options.adapter.listAvailableCountries(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_get_onboarding_status":
+						return asValidatedTextResult({
+							envelope: await options.adapter.getOnboardingStatus(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_get_campaign_readiness":
+						return asValidatedTextResult({
+							envelope: await options.adapter.getCampaignReadiness(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_get_campaign_deployment_status":
+						return asValidatedTextResult({
+							envelope:
+								await options.adapter.getCampaignDeploymentStatus(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});

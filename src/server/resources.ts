@@ -79,6 +79,57 @@ export function registerDynamoiResources(
 		}),
 	);
 
+	const countryTargetingResource = async (uri: URL) => ({
+		contents: [
+			{
+				mimeType: "application/json",
+				text: JSON.stringify({
+					agentGuidance:
+						"Always choose a campaign type before suggesting target countries. Smart Campaign and YouTube country catalogs are different.",
+					smartCampaigns: {
+						meaning:
+							"Spotify-focused Smart Campaign markets supported by Dynamoi's Meta campaign workflow.",
+						source: "SMART_CAMPAIGN_COUNTRIES",
+						tool: "dynamoi_list_available_countries",
+						toolInput: { campaignType: "SMART_CAMPAIGN" },
+					},
+					youtubeCampaigns: {
+						meaning:
+							"Google Ads geo targets for YouTube campaign deployment and localization.",
+						source: "GOOGLE_ADS_COUNTRIES",
+						tool: "dynamoi_list_available_countries",
+						toolInput: { campaignType: "YOUTUBE" },
+					},
+				}),
+				uri: uri.href,
+			},
+		],
+	});
+
+	server.registerResource(
+		"platform-country-targeting",
+		"dynamoi://platform/country-targeting",
+		{
+			description:
+				"Explains Smart Campaign vs YouTube country-targeting catalogs.",
+			mimeType: "application/json",
+			title: "Country Targeting",
+		},
+		countryTargetingResource,
+	);
+
+	server.registerResource(
+		"platform-supported-countries",
+		"dynamoi://platform/supported-countries",
+		{
+			description:
+				"Legacy alias for country-targeting guidance. Use dynamoi://platform/country-targeting for the canonical resource.",
+			mimeType: "application/json",
+			title: "Supported Countries",
+		},
+		countryTargetingResource,
+	);
+
 	server.registerResource(
 		"smart-links-free-plan",
 		"dynamoi://smart-links/free-plan",
