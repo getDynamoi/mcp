@@ -15,7 +15,7 @@ export function registerDynamoiResources(
 		"dynamoi://platform/pricing",
 		{
 			description:
-				"Dynamoi pricing, activation bonus, ad credit structure, and campaign budget minimums.",
+				"Dynamoi pricing, campaign credit structure, and campaign budget minimums.",
 			mimeType: "application/json",
 			title: "Pricing",
 		},
@@ -24,10 +24,6 @@ export function registerDynamoiResources(
 				{
 					mimeType: "application/json",
 					text: JSON.stringify({
-						activationBonus: {
-							amountUsd: 600,
-							note: "100% match on first month — pay $300, get $600 ad credit",
-						},
 						budgetMinimums: {
 							smartCampaign: {
 								dailyUsd: 10,

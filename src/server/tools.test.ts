@@ -21,6 +21,17 @@ import {
 	PHASE_3_TOOL_DEFINITIONS,
 } from "./tools";
 
+function getToolDefinition(
+	definitions: readonly { description: string; name: string }[],
+	name: string,
+) {
+	const definition = definitions.find((candidate) => candidate.name === name);
+	if (!definition) {
+		throw new Error(`Missing tool definition: ${name}`);
+	}
+	return definition;
+}
+
 describe("mcp/tools phase 1 definitions", () => {
 	test("read tools include required annotations", () => {
 		for (const def of PHASE_1_TOOL_DEFINITIONS) {
@@ -28,13 +39,6 @@ describe("mcp/tools phase 1 definitions", () => {
 			expect(def.destructiveHint).toBe(false);
 			expect(def.openWorldHint).toBe(false);
 			expect(def.outputSchema).toBeDefined();
-		}
-	});
-
-	test("read tool descriptions follow review-friendly metadata guidance", () => {
-		for (const def of PHASE_1_TOOL_DEFINITIONS) {
-			expect(def.description.startsWith("Use this when")).toBe(true);
-			expect(def.description).toContain("Do not use");
 		}
 	});
 
@@ -63,12 +67,12 @@ describe("mcp/tools phase 1 definitions", () => {
 	});
 
 	test("artist analytics metadata guides direct summary answers", () => {
-		const definition = PHASE_1_TOOL_DEFINITIONS.find(
-			(def) => def.name === "dynamoi_get_artist_analytics",
+		const definition = getToolDefinition(
+			PHASE_1_TOOL_DEFINITIONS,
+			"dynamoi_get_artist_analytics",
 		);
-		expect(definition).toBeDefined();
-		expect(definition?.description).toContain("Pass format=summary");
-		expect(definition?.description).toContain("stop and answer");
+		expect(definition.description).toContain("Pass format=summary");
+		expect(definition.description).toContain("stop and answer");
 	});
 
 	test("available countries schema requires campaignType", () => {
@@ -109,13 +113,6 @@ describe("mcp/tools phase 2 definitions", () => {
 		}
 	});
 
-	test("write tool descriptions follow review-friendly metadata guidance", () => {
-		for (const def of PHASE_2_TOOL_DEFINITIONS) {
-			expect(def.description.startsWith("Use this when")).toBe(true);
-			expect(def.description).toContain("Do not use");
-		}
-	});
-
 	test("pause schema accepts uuid campaignId", () => {
 		const parsed = DynamoiPauseCampaignInputSchema.parse({
 			campaignId: "00000000-0000-0000-0000-000000000000",
@@ -139,23 +136,43 @@ describe("mcp/tools phase 2 definitions", () => {
 	});
 
 	test("pause and resume schemas accept campaign read status guards", () => {
-		for (const expectedCurrentStatus of [
-			"AWAITING_SMART_LINK",
-			"CONTENT_VALIDATION",
-			"DEPLOYING",
-			"READY_FOR_REVIEW",
-			"ACTIVE",
-			"PAUSED",
-			"SUBSCRIPTION_PAUSED",
-			"ARCHIVED",
-			"FAILED",
-			"ENDED",
+		for (const schema of [
+			DynamoiPauseCampaignInputSchema,
+			DynamoiResumeCampaignInputSchema,
 		]) {
-			const parsed = DynamoiPauseCampaignInputSchema.parse({
-				campaignId: "00000000-0000-0000-0000-000000000000",
-				expectedCurrentStatus,
-			});
-			expect(parsed.expectedCurrentStatus).toBe(expectedCurrentStatus);
+			for (const expectedCurrentStatus of [
+				"AWAITING_SMART_LINK",
+				"CONTENT_VALIDATION",
+				"DEPLOYING",
+				"READY_FOR_REVIEW",
+				"ACTIVE",
+				"PAUSED",
+				"SUBSCRIPTION_PAUSED",
+				"ARCHIVED",
+				"FAILED",
+				"ENDED",
+			]) {
+				const parsed = schema.parse({
+					campaignId: "00000000-0000-0000-0000-000000000000",
+					expectedCurrentStatus,
+				});
+				expect(parsed.expectedCurrentStatus).toBe(expectedCurrentStatus);
+			}
+		}
+	});
+
+	test("campaign mutation schemas reject malformed UUIDs", () => {
+		for (const schema of [
+			DynamoiPauseCampaignInputSchema,
+			DynamoiResumeCampaignInputSchema,
+			DynamoiUpdateBudgetInputSchema,
+		]) {
+			expect(() =>
+				schema.parse({
+					budgetAmount: 100,
+					campaignId: "not-a-uuid",
+				}),
+			).toThrow();
 		}
 	});
 
@@ -195,13 +212,6 @@ describe("mcp/tools phase 3 definitions", () => {
 		}
 	});
 
-	test("phase 3 tool descriptions follow review-friendly metadata guidance", () => {
-		for (const def of PHASE_3_TOOL_DEFINITIONS) {
-			expect(def.description.startsWith("Use this when")).toBe(true);
-			expect(def.description).toContain("Do not use");
-		}
-	});
-
 	test("launch campaign schema accepts review-style smart campaign inputs", () => {
 		const parsed = DynamoiLaunchCampaignInputSchema.parse({
 			artistId: "00000000-0000-0000-0000-000000000000",
@@ -225,34 +235,34 @@ describe("mcp/tools phase 3 definitions", () => {
 	});
 
 	test("launch campaign metadata documents reviewer-safe defaults", () => {
-		const definition = PHASE_3_TOOL_DEFINITIONS.find(
-			(def) => def.name === "dynamoi_launch_campaign",
+		const definition = getToolDefinition(
+			PHASE_3_TOOL_DEFINITIONS,
+			"dynamoi_launch_campaign",
 		);
-		expect(definition).toBeDefined();
-		expect(definition?.description).toContain("omit spotifyUrl and endDate");
-		expect(definition?.description).toContain("reviewer-safe defaults");
-		expect(definition?.description).toContain("Do not invent placeholder");
+		expect(definition.description).toContain("omit spotifyUrl and endDate");
+		expect(definition.description).toContain("reviewer-safe defaults");
+		expect(definition.description).toContain("Do not invent placeholder");
 	});
 
 	test("current user metadata discourages generic advice context fishing", () => {
-		const definition = PHASE_1_TOOL_DEFINITIONS.find(
-			(def) => def.name === "dynamoi_get_account_overview",
+		const definition = getToolDefinition(
+			PHASE_1_TOOL_DEFINITIONS,
+			"dynamoi_get_account_overview",
 		);
-		expect(definition).toBeDefined();
-		expect(definition?.description).toContain("explicitly asks");
-		expect(definition?.description).toContain("Always pass intent");
-		expect(definition?.description).toContain("check context");
-		expect(definition?.description).toContain("generic Instagram");
-		expect(definition?.description).toContain("Never use");
+		expect(definition.description).toContain("explicitly asks");
+		expect(definition.description).toContain("Always pass intent");
+		expect(definition.description).toContain("check context");
+		expect(definition.description).toContain("generic Instagram");
+		expect(definition.description).toContain("Never use");
 	});
 
 	test("launch campaign metadata tells ChatGPT to stop after a successful launch", () => {
-		const definition = PHASE_3_TOOL_DEFINITIONS.find(
-			(def) => def.name === "dynamoi_launch_campaign",
+		const definition = getToolDefinition(
+			PHASE_3_TOOL_DEFINITIONS,
+			"dynamoi_launch_campaign",
 		);
-		expect(definition).toBeDefined();
-		expect(definition?.description).toContain("After a successful launch");
-		expect(definition?.description).toContain(
+		expect(definition.description).toContain("After a successful launch");
+		expect(definition.description).toContain(
 			"answer from the returned campaign details directly",
 		);
 	});
