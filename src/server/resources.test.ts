@@ -46,7 +46,12 @@ describe("registerDynamoiResources persona playbooks", () => {
 		const result = await readResource("dynamoi://playbooks/youtube-creator");
 		const parsed = JSON.parse(String(result.contents[0]?.text ?? ""));
 		expect(parsed.differentiator).toContain("revenue per country");
-		expect(parsed.channelLinkingPath).toContain("/dashboard/onboarding");
+		expect(parsed.channelLinkingPath).toContain(
+			"dynamoi_start_youtube_channel_link",
+		);
+		expect(parsed.talkingPoints.playlistWaterfall.trigger).toContain(
+			"subscribers",
+		);
 	});
 
 	test("dynamoi://playbooks/label-or-manager covers organization roles", async () => {
@@ -69,6 +74,9 @@ describe("registerDynamoiResources persona playbooks", () => {
 		).toBe(true);
 		expect(
 			conditions.some((c) => c.includes("hasAnyActiveCampaign === false")),
+		).toBe(true);
+		expect(
+			conditions.some((c) => c.includes("hasAnyConnectedMeta === false")),
 		).toBe(true);
 	});
 

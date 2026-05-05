@@ -1,18 +1,17 @@
 import * as z from "zod/v4";
+import { createPhaseOnboardingToolDefinitions } from "./onboarding-tool-definitions";
+import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 import {
 	AnyOutputEnvelopeSchema,
-	GetCampaignDeploymentStatusOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
-	GetOnboardingStatusOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
-	PauseResumeOutputEnvelopeSchema,
-	UpdateBudgetOutputEnvelopeSchema,
 } from "./output-schemas";
 
 export const ToolFormatSchema = z.enum(["json", "summary"]);
 const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const UserIntentSummarySchema = z.string().trim().max(500).optional();
 const ClientRequestIdSchema = z.string().uuid().optional();
+const OnboardingAttemptIdSchema = z.string().trim().min(1).max(120).optional();
 const ExpectedCampaignStatusSchema = z
 	.enum([
 		"AWAITING_SMART_LINK",
@@ -37,6 +36,7 @@ function isValidCalendarDate(value: string): boolean {
 
 export const DynamoiListArtistsInputSchema = z
 	.object({
+		artistId: z.string().uuid().optional(),
 		cursor: z.string().optional(),
 		format: ToolFormatSchema.optional(),
 		limit: z.number().int().min(1).max(50).optional(),
@@ -63,8 +63,6 @@ export const DynamoiSearchInputSchema = z
 			});
 		}
 	});
-
-import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 
 const DynamoiGetCurrentUserIntentSchema = z.enum([
 	"account_overview",
@@ -95,14 +93,6 @@ export const DynamoiListCampaignsInputSchema = z
 		format: ToolFormatSchema.optional(),
 		limit: z.number().int().min(1).max(50).optional(),
 		status: z.string().trim().optional(),
-	})
-	.strict();
-
-export const DynamoiGetCampaignInputSchema = z
-	.object({
-		campaignId: z.string().uuid(),
-		format: ToolFormatSchema.optional(),
-		includeCountries: z.boolean().optional(),
 	})
 	.strict();
 
@@ -140,6 +130,18 @@ export const DateRangeSchema = z
 		}
 	});
 
+export const DynamoiGetCampaignInputSchema = z
+	.object({
+		analyticsDateRange: DateRangeSchema.optional(),
+		analyticsGranularity: z.enum(["TOTAL", "DAILY"]).optional(),
+		campaignId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+		includeAnalytics: z.boolean().optional(),
+		includeCountries: z.boolean().optional(),
+		includeDeploymentStatus: z.boolean().optional(),
+	})
+	.strict();
+
 export const DynamoiGetCampaignAnalyticsInputSchema = z
 	.object({
 		campaignId: z.string().uuid(),
@@ -162,6 +164,15 @@ export const DynamoiGetBillingInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
+		onboardingAttemptId: OnboardingAttemptIdSchema,
+	})
+	.strict();
+
+export const DynamoiStartSubscriptionCheckoutInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
 
@@ -176,6 +187,24 @@ export const DynamoiGetPlatformStatusInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
+		onboardingAttemptId: OnboardingAttemptIdSchema,
+		onboardingFlow: z.enum(["meta", "youtube"]).optional(),
+	})
+	.strict();
+
+export const DynamoiStartYoutubeChannelLinkInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
+
+export const DynamoiStartMetaConnectionInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
+		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
 
@@ -248,6 +277,45 @@ export const DynamoiUpdateBudgetInputSchema = z
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
+
+export const DynamoiUpdateCampaignInputSchema = z
+	.object({
+		action: z.enum(["pause", "resume", "update_budget"]),
+		budgetAmount: z.number().finite().positive().optional(),
+		campaignId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		endDate: IsoDateSchema.optional(),
+		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
+		expectedCurrentEndDate: IsoDateSchema.optional(),
+		expectedCurrentStatus: ExpectedCampaignStatusSchema,
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (data.action === "update_budget" && data.budgetAmount === undefined) {
+			ctx.addIssue({
+				code: "custom",
+				message: "budgetAmount is required when action is update_budget",
+				path: ["budgetAmount"],
+			});
+		}
+		if (data.action !== "update_budget") {
+			for (const field of [
+				"budgetAmount",
+				"endDate",
+				"expectedCurrentBudgetAmount",
+				"expectedCurrentEndDate",
+			] as const) {
+				if (data[field] !== undefined) {
+					ctx.addIssue({
+						code: "custom",
+						message: `${field} is only valid when action is update_budget`,
+						path: [field],
+					});
+				}
+			}
+		}
+	});
 
 export const DynamoiListMediaAssetsInputSchema = z
 	.object({
@@ -380,7 +448,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user explicitly asks about the signed-in Dynamoi account itself, such as who is logged in, how many organizations or artists it can access, or whether account-level platform connections exist. Always pass intent to match that explicit account question. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
+			"Use this when the user explicitly asks about the signed-in Dynamoi account itself, such as who is logged in, how many organizations or artists it can access, or whether account-level platform connections exist. Always pass intent to match that explicit account question. Do not use this to confirm a specific Meta or YouTube onboarding attempt because this account-level state can span multiple artists; use dynamoi_get_platform_status for the target artist instead. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
 		destructiveHint: false,
 		name: "dynamoi_get_account_overview",
 		openWorldHint: false,
@@ -391,7 +459,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster. If the result is empty, the user is brand-new — do not stop with 'no records found'; instead route via dynamoi_get_account_overview.recommendedNextActions or read dynamoi://playbooks/onboarding-tree.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Pass artistId when you need the full profile/readiness details for one artist instead of a roster page. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster. If the result is empty, the user is brand-new — do not stop with 'no records found'; instead route via dynamoi_get_account_overview.recommendedNextActions or read dynamoi://playbooks/onboarding-tree.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -414,17 +482,6 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	...OPENAI_TOOL_DEFINITIONS,
 	{
 		description:
-			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first. Never use this for generic advice questions that do not require account-specific data, including Instagram growth, songwriting, or lyrics prompts.",
-		destructiveHint: false,
-		name: "dynamoi_get_artist",
-		openWorldHint: false,
-		outputSchema: AnyOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetArtistInputSchema,
-		title: "Get Artist",
-	},
-	{
-		description:
 			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that. Never use this to personalize generic marketing advice. If the user has no artists yet, do not call this — route via dynamoi_get_account_overview first.",
 		destructiveHint: false,
 		name: "dynamoi_list_campaigns",
@@ -436,7 +493,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Do not use this for a campaign list; use dynamoi_list_campaigns instead. Pass includeCountries=true only when the full country list is needed. After a successful launch or budget/status mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
+			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Set includeAnalytics=true for one-campaign performance, includeDeploymentStatus=true for delivery/deployment blockers, and includeCountries=true only when the full country list is needed. Do not use this for a campaign list; use dynamoi_list_campaigns instead. After a successful launch or campaign mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
@@ -447,18 +504,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks how one campaign is performing across impressions, clicks, spend, CPC, CPM, or CTR. Pass granularity=DAILY when the user asks for a daily breakdown. Use this for a deeper audit of one campaign after you already know which campaign to inspect. Do not use this for artist-wide performance across multiple campaigns; use dynamoi_get_artist_analytics instead.",
-		destructiveHint: false,
-		name: "dynamoi_get_campaign_analytics",
-		openWorldHint: false,
-		outputSchema: AnyOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetCampaignAnalyticsInputSchema,
-		title: "Get Campaign Analytics",
-	},
-	{
-		description:
-			"Use this when the user wants artist-level performance across all campaigns, including 30-day rollups or daily breakdowns. Pass granularity=DAILY when the user asks for a daily breakdown. Pass format=summary when the user wants a written rollup, a strongest-campaign verdict, or a direct answer you can relay immediately. If this tool already returned the requested strongest-campaign comparison, stop and answer instead of calling more analytics tools. Do not use this for one campaign's metrics; use dynamoi_get_campaign_analytics instead.",
+			"Use this when the user wants artist-level performance across all campaigns, including 30-day rollups or daily breakdowns. Pass granularity=DAILY when the user asks for a daily breakdown. Pass format=summary when the user wants a written rollup, a strongest-campaign verdict, or a direct answer you can relay immediately. If this tool already returned the requested strongest-campaign comparison, stop and answer instead of calling more analytics tools. For one campaign's metrics, use dynamoi_get_campaign with includeAnalytics=true.",
 		destructiveHint: false,
 		name: "dynamoi_get_artist_analytics",
 		openWorldHint: false,
@@ -469,7 +515,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks about billing state, credit balance, promo limits, or whether billing is blocking launches for one artist. Do not use this for campaign analytics or platform connection troubleshooting.",
+			"Use this when the user asks about billing state, credit balance, promo limits, or whether billing is blocking launches for one artist. When polling after dynamoi_start_subscription_checkout, pass the returned onboardingAttemptId so Dynamoi ops can correlate the chat-first Checkout attempt. Do not use this for campaign analytics or platform connection troubleshooting.",
 		destructiveHint: false,
 		name: "dynamoi_get_billing",
 		openWorldHint: false,
@@ -480,7 +526,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription state. Never use this to personalize generic Instagram or marketing-advice questions.",
+			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. When polling after dynamoi_start_meta_connection or dynamoi_start_youtube_channel_link, pass the returned onboardingAttemptId and onboardingFlow so Dynamoi ops can correlate the chat-first browser step. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription state. Never use this to personalize generic Instagram or marketing-advice questions.",
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,
@@ -502,17 +548,6 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks whether one artist is ready to create Smart Campaigns or YouTube campaigns, or what setup steps are still missing. This is artist-level readiness, not a campaign launch. Do not use this for generic marketing advice.",
-		destructiveHint: false,
-		name: "dynamoi_get_onboarding_status",
-		openWorldHint: false,
-		outputSchema: GetOnboardingStatusOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetOnboardingStatusInputSchema,
-		title: "Get Onboarding Status",
-	},
-	{
-		description:
 			"Use this when the user is planning a campaign and wants to know if the proposed inputs are ready before dynamoi_launch_campaign. This validates readiness and targeting without creating a campaign. Do not use this to create or mutate campaigns.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign_readiness",
@@ -522,54 +557,26 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		schema: DynamoiGetCampaignReadinessInputSchema,
 		title: "Get Campaign Readiness",
 	},
-	{
-		description:
-			"Use this when the user asks why an existing campaign is not live, where deployment stands, or what is blocking delivery. This reads local Dynamoi deployment state only. Do not use this for new campaign planning.",
-		destructiveHint: false,
-		name: "dynamoi_get_campaign_deployment_status",
-		openWorldHint: false,
-		outputSchema: GetCampaignDeploymentStatusOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetCampaignDeploymentStatusInputSchema,
-		title: "Get Campaign Deployment Status",
-	},
 ] as const;
+
+export const PHASE_ONBOARDING_TOOL_DEFINITIONS =
+	createPhaseOnboardingToolDefinitions({
+		metaConnection: DynamoiStartMetaConnectionInputSchema,
+		subscriptionCheckout: DynamoiStartSubscriptionCheckoutInputSchema,
+		youtubeChannelLink: DynamoiStartYoutubeChannelLinkInputSchema,
+	});
 
 export const PHASE_2_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user explicitly wants to pause a running campaign and stop ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
+			"Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.",
 		destructiveHint: true,
 		idempotentHint: true,
-		name: "dynamoi_pause_campaign",
+		name: "dynamoi_update_campaign",
 		openWorldHint: true,
-		outputSchema: PauseResumeOutputEnvelopeSchema,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: false,
-		schema: DynamoiPauseCampaignInputSchema,
-		title: "Pause Campaign",
-	},
-	{
-		description:
-			"Use this when the user explicitly wants to resume a paused campaign and restart ad delivery. Do not use this for inspection-only questions; this changes external campaign state.",
-		destructiveHint: true,
-		idempotentHint: true,
-		name: "dynamoi_resume_campaign",
-		openWorldHint: true,
-		outputSchema: PauseResumeOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiResumeCampaignInputSchema,
-		title: "Resume Campaign",
-	},
-	{
-		description:
-			"Use this when the user explicitly wants to change a campaign budget, and optionally the end date for total-budget campaigns. Do not use this for read-only budget checks; this updates live campaign settings.",
-		destructiveHint: true,
-		idempotentHint: true,
-		name: "dynamoi_update_budget",
-		openWorldHint: true,
-		outputSchema: UpdateBudgetOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiUpdateBudgetInputSchema,
-		title: "Update Campaign Budget",
+		schema: DynamoiUpdateCampaignInputSchema,
+		title: "Update Campaign",
 	},
 ] as const;

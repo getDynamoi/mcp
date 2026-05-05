@@ -17,38 +17,6 @@ const ErrorEnvelopeOutputSchema = z
 
 const AnyToolDataOutputSchema = z.object({}).passthrough();
 
-const PauseResumePlatformResultOutputSchema = z
-	.object({
-		message: z.string().optional(),
-		platform: z.enum(["META", "GOOGLE"]),
-		success: z.boolean(),
-	})
-	.strict();
-
-const PauseResumeCampaignDataOutputSchema = z
-	.object({
-		actionRequired: z.array(z.string()).optional(),
-		contentTitle: z.string(),
-		id: z.string(),
-		newStatus: z.enum(["PAUSED", "ACTIVE"]),
-		platformResults: z.array(PauseResumePlatformResultOutputSchema),
-		warnings: z.array(z.string()).optional(),
-	})
-	.strict();
-
-const UpdateBudgetDataOutputSchema = z
-	.object({
-		actionRequired: z.array(z.string()).optional(),
-		budgetType: z.enum(["DAILY", "TOTAL"]),
-		contentTitle: z.string(),
-		endDate: z.string().optional(),
-		id: z.string(),
-		newBudget: MoneyDisplayOutputSchema,
-		previousBudget: MoneyDisplayOutputSchema,
-		warnings: z.array(z.string()).optional(),
-	})
-	.strict();
-
 const MediaAssetSummaryOutputSchema = z
 	.object({
 		aspectRatio: z.string().optional(),
@@ -143,77 +111,6 @@ const ListSmartLinksSummaryOutputSchema = z
 	})
 	.strict();
 
-const SmartLinkSettingsOutputSchema = z
-	.object({
-		artistId: z.string(),
-		artistName: z.string(),
-		availableThemes: z.array(SmartLinkStatusSchemas.theme),
-		defaultTheme: SmartLinkStatusSchemas.theme,
-		isEnabled: z.boolean(),
-		pixels: z
-			.object({
-				googleAdsConversionId: z.string().nullable(),
-				metaPixelId: z.string().nullable(),
-				tiktokPixelId: z.string().nullable(),
-			})
-			.strict(),
-		summary: z.string().optional(),
-	})
-	.strict();
-
-const SmartLinkAnalyticsTotalsOutputSchema = z
-	.object({
-		anonymousVisits: z.number(),
-		promoteCtaClicks: z.number(),
-		shareClicks: z.number(),
-		streamingServiceClicks: z.number(),
-	})
-	.strict();
-
-const SmartLinkBreakdownsOutputSchema = z
-	.object({
-		countryClicks: z.record(z.string(), z.number()).optional(),
-		countryViews: z.record(z.string(), z.number()).optional(),
-		deviceClicks: z.record(z.string(), z.number()).optional(),
-		deviceViews: z.record(z.string(), z.number()).optional(),
-		localeClicks: z.record(z.string(), z.number()).optional(),
-		localeViews: z.record(z.string(), z.number()).optional(),
-		referrerClicks: z.record(z.string(), z.number()).optional(),
-		referrerViews: z.record(z.string(), z.number()).optional(),
-		serviceClicks: z.record(z.string(), z.number()).optional(),
-		themeClicks: z.record(z.string(), z.number()).optional(),
-		themeViews: z.record(z.string(), z.number()).optional(),
-		utmClicks: z.record(z.string(), z.number()).optional(),
-		utmViews: z.record(z.string(), z.number()).optional(),
-	})
-	.strict();
-
-const SmartLinkAnalyticsOutputSchema = z
-	.object({
-		artistId: z.string(),
-		breakdowns: SmartLinkBreakdownsOutputSchema.optional(),
-		daily: z
-			.array(
-				SmartLinkAnalyticsTotalsOutputSchema.extend({
-					date: z.string(),
-				}).strict(),
-			)
-			.optional(),
-		dateRange: z.object({ end: z.string(), start: z.string() }).strict(),
-		playLinkId: z.string(),
-		releaseTitle: z.string(),
-		totals: SmartLinkAnalyticsTotalsOutputSchema,
-		warnings: z.array(z.string()).optional(),
-	})
-	.strict();
-
-const SmartLinkAnalyticsSummaryOutputSchema = z
-	.object({
-		summary: z.string(),
-		warnings: z.array(z.string()).optional(),
-	})
-	.strict();
-
 const AvailableCountryOutputSchema = z
 	.object({
 		code: z.string(),
@@ -239,26 +136,6 @@ const SummaryCountOutputSchema = z
 		nextCursor: z.string().optional(),
 		summary: z.string(),
 		totalCount: z.number(),
-	})
-	.strict();
-
-const ProductReadinessOutputSchema = z
-	.object({
-		blockers: z.array(z.string()),
-		isReady: z.boolean(),
-		missingRequirements: z.array(z.string()),
-		nextAction: z.string().optional(),
-		warnings: z.array(z.string()),
-	})
-	.strict();
-
-const GetOnboardingStatusDataOutputSchema = z
-	.object({
-		artistId: z.string(),
-		artistName: z.string(),
-		overallNextAction: z.string().optional(),
-		smartCampaign: ProductReadinessOutputSchema,
-		youtube: ProductReadinessOutputSchema,
 	})
 	.strict();
 
@@ -296,31 +173,6 @@ const GetCampaignReadinessDataOutputSchema = z
 	})
 	.strict();
 
-const GetCampaignDeploymentStatusDataOutputSchema = z
-	.object({
-		artistId: z.string(),
-		artistName: z.string(),
-		blockers: z.array(z.string()),
-		campaignId: z.string(),
-		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
-		contentTitle: z.string(),
-		deliveryState: z.enum(["LIVE", "PENDING", "BLOCKED", "PAUSED", "ENDED"]),
-		nextAction: z.string().optional(),
-		platforms: z.array(
-			z
-				.object({
-					errorMessage: z.string().optional(),
-					linkedProviderId: z.string().optional(),
-					platform: z.enum(["META", "GOOGLE"]),
-					status: z.string(),
-				})
-				.strict(),
-		),
-		status: z.string(),
-		warnings: z.array(z.string()),
-	})
-	.strict();
-
 const CreateSmartLinkFromSpotifyDataOutputSchema =
 	SmartLinkDetailsOutputSchema.extend({
 		outcome: z.enum(["created", "existing"]),
@@ -330,6 +182,7 @@ const CreateSmartLinkFromSpotifyDataOutputSchema =
 
 const CreateSmartLinksFromSpotifyArtistDataOutputSchema = z
 	.object({
+		artistCreatedFromSpotify: z.boolean().optional(),
 		artistHubUrl: z.string(),
 		artistId: z.string(),
 		artistName: z.string(),
@@ -347,22 +200,6 @@ const CreateSmartLinksFromSpotifyArtistDataOutputSchema = z
 		warnings: z.array(z.string()).optional(),
 	})
 	.strict();
-
-const UpdateSmartLinkDataOutputSchema = SmartLinkDetailsOutputSchema.extend({
-	renderRunId: z.string().nullable(),
-	renderWarning: z.string().nullable(),
-}).strict();
-
-const UpdateSmartLinkArtistSettingsDataOutputSchema =
-	SmartLinkSettingsOutputSchema.extend({
-		renderQueuedCount: z.number(),
-		renderWarning: z.string().nullable(),
-	}).strict();
-
-const PublishSmartLinkDataOutputSchema = SmartLinkDetailsOutputSchema.extend({
-	workflowRunId: z.string().nullable(),
-	workflowWarning: z.string().nullable(),
-}).strict();
 
 const LaunchCampaignDataOutputSchema = z
 	.object({
@@ -385,32 +222,6 @@ export const AnyOutputEnvelopeSchema = z.union([
 	z.object({ data: AnyToolDataOutputSchema, status: z.literal("success") }),
 	z.object({
 		data: AnyToolDataOutputSchema,
-		message: z.string(),
-		status: z.literal("partial_success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const PauseResumeOutputEnvelopeSchema = z.union([
-	z.object({
-		data: PauseResumeCampaignDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	z.object({
-		data: PauseResumeCampaignDataOutputSchema,
-		message: z.string(),
-		status: z.literal("partial_success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const UpdateBudgetOutputEnvelopeSchema = z.union([
-	z.object({
-		data: UpdateBudgetDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	z.object({
-		data: UpdateBudgetDataOutputSchema,
 		message: z.string(),
 		status: z.literal("partial_success"),
 	}),
@@ -447,32 +258,10 @@ export const ListAvailableCountriesOutputEnvelopeSchema = z.union([
 	ErrorEnvelopeOutputSchema,
 ]);
 
-export const GetOnboardingStatusOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			GetOnboardingStatusDataOutputSchema,
-			SummaryWarningsActionsOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
 export const GetCampaignReadinessOutputEnvelopeSchema = z.union([
 	z.object({
 		data: z.union([
 			GetCampaignReadinessDataOutputSchema,
-			SummaryWarningsActionsOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const GetCampaignDeploymentStatusOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			GetCampaignDeploymentStatusDataOutputSchema,
 			SummaryWarningsActionsOutputSchema,
 		]),
 		status: z.literal("success"),
@@ -502,60 +291,6 @@ export const ListSmartLinksOutputEnvelopeSchema = z.union([
 			ListSmartLinksDataOutputSchema,
 			ListSmartLinksSummaryOutputSchema,
 		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const GetSmartLinkOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			SmartLinkDetailsOutputSchema,
-			z.object({ summary: z.string() }).passthrough(),
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const GetSmartLinkAnalyticsOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			SmartLinkAnalyticsOutputSchema,
-			SmartLinkAnalyticsSummaryOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const SmartLinkArtistSettingsOutputEnvelopeSchema = z.union([
-	z.object({
-		data: SmartLinkSettingsOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const UpdateSmartLinkOutputEnvelopeSchema = z.union([
-	z.object({
-		data: UpdateSmartLinkDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const UpdateSmartLinkArtistSettingsOutputEnvelopeSchema = z.union([
-	z.object({
-		data: UpdateSmartLinkArtistSettingsDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
-
-export const PublishSmartLinkOutputEnvelopeSchema = z.union([
-	z.object({
-		data: PublishSmartLinkDataOutputSchema,
 		status: z.literal("success"),
 	}),
 	ErrorEnvelopeOutputSchema,

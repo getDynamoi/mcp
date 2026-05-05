@@ -43,41 +43,33 @@ White-glove onboarding and ongoing support included — need help setting up you
 
 | Tool | Description |
 |---|---|
-| `dynamoi_list_artists` | List all music artists and YouTube channels you manage |
+| `dynamoi_list_artists` | List all music artists and YouTube channels you manage; pass `artistId` for one artist profile |
 | `dynamoi_search` | Search across artists, ad campaigns, and smart links by name or URL |
-| `dynamoi_get_artist` | Artist or YouTube channel profile — connected platforms, subscription tier, billing status |
 | `dynamoi_list_campaigns` | List campaigns with content title, type, budget, status, and platforms |
-| `dynamoi_get_campaign` | Full campaign details — budget, targeting, per-platform status, blocked reasons (by default includes countryCount; pass includeCountries=true for full list) |
-| `dynamoi_get_campaign_analytics` | Performance metrics — impressions, clicks, spend, CPC, CPM, CTR by platform |
+| `dynamoi_get_campaign` | Full campaign details — budget, targeting, platform status, blockers; pass `includeAnalytics`, `includeDeploymentStatus`, or `includeCountries` for deeper reads |
 | `dynamoi_get_artist_analytics` | Artist-level rollup analytics across all campaigns — totals + optional daily rows by platform |
 | `dynamoi_get_billing` | Credit balance, subscription tier, billing status, and recent spend |
 | `dynamoi_get_platform_status` | Connection health for Spotify, Meta, and YouTube — status, expiry, next steps |
 | `dynamoi_list_available_countries` | Campaign-type-aware country targeting list for Smart Campaigns or YouTube campaigns |
-| `dynamoi_get_onboarding_status` | Artist readiness for Smart Campaigns and YouTube campaigns, with missing setup steps |
 | `dynamoi_get_campaign_readiness` | No-write launch preflight for proposed campaign inputs and targeting |
-| `dynamoi_get_campaign_deployment_status` | Existing campaign deployment/delivery state, platform links, blockers, and next action |
 | `dynamoi_list_smart_links` | List free Smart Links for one artist with publish, render, claim, and public URL status |
-| `dynamoi_get_smart_link` | Full Smart Link details — release metadata, public URL, statuses, theme, and next actions |
-| `dynamoi_get_smart_link_analytics` | Aggregate Smart Link visits and clicks with optional daily rows and capped breakdowns |
-| `dynamoi_get_smart_link_artist_settings` | Artist-level Smart Link defaults including theme and validated tracking pixel IDs |
+| `dynamoi_get_smart_link` | Full Smart Link details; pass `include` for analytics or artist-level theme/pixel settings |
 
 ### Write Tools
 
 | Tool | Description |
 |---|---|
-| `dynamoi_pause_campaign` | Pause a running campaign on Meta and/or Google |
-| `dynamoi_resume_campaign` | Resume a paused campaign on Meta and/or Google |
-| `dynamoi_update_budget` | Change campaign budget amount in USD (daily or total) |
-| `dynamoi_update_smart_link` | Update a Smart Link custom description and queue rerendering |
-| `dynamoi_update_smart_link_artist_settings` | Update artist-level Smart Link theme and validated Meta, TikTok, or Google Ads pixel IDs |
-| `dynamoi_publish_smart_link` | Publish an eligible Smart Link and queue rendering |
-| `dynamoi_unpublish_smart_link` | Unpublish a Smart Link and queue public artifact removal |
+| `dynamoi_update_campaign` | Pause, resume, or update campaign budget/end-date settings via an `action` |
+| `dynamoi_update_smart_link` | Update description, publish/unpublish, or update artist-level Smart Link theme and validated pixel IDs via an `action` |
 
 ### Workflow Tools
 
 | Tool | Description |
 |---|---|
 | `dynamoi_list_media_assets` | Browse uploaded creative assets for campaign launches |
+| `dynamoi_start_subscription_checkout` | Start managed-advertising billing with a secure Stripe Checkout URL |
+| `dynamoi_start_youtube_channel_link` | Start YouTube channel linking with a signed Google OAuth URL |
+| `dynamoi_start_meta_connection` | Start Meta connection with a signed OAuth URL and chat-first return page |
 | `dynamoi_create_smart_link_from_spotify` | Create or return an existing free Smart Link from a Spotify artist, album, or track URL |
 | `dynamoi_create_smart_links_from_spotify_artist` | Create or refresh free Smart Links from a Spotify artist URL, return the artist hub, and start catalog import |
 | `dynamoi_launch_campaign` | Launch a new Spotify promotion or YouTube growth campaign |
@@ -175,19 +167,19 @@ The MCP server includes static resources to help AI assistants make better decis
 > → AI checks your platform connections, helps select a playlist, and launches a YouTube campaign that optimizes for channel revenue.
 
 > **"How are my campaigns doing?"**
-> → AI calls `dynamoi_list_campaigns` + `dynamoi_get_campaign_analytics` and gives you a performance summary with spend, clicks, and efficiency metrics.
+> → AI calls `dynamoi_list_campaigns` + `dynamoi_get_campaign` with `includeAnalytics=true` and gives you a performance summary with spend, clicks, and efficiency metrics.
 
 > **"Why is my campaign stuck?"**
 > → AI fetches campaign details and platform status, identifies the blocker (missing connection, review pending, budget issue), and tells you exactly what to do next.
 
 > **"Pause all my active campaigns"**
-> → AI lists your campaigns, confirms which ones to pause, then calls `dynamoi_pause_campaign` for each.
+> → AI lists your campaigns, confirms which ones to pause, then calls `dynamoi_update_campaign` with `action=pause` for each.
 
 > **"Show me how much I've spent this month across all campaigns"**
 > → AI pulls billing and analytics data across your artists and gives you a consolidated spend summary.
 
 > **"Double my YouTube campaign budget"**
-> → AI fetches current budget, confirms the change, and calls `dynamoi_update_budget`.
+> → AI fetches current budget, confirms the change, and calls `dynamoi_update_campaign` with `action=update_budget`.
 
 > **"Launch a new campaign for my single dropping Friday"**
 > → AI walks you through content type, budget, targeting, and creative — then calls `dynamoi_launch_campaign`.
@@ -216,4 +208,4 @@ See [CHANGELOG.md](./CHANGELOG.md).
 > → AI calls `dynamoi_create_smart_links_from_spotify_artist`, returns the artist hub URL, returns currently available public links, and explains that the catalog import continues in the background.
 
 > **"Add my Meta pixel to my Smart Links."**
-> → AI confirms the pixel ID, calls `dynamoi_update_smart_link_artist_settings`, and queues rerendering for existing links.
+> → AI confirms the pixel ID, calls `dynamoi_update_smart_link` with `action=update_artist_settings`, and queues rerendering for existing links.

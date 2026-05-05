@@ -1,14 +1,9 @@
 import * as z from "zod/v4";
 import {
+	AnyOutputEnvelopeSchema,
 	CreateSmartLinkFromSpotifyOutputEnvelopeSchema,
 	CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema,
-	GetSmartLinkAnalyticsOutputEnvelopeSchema,
-	GetSmartLinkOutputEnvelopeSchema,
 	ListSmartLinksOutputEnvelopeSchema,
-	PublishSmartLinkOutputEnvelopeSchema,
-	SmartLinkArtistSettingsOutputEnvelopeSchema,
-	UpdateSmartLinkArtistSettingsOutputEnvelopeSchema,
-	UpdateSmartLinkOutputEnvelopeSchema,
 } from "./output-schemas";
 
 const ToolFormatSchema = z.enum(["json", "summary"]);
@@ -91,7 +86,7 @@ export const DynamoiCreateSmartLinkFromSpotifyInputSchema = z
 
 export const DynamoiCreateSmartLinksFromSpotifyArtistInputSchema = z
 	.object({
-		artistId: z.string().uuid(),
+		artistId: z.string().uuid().optional(),
 		clientRequestId: RequiredClientRequestIdSchema.optional(),
 		format: ToolFormatSchema.optional(),
 		spotifyArtistUrl: z.string().trim().min(1).max(500),
@@ -113,17 +108,43 @@ export const DynamoiListSmartLinksInputSchema = z
 export const DynamoiGetSmartLinkInputSchema = z
 	.object({
 		artistId: z.string().uuid().optional(),
+		dateRange: DateRangeSchema.optional(),
 		format: ToolFormatSchema.optional(),
+		granularity: z.enum(["TOTAL", "DAILY"]).optional(),
+		include: z
+			.array(z.enum(["analytics", "artist_settings"]))
+			.max(2)
+			.optional(),
+		includeBreakdowns: z.boolean().optional(),
 		playLinkId: z.string().uuid().optional(),
 		spotifyUrl: z.string().trim().min(1).max(500).optional(),
 	})
 	.strict()
 	.superRefine((data, ctx) => {
-		if (!(data.playLinkId || (data.artistId && data.spotifyUrl))) {
+		const settingsOnly =
+			data.include?.includes("artist_settings") &&
+			!data.playLinkId &&
+			!data.spotifyUrl &&
+			Boolean(data.artistId);
+		if (
+			!(data.playLinkId || (data.artistId && data.spotifyUrl) || settingsOnly)
+		) {
 			ctx.addIssue({
 				code: "custom",
-				message: "Provide playLinkId or artistId with spotifyUrl",
+				message:
+					"Provide playLinkId, artistId with spotifyUrl, or artistId with include=['artist_settings']",
 				path: ["playLinkId"],
+			});
+		}
+		if (
+			(data.dateRange || data.granularity || data.includeBreakdowns) &&
+			!data.include?.includes("analytics")
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"dateRange, granularity, and includeBreakdowns require include to contain analytics",
+				path: ["include"],
 			});
 		}
 	});
@@ -147,13 +168,105 @@ export const DynamoiGetSmartLinkArtistSettingsInputSchema = z
 
 export const DynamoiUpdateSmartLinkInputSchema = z
 	.object({
+		action: z.enum([
+			"update_description",
+			"update_artist_settings",
+			"publish",
+			"unpublish",
+		]),
+		artistId: z.string().uuid().optional(),
 		clientRequestId: ClientRequestIdSchema,
-		customDescription: z.string().max(500).nullable(),
+		customDescription: z.string().max(500).nullable().optional(),
+		expectedPublishState: z.enum(["published", "unpublished"]).optional(),
 		expectedUpdatedAt: z.string().datetime().optional(),
-		playLinkId: z.string().uuid(),
+		googleAdsConversionId: z.string().trim().max(32).nullable().optional(),
+		metaPixelId: z.string().trim().max(32).nullable().optional(),
+		playLinkId: z.string().uuid().optional(),
+		theme: SmartLinkThemeSchema.optional(),
+		tiktokPixelId: z.string().trim().max(32).nullable().optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
-	.strict();
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.action === "update_description" &&
+			data.customDescription === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"customDescription is required when action is update_description",
+				path: ["customDescription"],
+			});
+		}
+		if (data.action !== "update_artist_settings" && !data.playLinkId) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"playLinkId is required when action is update_description, publish, or unpublish",
+				path: ["playLinkId"],
+			});
+		}
+		if (data.action === "update_artist_settings") {
+			if (!data.artistId) {
+				ctx.addIssue({
+					code: "custom",
+					message: "artistId is required when action is update_artist_settings",
+					path: ["artistId"],
+				});
+			}
+			if (
+				data.theme === undefined &&
+				data.metaPixelId === undefined &&
+				data.tiktokPixelId === undefined &&
+				data.googleAdsConversionId === undefined
+			) {
+				ctx.addIssue({
+					code: "custom",
+					message: "Provide at least one setting to update",
+					path: ["theme"],
+				});
+			}
+		}
+		if (
+			(data.action === "publish" || data.action === "unpublish") &&
+			data.customDescription !== undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "customDescription is only valid for update_description",
+				path: ["customDescription"],
+			});
+		}
+		if (data.action !== "update_artist_settings") {
+			for (const field of [
+				"artistId",
+				"googleAdsConversionId",
+				"metaPixelId",
+				"theme",
+				"tiktokPixelId",
+			] as const) {
+				if (data[field] !== undefined) {
+					ctx.addIssue({
+						code: "custom",
+						message: `${field} is only valid for update_artist_settings`,
+						path: [field],
+					});
+				}
+			}
+		}
+		if (
+			data.action !== "publish" &&
+			data.action !== "unpublish" &&
+			data.expectedPublishState !== undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "expectedPublishState is only valid for publish or unpublish",
+				path: ["expectedPublishState"],
+			});
+		}
+	});
 
 export const DynamoiUpdateSmartLinkArtistSettingsInputSchema = z
 	.object({
@@ -205,7 +318,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
+			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. If the signed-in user has no Dynamoi artist yet, omit artistId so Dynamoi can create the first artist from the Spotify artist profile. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_links_from_spotify_artist",
@@ -228,83 +341,25 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
+			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions. Add include=['analytics'] for visit/click analytics and include=['artist_settings'] for artist-level theme/pixel settings. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		name: "dynamoi_get_smart_link",
 		openWorldHint: false,
-		outputSchema: GetSmartLinkOutputEnvelopeSchema,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetSmartLinkInputSchema,
 		title: "Get Smart Link",
 	},
 	{
 		description:
-			"Use this when the user asks how one free Smart Link is performing. Returns aggregate visits, streaming-service clicks, share clicks, promote CTA clicks, and optional daily or capped breakdown data. Never use this to expose raw visitor identifiers.",
-		destructiveHint: false,
-		name: "dynamoi_get_smart_link_analytics",
-		openWorldHint: false,
-		outputSchema: GetSmartLinkAnalyticsOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetSmartLinkAnalyticsInputSchema,
-		title: "Get Smart Link Analytics",
-	},
-	{
-		description:
-			"Use this when the user wants to inspect artist-level Smart Link settings, including whether Smart Links are enabled, default theme, available themes, and configured tracking pixel IDs.",
-		destructiveHint: false,
-		name: "dynamoi_get_smart_link_artist_settings",
-		openWorldHint: false,
-		outputSchema: SmartLinkArtistSettingsOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiGetSmartLinkArtistSettingsInputSchema,
-		title: "Get Smart Link Artist Settings",
-	},
-	{
-		description:
-			"Use this when the user wants to change one Smart Link's public description. This updates a public landing page and queues background rendering. Theme and pixel settings are artist-level; use dynamoi_update_smart_link_artist_settings for those.",
+			"Use this when the user wants to change one Smart Link's public description, publish/unpublish the public landing page, or update artist-level Smart Link theme/pixel settings. Set action to update_description, publish, unpublish, or update_artist_settings. This updates public landing-page behavior and may queue background rendering.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_update_smart_link",
 		openWorldHint: true,
-		outputSchema: UpdateSmartLinkOutputEnvelopeSchema,
+		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiUpdateSmartLinkInputSchema,
 		title: "Update Smart Link",
-	},
-	{
-		description:
-			"Use this when the user wants to update artist-level Smart Link theme or tracking pixel IDs. These settings apply to all current and future Smart Links for the artist. Accepts only validated Meta Pixel ID, TikTok Pixel ID, and Google Ads Conversion ID; arbitrary JavaScript or script snippets are not supported.",
-		destructiveHint: false,
-		idempotentHint: true,
-		name: "dynamoi_update_smart_link_artist_settings",
-		openWorldHint: true,
-		outputSchema: UpdateSmartLinkArtistSettingsOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiUpdateSmartLinkArtistSettingsInputSchema,
-		title: "Update Smart Link Artist Settings",
-	},
-	{
-		description:
-			"Use this when the user explicitly wants to publish an approved Smart Link and expose its public play.dynamoi.com URL. Cannot publish rejected, pending-review, or takedown-active links.",
-		destructiveHint: false,
-		idempotentHint: true,
-		name: "dynamoi_publish_smart_link",
-		openWorldHint: true,
-		outputSchema: PublishSmartLinkOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiPublishSmartLinkInputSchema,
-		title: "Publish Smart Link",
-	},
-	{
-		description:
-			"Use this when the user explicitly wants to unpublish a Smart Link and remove its public play.dynamoi.com landing page. Restate the affected public URL before calling this tool.",
-		destructiveHint: true,
-		idempotentHint: true,
-		name: "dynamoi_unpublish_smart_link",
-		openWorldHint: true,
-		outputSchema: PublishSmartLinkOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiPublishSmartLinkInputSchema,
-		title: "Unpublish Smart Link",
 	},
 ] as const;

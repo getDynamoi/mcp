@@ -44,7 +44,11 @@ import type {
 	SearchData,
 	SearchSummaryData,
 	SmartLinkSettingsData,
+	StartMetaConnectionData,
+	StartSubscriptionCheckoutData,
+	StartYoutubeChannelLinkData,
 	UpdateBudgetData,
+	UpdateCampaignData,
 	UpdateSmartLinkArtistSettingsData,
 	UpdateSmartLinkData,
 } from "../types";
@@ -54,7 +58,11 @@ import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
-import { PHASE_1_TOOL_DEFINITIONS, PHASE_2_TOOL_DEFINITIONS } from "./tools";
+import {
+	PHASE_1_TOOL_DEFINITIONS,
+	PHASE_2_TOOL_DEFINITIONS,
+	PHASE_ONBOARDING_TOOL_DEFINITIONS,
+} from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
 const SdkToolOutputEnvelopeSchema = z
@@ -99,11 +107,20 @@ export type Phase3Adapter = {
 	getBilling(
 		input: unknown,
 	): Promise<ResultEnvelope<GetBillingData | GetBillingSummaryData>>;
+	startSubscriptionCheckout(
+		input: unknown,
+	): Promise<ResultEnvelope<StartSubscriptionCheckoutData>>;
+	startMetaConnection(
+		input: unknown,
+	): Promise<ResultEnvelope<StartMetaConnectionData>>;
 	getPlatformStatus(
 		input: unknown,
 	): Promise<
 		ResultEnvelope<GetPlatformStatusData | GetPlatformStatusSummaryData>
 	>;
+	startYoutubeChannelLink(
+		input: unknown,
+	): Promise<ResultEnvelope<StartYoutubeChannelLinkData>>;
 	listAvailableCountries(
 		input: unknown,
 	): Promise<
@@ -136,6 +153,7 @@ export type Phase3Adapter = {
 		input: unknown,
 	): Promise<ResultEnvelope<PauseResumeCampaignData>>;
 	updateBudget(input: unknown): Promise<ResultEnvelope<UpdateBudgetData>>;
+	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData>>;
 
 	listMediaAssets(
 		input: unknown,
@@ -161,7 +179,15 @@ export type Phase3Adapter = {
 	getSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<SmartLinkSettingsData>>;
-	updateSmartLink(input: unknown): Promise<ResultEnvelope<UpdateSmartLinkData>>;
+	updateSmartLink(
+		input: unknown,
+	): Promise<
+		ResultEnvelope<
+			| UpdateSmartLinkData
+			| UpdateSmartLinkArtistSettingsData
+			| PublishSmartLinkData
+		>
+	>;
 	updateSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<UpdateSmartLinkArtistSettingsData>>;
@@ -241,6 +267,7 @@ export function createDynamoiMcpServer(options: {
 	// Tools (Phase 1 + Phase 2)
 	for (const def of [
 		...PHASE_1_TOOL_DEFINITIONS,
+		...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 		...PHASE_2_TOOL_DEFINITIONS,
 		...PHASE_3_TOOL_DEFINITIONS,
 		...PHASE_4_TOOL_DEFINITIONS,
@@ -299,12 +326,6 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_get_artist":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getArtist(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
 					case "dynamoi_get_artist_analytics":
 						return asValidatedTextResult({
 							envelope: await options.adapter.getArtistAnalytics(input),
@@ -323,15 +344,21 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_get_campaign_analytics":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getCampaignAnalytics(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
 					case "dynamoi_get_billing":
 						return asValidatedTextResult({
 							envelope: await options.adapter.getBilling(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_start_subscription_checkout":
+						return asValidatedTextResult({
+							envelope: await options.adapter.startSubscriptionCheckout(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_start_meta_connection":
+						return asValidatedTextResult({
+							envelope: await options.adapter.startMetaConnection(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
@@ -341,15 +368,15 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_list_available_countries":
+					case "dynamoi_start_youtube_channel_link":
 						return asValidatedTextResult({
-							envelope: await options.adapter.listAvailableCountries(input),
+							envelope: await options.adapter.startYoutubeChannelLink(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_get_onboarding_status":
+					case "dynamoi_list_available_countries":
 						return asValidatedTextResult({
-							envelope: await options.adapter.getOnboardingStatus(input),
+							envelope: await options.adapter.listAvailableCountries(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
@@ -359,28 +386,9 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_get_campaign_deployment_status":
+					case "dynamoi_update_campaign":
 						return asValidatedTextResult({
-							envelope:
-								await options.adapter.getCampaignDeploymentStatus(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_pause_campaign":
-						return asValidatedTextResult({
-							envelope: await options.adapter.pauseCampaign(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_resume_campaign":
-						return asValidatedTextResult({
-							envelope: await options.adapter.resumeCampaign(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_update_budget":
-						return asValidatedTextResult({
-							envelope: await options.adapter.updateBudget(input),
+							envelope: await options.adapter.updateCampaign(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
@@ -421,40 +429,9 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
-					case "dynamoi_get_smart_link_analytics":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getSmartLinkAnalytics(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_smart_link_artist_settings":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getSmartLinkArtistSettings(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
 					case "dynamoi_update_smart_link":
 						return asValidatedTextResult({
 							envelope: await options.adapter.updateSmartLink(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_update_smart_link_artist_settings":
-						return asValidatedTextResult({
-							envelope:
-								await options.adapter.updateSmartLinkArtistSettings(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_publish_smart_link":
-						return asValidatedTextResult({
-							envelope: await options.adapter.publishSmartLink(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_unpublish_smart_link":
-						return asValidatedTextResult({
-							envelope: await options.adapter.unpublishSmartLink(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});

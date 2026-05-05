@@ -6,23 +6,23 @@ import {
 import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
-	DynamoiPublishSmartLinkInputSchema,
-	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
+	DynamoiGetSmartLinkInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
 	PHASE_4_TOOL_DEFINITIONS,
 } from "./smart-link-tools";
 import {
 	DynamoiGetArtistAnalyticsInputSchema,
+	DynamoiGetBillingInputSchema,
 	DynamoiGetCampaignInputSchema,
 	DynamoiGetCampaignReadinessInputSchema,
 	DynamoiGetCurrentUserInputSchema,
+	DynamoiGetPlatformStatusInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
-	DynamoiPauseCampaignInputSchema,
-	DynamoiResumeCampaignInputSchema,
-	DynamoiUpdateBudgetInputSchema,
+	DynamoiUpdateCampaignInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
+	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
@@ -38,6 +38,20 @@ function getToolDefinition(
 }
 
 describe("mcp/tools phase 1 definitions", () => {
+	test("public connector surface stays compact", () => {
+		const publicTools = [
+			...PHASE_1_TOOL_DEFINITIONS,
+			...PHASE_ONBOARDING_TOOL_DEFINITIONS,
+			...PHASE_2_TOOL_DEFINITIONS,
+			...PHASE_3_TOOL_DEFINITIONS,
+			...PHASE_4_TOOL_DEFINITIONS,
+		];
+		expect(publicTools.length).toBeLessThanOrEqual(23);
+		expect(publicTools.map((tool) => tool.name)).toContain(
+			"dynamoi_start_meta_connection",
+		);
+	});
+
 	test("read tools include required annotations", () => {
 		for (const def of PHASE_1_TOOL_DEFINITIONS) {
 			expect(def.readOnlyHint).toBe(true);
@@ -47,12 +61,17 @@ describe("mcp/tools phase 1 definitions", () => {
 		}
 	});
 
-	test("get campaign schema supports includeCountries", () => {
+	test("get campaign schema supports consolidated include flags", () => {
 		const parsed = DynamoiGetCampaignInputSchema.parse({
+			analyticsGranularity: "DAILY",
 			campaignId: "00000000-0000-0000-0000-000000000000",
+			includeAnalytics: true,
 			includeCountries: true,
+			includeDeploymentStatus: true,
 		});
 		expect(parsed.includeCountries).toBe(true);
+		expect(parsed.includeAnalytics).toBe(true);
+		expect(parsed.includeDeploymentStatus).toBe(true);
 	});
 
 	test("get artist analytics schema accepts uuid artistId", () => {
@@ -69,6 +88,23 @@ describe("mcp/tools phase 1 definitions", () => {
 			intent: "account_overview",
 		});
 		expect(parsed.intent).toBe("account_overview");
+	});
+
+	test("polling schemas accept onboarding attempt correlation", () => {
+		const billing = DynamoiGetBillingInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			onboardingAttemptId: "11111111-1111-4111-8111-111111111111",
+		});
+		expect(billing.onboardingAttemptId).toBe(
+			"11111111-1111-4111-8111-111111111111",
+		);
+
+		const platform = DynamoiGetPlatformStatusInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			onboardingAttemptId: "11111111-1111-4111-8111-111111111111",
+			onboardingFlow: "youtube",
+		});
+		expect(platform.onboardingFlow).toBe("youtube");
 	});
 
 	test("artist analytics metadata guides direct summary answers", () => {
@@ -159,6 +195,38 @@ describe("mcp/tools phase 1 definitions", () => {
 	});
 });
 
+describe("mcp/tools onboarding definitions", () => {
+	test("onboarding start tools are idempotent non-destructive writes", () => {
+		expect(
+			PHASE_ONBOARDING_TOOL_DEFINITIONS.some(
+				(def) => def.name === "dynamoi_start_meta_connection",
+			),
+		).toBe(true);
+		for (const def of PHASE_ONBOARDING_TOOL_DEFINITIONS) {
+			expect(def.readOnlyHint).toBe(false);
+			expect(def.destructiveHint).toBe(false);
+			expect(def.idempotentHint).toBe(true);
+			expect(def.openWorldHint).toBe(true);
+			expect(def.outputSchema).toBeDefined();
+		}
+	});
+
+	test("platform onboarding definitions name platform-status completion fields", () => {
+		const youtube = getToolDefinition(
+			PHASE_ONBOARDING_TOOL_DEFINITIONS,
+			"dynamoi_start_youtube_channel_link",
+		);
+		expect(youtube.description).toContain("platforms.youtube.connected");
+
+		const meta = getToolDefinition(
+			PHASE_ONBOARDING_TOOL_DEFINITIONS,
+			"dynamoi_start_meta_connection",
+		);
+		expect(meta.description).toContain("platforms.meta.status");
+		expect(meta.description).toContain("oauth_complete");
+	});
+});
+
 describe("mcp/tools phase 2 definitions", () => {
 	test("write tools include required annotations", () => {
 		for (const def of PHASE_2_TOOL_DEFINITIONS) {
@@ -171,8 +239,9 @@ describe("mcp/tools phase 2 definitions", () => {
 		}
 	});
 
-	test("pause schema accepts uuid campaignId", () => {
-		const parsed = DynamoiPauseCampaignInputSchema.parse({
+	test("update campaign schema accepts pause and resume actions", () => {
+		const parsed = DynamoiUpdateCampaignInputSchema.parse({
+			action: "pause",
 			campaignId: "00000000-0000-0000-0000-000000000000",
 			clientRequestId: "11111111-1111-4111-8111-111111111111",
 			expectedCurrentStatus: "ACTIVE",
@@ -180,63 +249,52 @@ describe("mcp/tools phase 2 definitions", () => {
 		});
 		expect(parsed.campaignId).toBe("00000000-0000-0000-0000-000000000000");
 		expect(parsed.clientRequestId).toBe("11111111-1111-4111-8111-111111111111");
-	});
-
-	test("resume schema accepts uuid campaignId", () => {
-		const parsed = DynamoiResumeCampaignInputSchema.parse({
+		const resume = DynamoiUpdateCampaignInputSchema.parse({
+			action: "resume",
 			campaignId: "00000000-0000-0000-0000-000000000000",
 			clientRequestId: "11111111-1111-4111-8111-111111111111",
 			expectedCurrentStatus: "PAUSED",
 			userIntentSummary: "Resume after confirming billing is ready.",
 		});
-		expect(parsed.campaignId).toBe("00000000-0000-0000-0000-000000000000");
-		expect(parsed.expectedCurrentStatus).toBe("PAUSED");
+		expect(resume.expectedCurrentStatus).toBe("PAUSED");
 	});
 
-	test("pause and resume schemas accept campaign read status guards", () => {
-		for (const schema of [
-			DynamoiPauseCampaignInputSchema,
-			DynamoiResumeCampaignInputSchema,
+	test("update campaign schema accepts campaign read status guards", () => {
+		for (const expectedCurrentStatus of [
+			"AWAITING_SMART_LINK",
+			"CONTENT_VALIDATION",
+			"DEPLOYING",
+			"READY_FOR_REVIEW",
+			"ACTIVE",
+			"PAUSED",
+			"SUBSCRIPTION_PAUSED",
+			"ARCHIVED",
+			"FAILED",
+			"ENDED",
 		]) {
-			for (const expectedCurrentStatus of [
-				"AWAITING_SMART_LINK",
-				"CONTENT_VALIDATION",
-				"DEPLOYING",
-				"READY_FOR_REVIEW",
-				"ACTIVE",
-				"PAUSED",
-				"SUBSCRIPTION_PAUSED",
-				"ARCHIVED",
-				"FAILED",
-				"ENDED",
-			]) {
-				const parsed = schema.parse({
-					campaignId: "00000000-0000-0000-0000-000000000000",
-					expectedCurrentStatus,
-				});
-				expect(parsed.expectedCurrentStatus).toBe(expectedCurrentStatus);
-			}
+			const parsed = DynamoiUpdateCampaignInputSchema.parse({
+				action: "pause",
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				expectedCurrentStatus,
+			});
+			expect(parsed.expectedCurrentStatus).toBe(expectedCurrentStatus);
 		}
 	});
 
-	test("campaign mutation schemas reject malformed UUIDs", () => {
-		for (const schema of [
-			DynamoiPauseCampaignInputSchema,
-			DynamoiResumeCampaignInputSchema,
-			DynamoiUpdateBudgetInputSchema,
-		]) {
-			expect(() =>
-				schema.parse({
-					budgetAmount: 100,
-					campaignId: "not-a-uuid",
-				}),
-			).toThrow();
-		}
+	test("campaign mutation schema rejects malformed UUIDs", () => {
+		expect(() =>
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "update_budget",
+				budgetAmount: 100,
+				campaignId: "not-a-uuid",
+			}),
+		).toThrow();
 	});
 
 	test("update budget schema requires positive budgetAmount", () => {
 		expect(() =>
-			DynamoiUpdateBudgetInputSchema.parse({
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "update_budget",
 				budgetAmount: 0,
 				campaignId: "00000000-0000-0000-0000-000000000000",
 			}),
@@ -244,7 +302,8 @@ describe("mcp/tools phase 2 definitions", () => {
 	});
 
 	test("update budget schema accepts idempotency and expected-state guards", () => {
-		const parsed = DynamoiUpdateBudgetInputSchema.parse({
+		const parsed = DynamoiUpdateCampaignInputSchema.parse({
+			action: "update_budget",
 			budgetAmount: 250,
 			campaignId: "00000000-0000-0000-0000-000000000000",
 			clientRequestId: "11111111-1111-4111-8111-111111111111",
@@ -255,6 +314,16 @@ describe("mcp/tools phase 2 definitions", () => {
 
 		expect(parsed.clientRequestId).toBe("11111111-1111-4111-8111-111111111111");
 		expect(parsed.expectedCurrentEndDate).toBe("2026-05-15");
+	});
+
+	test("pause and resume reject budget-only fields", () => {
+		expect(() =>
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "pause",
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+			}),
+		).toThrow();
 	});
 });
 
@@ -309,6 +378,7 @@ describe("mcp/tools phase 3 definitions", () => {
 		);
 		expect(definition.description).toContain("explicitly asks");
 		expect(definition.description).toContain("Always pass intent");
+		expect(definition.description).toContain("use dynamoi_get_platform_status");
 		expect(definition.description).toContain("check context");
 		expect(definition.description).toContain("generic Instagram");
 		expect(definition.description).toContain("Never use");
@@ -403,18 +473,38 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 		expect(parsed.spotifyArtistUrl).toContain("/artist/");
 	});
 
-	test("smart link settings schema supports theme and validated pixel id fields only", () => {
-		const parsed = DynamoiUpdateSmartLinkArtistSettingsInputSchema.parse({
+	test("get smart link schema supports consolidated includes", () => {
+		const parsed = DynamoiGetSmartLinkInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			include: ["analytics", "artist_settings"],
+			playLinkId: "22222222-2222-4222-8222-222222222222",
+		});
+
+		expect(parsed.include).toContain("analytics");
+		expect(
+			DynamoiGetSmartLinkInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				include: ["artist_settings"],
+			}).artistId,
+		).toBe("00000000-0000-0000-0000-000000000000");
+	});
+
+	test("smart link update schema supports theme and validated pixel id fields only", () => {
+		const parsed = DynamoiUpdateSmartLinkInputSchema.parse({
+			action: "update_artist_settings",
 			artistId: "00000000-0000-0000-0000-000000000000",
 			clientRequestId: "11111111-1111-4111-8111-111111111111",
 			metaPixelId: "1234567890",
+			playLinkId: "22222222-2222-4222-8222-222222222222",
 			theme: "aurora",
 		});
 
 		expect(parsed.theme).toBe("aurora");
 		expect(() =>
-			DynamoiUpdateSmartLinkArtistSettingsInputSchema.parse({
+			DynamoiUpdateSmartLinkInputSchema.parse({
+				action: "update_artist_settings",
 				artistId: "00000000-0000-0000-0000-000000000000",
+				playLinkId: "22222222-2222-4222-8222-222222222222",
 				script: "<script>alert(1)</script>",
 			}),
 		).toThrow();
@@ -423,13 +513,15 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 	test("smart link mutation schemas reject unknown properties", () => {
 		expect(() =>
 			DynamoiUpdateSmartLinkInputSchema.parse({
+				action: "update_description",
 				customDescription: "Hello",
 				playLinkId: "00000000-0000-0000-0000-000000000000",
 				theme: "classic",
 			}),
 		).toThrow();
 		expect(() =>
-			DynamoiPublishSmartLinkInputSchema.parse({
+			DynamoiUpdateSmartLinkInputSchema.parse({
+				action: "publish",
 				playLinkId: "00000000-0000-0000-0000-000000000000",
 				publicUrl: "https://play.dynamoi.com/x",
 			}),

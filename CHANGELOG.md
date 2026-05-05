@@ -10,10 +10,13 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Added `dynamoi_create_smart_links_from_spotify_artist` so assistants can start a free Spotify artist catalog Smart Link import, return the artist hub, and keep users in the MCP flow instead of sending them to the dashboard.
+- Added `dynamoi_start_subscription_checkout`, `dynamoi_start_youtube_channel_link`, and `dynamoi_start_meta_connection` so assistants can start billing activation, YouTube channel linking, and Meta connection from chat.
 
 ### Changed
 
 - Smart Link tool metadata, instructions, resources, and docs now distinguish single-release creation from full artist catalog/hub creation.
+- Consolidated the public tool surface: campaign analytics/deployment now live behind `dynamoi_get_campaign` include flags, campaign mutations use `dynamoi_update_campaign`, and Smart Link analytics/settings/publish controls are folded into `dynamoi_get_smart_link` and `dynamoi_update_smart_link`.
+- `dynamoi_list_artists` now accepts `artistId` for one artist's full profile/readiness details, replacing the separate one-artist read tool in the advertised connector surface.
 
 ## [0.6.0] - 2026-05-02
 

@@ -45,9 +45,14 @@ export {
 	DynamoiPauseCampaignInputSchema,
 	DynamoiResumeCampaignInputSchema,
 	DynamoiSearchInputSchema,
+	DynamoiStartMetaConnectionInputSchema,
+	DynamoiStartSubscriptionCheckoutInputSchema,
+	DynamoiStartYoutubeChannelLinkInputSchema,
 	DynamoiUpdateBudgetInputSchema,
+	DynamoiUpdateCampaignInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
+	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	ToolFormatSchema,
 } from "./server/tools";
 export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
@@ -109,7 +114,11 @@ export type {
 	SearchSummaryData,
 	SmartLinkSettingsData,
 	SmartLinkSummary,
+	StartMetaConnectionData,
+	StartSubscriptionCheckoutData,
+	StartYoutubeChannelLinkData,
 	UpdateBudgetData,
+	UpdateCampaignData,
 	UpdateSmartLinkArtistSettingsData,
 	UpdateSmartLinkData,
 } from "./types";

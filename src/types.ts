@@ -1,3 +1,4 @@
+export type * from "./flow-types";
 export type * from "./readiness-types";
 
 export type ResultEnvelope<T> =
@@ -81,6 +82,7 @@ export type GetCurrentUserArtistSummary = {
 	id: string;
 	name: string;
 	slug: string | null;
+	hasConnectedMeta: boolean;
 	hasConnectedSpotify: boolean;
 	hasConnectedYoutube: boolean;
 	artistHasActiveCampaigns: boolean;
@@ -89,6 +91,7 @@ export type GetCurrentUserArtistSummary = {
 
 export type GetCurrentUserState = {
 	hasAnyArtist: boolean;
+	hasAnyConnectedMeta: boolean;
 	hasAnyConnectedSpotify: boolean;
 	hasAnyConnectedYoutube: boolean;
 	hasAnySmartLink: boolean;
@@ -242,6 +245,7 @@ export type CreateSmartLinksFromSpotifyArtistData = {
 	artistName: string;
 	artistHubUrl: string;
 	spotifyArtistUrl: string;
+	artistCreatedFromSpotify?: boolean;
 	catalogImportStatus: "started" | "start_failed";
 	catalogWorkflowRunId: string | null;
 	initialSmartLink: SmartLinkSummary | null;
@@ -464,124 +468,5 @@ export type GetArtistAnalyticsSummaryData = {
 		clicks: number;
 		spend: MoneyDisplay;
 	};
-	warnings?: string[];
-};
-
-export type GetBillingData = {
-	tier: ArtistTier;
-	billingStatus: BillingStatus;
-	creditBalance: MoneyDisplay | null;
-	recentUsage?: {
-		period: string;
-		totalSpend: MoneyDisplay;
-		campaignCount: number;
-	};
-	isPromoArtist: boolean;
-	promoLimits?: {
-		campaignsUsed: number;
-		campaignsAllowed: number;
-		remainingBudget: MoneyDisplay;
-	};
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type GetBillingSummaryData = {
-	summary: string;
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type GetPlatformStatusData = {
-	platforms: {
-		spotify: { connected: boolean; artistName?: string; artistUrl?: string };
-		meta: {
-			connected: boolean;
-			status:
-				| "not_connected"
-				| "oauth_complete"
-				| "selection_pending"
-				| "partnership_pending"
-				| "partnership_active";
-			pageName?: string;
-			tokenExpiresAt?: string;
-			isTokenExpired?: boolean;
-		};
-		youtube: { connected: boolean; channelName?: string; channelUrl?: string };
-	};
-	onboardingComplete: boolean;
-	missingForSmartCampaign: string[];
-	missingForYouTube: string[];
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type GetPlatformStatusSummaryData = {
-	summary: string;
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type PauseResumePlatformResult = {
-	platform: "META" | "GOOGLE";
-	success: boolean;
-	message?: string;
-};
-
-export type PauseResumeCampaignData = {
-	id: string;
-	contentTitle: string;
-	newStatus: "PAUSED" | "ACTIVE";
-	platformResults: PauseResumePlatformResult[];
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type UpdateBudgetData = {
-	id: string;
-	contentTitle: string;
-	previousBudget: MoneyDisplay;
-	newBudget: MoneyDisplay;
-	budgetType: "DAILY" | "TOTAL";
-	endDate?: string;
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
-export type MediaAssetSummary = {
-	id: string;
-	url?: string;
-	urlExpiresAt?: string;
-	fileType: string;
-	fileName?: string;
-	width?: number;
-	height?: number;
-	aspectRatio?: string;
-	createdAt: string;
-};
-
-export type ListMediaAssetsData = {
-	assets: MediaAssetSummary[];
-	nextCursor?: string;
-};
-
-export type ListMediaAssetsSummaryData = {
-	summary: string;
-	totalCount: number;
-	nextCursor?: string;
-};
-
-export type LaunchCampaignData = {
-	summary: string;
-	id: string;
-	contentTitle: string;
-	campaignType: CampaignType;
-	status: CampaignDisplayStatus;
-	budget: MoneyDisplay;
-	budgetType: "DAILY" | "TOTAL";
-	platforms: string[];
-	deliveryState: "ACTIVE" | "PENDING_REVIEW" | "CONTENT_VALIDATION";
-	isLive: boolean;
-	nextSteps: string[];
 	warnings?: string[];
 };
