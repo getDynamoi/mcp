@@ -74,6 +74,28 @@ export type SearchSummaryData = {
 	nextCursor?: string;
 };
 
+// OpenAiSearchData / OpenAiFetchData live in server/openai-tools.ts
+// (re-exported through the package entrypoint).
+
+export type GetCurrentUserArtistSummary = {
+	id: string;
+	name: string;
+	slug: string | null;
+	hasConnectedSpotify: boolean;
+	hasConnectedYoutube: boolean;
+	artistHasActiveCampaigns: boolean;
+	smartLinkCount: number;
+};
+
+export type GetCurrentUserState = {
+	hasAnyArtist: boolean;
+	hasAnyConnectedSpotify: boolean;
+	hasAnyConnectedYoutube: boolean;
+	hasAnySmartLink: boolean;
+	hasAnyActiveCampaign: boolean;
+	isFirstSession: boolean;
+};
+
 export type GetCurrentUserData = {
 	user: {
 		id: string;
@@ -83,6 +105,12 @@ export type GetCurrentUserData = {
 	};
 	organizationCount: number;
 	artistCount: number;
+	artists: {
+		count: number;
+		summaries: GetCurrentUserArtistSummary[];
+	};
+	state: GetCurrentUserState;
+	recommendedNextActions: string[];
 	hints: string[];
 };
 
@@ -105,6 +133,7 @@ export type SmartLinkSummary = {
 	id: string;
 	artistId: string;
 	artistName: string;
+	artistHubUrl: string;
 	releaseTitle: string;
 	releaseType: string;
 	releaseSlug: string;
@@ -208,6 +237,24 @@ export type CreateSmartLinkFromSpotifyData = GetSmartLinkData & {
 	workflowWarning: string | null;
 };
 
+export type CreateSmartLinksFromSpotifyArtistData = {
+	artistId: string;
+	artistName: string;
+	artistHubUrl: string;
+	spotifyArtistUrl: string;
+	catalogImportStatus: "started" | "start_failed";
+	catalogWorkflowRunId: string | null;
+	initialSmartLink: SmartLinkSummary | null;
+	initialRenderRunId: string | null;
+	currentSmartLinkCount: number;
+	newlyAvailableCount: number;
+	existingCount: number;
+	smartLinks: SmartLinkSummary[];
+	summary: string;
+	nextActions: string[];
+	warnings?: string[];
+};
+
 export type UpdateSmartLinkData = GetSmartLinkData & {
 	renderRunId: string | null;
 	renderWarning: string | null;
@@ -227,6 +274,7 @@ export type GetCurrentUserSummaryData = {
 	summary: string;
 	organizationCount: number;
 	artistCount: number;
+	recommendedNextActions: string[];
 };
 
 export type GetArtistData = {

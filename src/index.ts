@@ -8,7 +8,14 @@ export { verifyAccessToken } from "./auth/verify-token";
 export type { Phase3Adapter } from "./server/create-server";
 export { createDynamoiMcpServer } from "./server/create-server";
 export {
+	DynamoiOpenAiFetchInputSchema,
+	DynamoiOpenAiSearchInputSchema,
+	type OpenAiFetchData,
+	type OpenAiSearchData,
+} from "./server/openai-tools";
+export {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
+	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
 	DynamoiGetSmartLinkAnalyticsInputSchema,
 	DynamoiGetSmartLinkArtistSettingsInputSchema,
 	DynamoiGetSmartLinkInputSchema,
@@ -41,9 +48,9 @@ export {
 	DynamoiUpdateBudgetInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
-	PHASE_3_TOOL_DEFINITIONS,
 	ToolFormatSchema,
 } from "./server/tools";
+export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
 export { handleMcpHttpRequest } from "./transport/http";
 export type {
 	AccessRole,
@@ -53,6 +60,7 @@ export type {
 	CampaignType,
 	CountryCatalogSource,
 	CreateSmartLinkFromSpotifyData,
+	CreateSmartLinksFromSpotifyArtistData,
 	GetArtistAnalyticsJsonData,
 	GetArtistAnalyticsSummaryData,
 	GetArtistData,
@@ -67,7 +75,9 @@ export type {
 	GetCampaignReadinessData,
 	GetCampaignReadinessSummaryData,
 	GetCampaignSummaryData,
+	GetCurrentUserArtistSummary,
 	GetCurrentUserData,
+	GetCurrentUserState,
 	GetCurrentUserSummaryData,
 	GetOnboardingStatusData,
 	GetOnboardingStatusSummaryData,

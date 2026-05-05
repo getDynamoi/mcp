@@ -4,6 +4,7 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import type { Phase3Adapter } from "./create-server";
+import { registerPlaybookResources } from "./playbook-resources";
 
 export function registerDynamoiResources(
 	server: McpServer,
@@ -143,6 +144,7 @@ export function registerDynamoiResources(
 						free: true,
 						included: [
 							"Unlimited free Smart Links for supported Spotify artist, album, and track URLs",
+							"Artist hub pages for catalog-level Smart Links",
 							"Smart Link analytics",
 							"Artist-level themes",
 							"Validated Meta, TikTok, and Google Ads pixel IDs",
@@ -168,6 +170,8 @@ export function registerDynamoiResources(
 				{
 					mimeType: "application/json",
 					text: JSON.stringify({
+						artistCatalogWorkflow:
+							"Use dynamoi_create_smart_links_from_spotify_artist for Spotify artist URLs when the user wants the artist hub, catalog import, or all links. The tool creates/returns a starter link immediately and starts the background catalog import so the user does not need the dashboard.",
 						creationInputs: {
 							supportedSpotifyKinds: ["artist", "album", "track"],
 							unsupportedToday: ["playlist"],
@@ -240,6 +244,7 @@ export function registerDynamoiResources(
 					mimeType: "application/json",
 					text: JSON.stringify({
 						answerWith: [
+							"artist hub URL when present",
 							"release title",
 							"artist name",
 							"public URL",
@@ -253,7 +258,7 @@ export function registerDynamoiResources(
 							"provider implementation details",
 						],
 						whenToUse:
-							"Use Smart Link tools when the user asks for free release links, streaming landing pages, Spotify link pages, Smart Link analytics, themes, pixels, publish state, or public URLs.",
+							"Use Smart Link tools when the user asks for free release links, artist hubs, full-catalog Spotify landing pages, streaming landing pages, Spotify link pages, Smart Link analytics, themes, pixels, publish state, or public URLs.",
 					}),
 					uri: uri.href,
 				},
@@ -275,6 +280,8 @@ export function registerDynamoiResources(
 				{
 					mimeType: "application/json",
 					text: JSON.stringify({
+						emptyStateRule:
+							"Always call dynamoi_get_account_overview first for routing. If list_artists, list_campaigns, list_smart_links, or search return empty for a brand-new user, do not respond 'no records found' as a terminal answer; consult dynamoi_get_account_overview.recommendedNextActions or dynamoi://playbooks/onboarding-tree.",
 						genericAdvice:
 							"Answer generic music marketing questions directly unless the user asks about their Dynamoi account or asks Dynamoi to take an action.",
 						stopRule:
@@ -289,6 +296,8 @@ export function registerDynamoiResources(
 			],
 		}),
 	);
+
+	registerPlaybookResources(server);
 
 	server.registerResource(
 		"music-marketing-when-to-use-dynamoi",

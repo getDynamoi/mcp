@@ -68,7 +68,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 				spotifyUrl: z.string().trim().optional(),
 			},
 			description:
-				"Create a free Smart Link from a Spotify artist, album, or track URL.",
+				"Create free Smart Links from a Spotify artist, album, or track URL.",
 			title: "Create Free Smart Link",
 		},
 		(args) =>
@@ -83,7 +83,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 						: "Ask me for a Spotify artist, album, or track URL. Playlist URLs are not supported today.",
 					"",
 					"Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid campaign.",
-					"Once the artist and Spotify URL are known, use dynamoi_create_smart_link_from_spotify.",
+					"If the Spotify URL is an artist URL and I want my hub/catalog, use dynamoi_create_smart_links_from_spotify_artist. If it is an album or track URL, use dynamoi_create_smart_link_from_spotify.",
 				].join("\n"),
 			),
 	);

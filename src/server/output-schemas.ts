@@ -94,6 +94,7 @@ const SmartLinkStatusSchemas = {
 
 const SmartLinkSummaryOutputSchema = z
 	.object({
+		artistHubUrl: z.string(),
 		artistId: z.string(),
 		artistName: z.string(),
 		claimStatus: SmartLinkStatusSchemas.claimStatus,
@@ -327,6 +328,26 @@ const CreateSmartLinkFromSpotifyDataOutputSchema =
 		workflowWarning: z.string().nullable(),
 	}).strict();
 
+const CreateSmartLinksFromSpotifyArtistDataOutputSchema = z
+	.object({
+		artistHubUrl: z.string(),
+		artistId: z.string(),
+		artistName: z.string(),
+		catalogImportStatus: z.enum(["started", "start_failed"]),
+		catalogWorkflowRunId: z.string().nullable(),
+		currentSmartLinkCount: z.number(),
+		existingCount: z.number(),
+		initialRenderRunId: z.string().nullable(),
+		initialSmartLink: SmartLinkSummaryOutputSchema.nullable(),
+		newlyAvailableCount: z.number(),
+		nextActions: z.array(z.string()),
+		smartLinks: z.array(SmartLinkSummaryOutputSchema),
+		spotifyArtistUrl: z.string(),
+		summary: z.string(),
+		warnings: z.array(z.string()).optional(),
+	})
+	.strict();
+
 const UpdateSmartLinkDataOutputSchema = SmartLinkDetailsOutputSchema.extend({
 	renderRunId: z.string().nullable(),
 	renderWarning: z.string().nullable(),
@@ -462,6 +483,14 @@ export const GetCampaignDeploymentStatusOutputEnvelopeSchema = z.union([
 export const CreateSmartLinkFromSpotifyOutputEnvelopeSchema = z.union([
 	z.object({
 		data: CreateSmartLinkFromSpotifyDataOutputSchema,
+		status: z.literal("success"),
+	}),
+	ErrorEnvelopeOutputSchema,
+]);
+
+export const CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema = z.union([
+	z.object({
+		data: CreateSmartLinksFromSpotifyArtistDataOutputSchema,
 		status: z.literal("success"),
 	}),
 	ErrorEnvelopeOutputSchema,

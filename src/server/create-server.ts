@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import type {
 	CreateSmartLinkFromSpotifyData,
+	CreateSmartLinksFromSpotifyArtistData,
 	GetArtistAnalyticsJsonData,
 	GetArtistAnalyticsSummaryData,
 	GetArtistData,
@@ -49,14 +50,12 @@ import type {
 } from "../types";
 import { DYNAMOI_MCP_VERSION } from "../version";
 import { DYNAMOI_MCP_INSTRUCTIONS } from "./instructions";
+import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
-import {
-	PHASE_1_TOOL_DEFINITIONS,
-	PHASE_2_TOOL_DEFINITIONS,
-	PHASE_3_TOOL_DEFINITIONS,
-} from "./tools";
+import { PHASE_1_TOOL_DEFINITIONS, PHASE_2_TOOL_DEFINITIONS } from "./tools";
+import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
 const SdkToolOutputEnvelopeSchema = z
 	.object({
@@ -74,6 +73,8 @@ export type Phase3Adapter = {
 	search(
 		input: unknown,
 	): Promise<ResultEnvelope<SearchData | SearchSummaryData>>;
+	openAiSearch(input: unknown): Promise<ResultEnvelope<OpenAiSearchData>>;
+	openAiFetch(input: unknown): Promise<ResultEnvelope<OpenAiFetchData>>;
 	getArtist(
 		input: unknown,
 	): Promise<ResultEnvelope<GetArtistData | GetArtistSummaryData>>;
@@ -143,6 +144,9 @@ export type Phase3Adapter = {
 	createSmartLinkFromSpotify(
 		input: unknown,
 	): Promise<ResultEnvelope<CreateSmartLinkFromSpotifyData>>;
+	createSmartLinksFromSpotifyArtist(
+		input: unknown,
+	): Promise<ResultEnvelope<CreateSmartLinksFromSpotifyArtistData>>;
 	listSmartLinks(
 		input: unknown,
 	): Promise<ResultEnvelope<ListSmartLinksData | ListSmartLinksSummaryData>>;
@@ -283,6 +287,18 @@ export function createDynamoiMcpServer(options: {
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});
+					case "search":
+						return asValidatedTextResult({
+							envelope: await options.adapter.openAiSearch(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "fetch":
+						return asValidatedTextResult({
+							envelope: await options.adapter.openAiFetch(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
 					case "dynamoi_get_artist":
 						return asValidatedTextResult({
 							envelope: await options.adapter.getArtist(input),
@@ -383,6 +399,13 @@ export function createDynamoiMcpServer(options: {
 					case "dynamoi_create_smart_link_from_spotify":
 						return asValidatedTextResult({
 							envelope: await options.adapter.createSmartLinkFromSpotify(input),
+							outputSchema: def.outputSchema,
+							toolName: def.name,
+						});
+					case "dynamoi_create_smart_links_from_spotify_artist":
+						return asValidatedTextResult({
+							envelope:
+								await options.adapter.createSmartLinksFromSpotifyArtist(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});

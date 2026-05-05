@@ -4,9 +4,7 @@ import {
 	GetCampaignDeploymentStatusOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
 	GetOnboardingStatusOutputEnvelopeSchema,
-	LaunchCampaignOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
-	ListMediaAssetsOutputEnvelopeSchema,
 	PauseResumeOutputEnvelopeSchema,
 	UpdateBudgetOutputEnvelopeSchema,
 } from "./output-schemas";
@@ -65,6 +63,8 @@ export const DynamoiSearchInputSchema = z
 			});
 		}
 	});
+
+import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 
 const DynamoiGetCurrentUserIntentSchema = z.enum([
 	"account_overview",
@@ -391,7 +391,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster. If the result is empty, the user is brand-new — do not stop with 'no records found'; instead route via dynamoi_get_account_overview.recommendedNextActions or read dynamoi://playbooks/onboarding-tree.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -402,7 +402,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user mentions an artist, release, campaign, or smart link but you do not yet know the exact record to inspect. Do not use this for analytics summaries or billing questions once you already know the target record.",
+			"Use this when the user mentions an artist, release, campaign, or smart link but you do not yet know the exact record to inspect. Do not use this for analytics summaries or billing questions once you already know the target record. If the result is empty for a brand-new user (no artists yet), do not respond 'no records found' as a terminal answer — instead suggest creating their first artist hub via dynamoi_create_smart_links_from_spotify_artist or read dynamoi://playbooks/onboarding-tree.",
 		destructiveHint: false,
 		name: "dynamoi_search",
 		openWorldHint: false,
@@ -411,6 +411,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		schema: DynamoiSearchInputSchema,
 		title: "Search Dynamoi",
 	},
+	...OPENAI_TOOL_DEFINITIONS,
 	{
 		description:
 			"Use this when the user wants the profile and launch readiness for one specific artist or YouTube channel, including connected platforms and billing state. Do not use this to list every artist; use dynamoi_list_artists first. Never use this for generic advice questions that do not require account-specific data, including Instagram growth, songwriting, or lyrics prompts.",
@@ -424,7 +425,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that. Never use this to personalize generic marketing advice.",
+			"Use this when the user wants to browse campaigns for one artist, optionally filtered by type or status. Do not use this for a single campaign deep dive; use dynamoi_get_campaign for that. Never use this to personalize generic marketing advice. If the user has no artists yet, do not call this — route via dynamoi_get_account_overview first.",
 		destructiveHint: false,
 		name: "dynamoi_list_campaigns",
 		openWorldHint: false,
@@ -570,31 +571,5 @@ export const PHASE_2_TOOL_DEFINITIONS = [
 		readOnlyHint: false,
 		schema: DynamoiUpdateBudgetInputSchema,
 		title: "Update Campaign Budget",
-	},
-] as const;
-
-export const PHASE_3_TOOL_DEFINITIONS = [
-	{
-		description:
-			"Use this when the user wants to choose from uploaded images or videos that can be reused in a campaign launch. Do not use this when the user only wants campaign status or analytics. Use format=json when you need asset IDs for a follow-up launch. Request includeUrls only when the assistant must display or inspect public-safe asset URLs.",
-		destructiveHint: false,
-		name: "dynamoi_list_media_assets",
-		openWorldHint: false,
-		outputSchema: ListMediaAssetsOutputEnvelopeSchema,
-		readOnlyHint: true,
-		schema: DynamoiListMediaAssetsInputSchema,
-		title: "List Media Assets",
-	},
-	{
-		description:
-			"Use this when the user explicitly wants to create a new Smart Campaign or YouTube Campaign and start the launch workflow with provided details. Ads are not necessarily live until the returned delivery state is ACTIVE. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more. Do not use this for recommendations or previews; this creates a real campaign workflow or demo-safe simulated campaign.",
-		destructiveHint: false,
-		idempotentHint: true,
-		name: "dynamoi_launch_campaign",
-		openWorldHint: true,
-		outputSchema: LaunchCampaignOutputEnvelopeSchema,
-		readOnlyHint: false,
-		schema: DynamoiLaunchCampaignInputSchema,
-		title: "Start Campaign Launch Workflow",
 	},
 ] as const;

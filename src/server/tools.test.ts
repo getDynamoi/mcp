@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+	DynamoiOpenAiFetchInputSchema,
+	DynamoiOpenAiSearchInputSchema,
+} from "./openai-tools";
+import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
+	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
 	DynamoiPublishSmartLinkInputSchema,
 	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
@@ -18,8 +23,8 @@ import {
 	DynamoiUpdateBudgetInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
-	PHASE_3_TOOL_DEFINITIONS,
 } from "./tools";
+import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
 function getToolDefinition(
 	definitions: readonly { description: string; name: string }[],
@@ -98,6 +103,59 @@ describe("mcp/tools phase 1 definitions", () => {
 		expect(parsed.campaignType).toBe("YOUTUBE");
 		expect(parsed.endDate).toBe("2026-06-01");
 		expect(parsed.locationTargets?.[0]?.code).toBe("US");
+	});
+
+	test("OpenAI Connectors search and fetch tools are registered as read tools", () => {
+		const search = getToolDefinition(PHASE_1_TOOL_DEFINITIONS, "search");
+		expect(search.description).toContain("OpenAI ChatGPT Deep Research");
+		expect(search.description).toContain("dynamoi_search");
+
+		const fetchDef = getToolDefinition(PHASE_1_TOOL_DEFINITIONS, "fetch");
+		expect(fetchDef.description).toContain("Deep Research");
+		expect(fetchDef.description).toContain("artist:<uuid>");
+	});
+
+	test("OpenAI search schema requires a non-empty query", () => {
+		expect(() => DynamoiOpenAiSearchInputSchema.parse({})).toThrow();
+		expect(() => DynamoiOpenAiSearchInputSchema.parse({ query: "" })).toThrow();
+		const ok = DynamoiOpenAiSearchInputSchema.parse({ query: "Bandlamudi" });
+		expect(ok.query).toBe("Bandlamudi");
+	});
+
+	test("OpenAI fetch schema requires a non-empty id", () => {
+		expect(() => DynamoiOpenAiFetchInputSchema.parse({})).toThrow();
+		expect(() => DynamoiOpenAiFetchInputSchema.parse({ id: "" })).toThrow();
+		const ok = DynamoiOpenAiFetchInputSchema.parse({
+			id: "artist:00000000-0000-0000-0000-000000000000",
+		});
+		expect(ok.id.startsWith("artist:")).toBe(true);
+	});
+
+	test("read tool descriptions include empty-state fallback hints for new users", () => {
+		const listArtists = getToolDefinition(
+			PHASE_1_TOOL_DEFINITIONS,
+			"dynamoi_list_artists",
+		);
+		expect(listArtists.description).toContain("brand-new");
+		expect(listArtists.description).toContain(
+			"dynamoi_get_account_overview.recommendedNextActions",
+		);
+
+		const search = getToolDefinition(
+			PHASE_1_TOOL_DEFINITIONS,
+			"dynamoi_search",
+		);
+		expect(search.description).toContain(
+			"dynamoi_create_smart_links_from_spotify_artist",
+		);
+
+		const listCampaigns = getToolDefinition(
+			PHASE_1_TOOL_DEFINITIONS,
+			"dynamoi_list_campaigns",
+		);
+		expect(listCampaigns.description).toContain(
+			"route via dynamoi_get_account_overview first",
+		);
 	});
 });
 
@@ -301,6 +359,25 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 			"playlist URLs are not supported",
 		);
 		expect(createDefinition?.description).toContain("lead with the public URL");
+		expect(
+			getToolDefinition(
+				PHASE_4_TOOL_DEFINITIONS,
+				"dynamoi_create_smart_links_from_spotify_artist",
+			).description,
+		).toContain("artist hub");
+	});
+
+	test("list smart links description guides empty-state to the create tools", () => {
+		const listSmartLinks = getToolDefinition(
+			PHASE_4_TOOL_DEFINITIONS,
+			"dynamoi_list_smart_links",
+		);
+		expect(listSmartLinks.description).toContain(
+			"dynamoi_create_smart_links_from_spotify_artist",
+		);
+		expect(listSmartLinks.description).toContain(
+			"dynamoi_create_smart_link_from_spotify",
+		);
 	});
 
 	test("create smart link schema accepts Spotify entrypoint inputs", () => {
@@ -313,6 +390,17 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 		});
 
 		expect(parsed.spotifyUrl).toContain("spotify.com");
+	});
+
+	test("artist catalog smart link schema accepts the Spotify artist entrypoint", () => {
+		const parsed = DynamoiCreateSmartLinksFromSpotifyArtistInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			spotifyArtistUrl: "https://open.spotify.com/artist/123",
+			userIntentSummary: "Create my free Smart Link artist hub.",
+		});
+
+		expect(parsed.spotifyArtistUrl).toContain("/artist/");
 	});
 
 	test("smart link settings schema supports theme and validated pixel id fields only", () => {

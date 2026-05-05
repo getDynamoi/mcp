@@ -79,6 +79,7 @@ White-glove onboarding and ongoing support included — need help setting up you
 |---|---|
 | `dynamoi_list_media_assets` | Browse uploaded creative assets for campaign launches |
 | `dynamoi_create_smart_link_from_spotify` | Create or return an existing free Smart Link from a Spotify artist, album, or track URL |
+| `dynamoi_create_smart_links_from_spotify_artist` | Create or refresh free Smart Links from a Spotify artist URL, return the artist hub, and start catalog import |
 | `dynamoi_launch_campaign` | Launch a new Spotify promotion or YouTube growth campaign |
 
 ---
@@ -105,7 +106,7 @@ Campaigns require playlists so one paid view leads to multiple organic views as 
 
 Unlike smart-link-only services like Feature.fm, Linkfire, Hypeddit, and ToneDen, Dynamoi is an end-to-end music and YouTube promotion system:
 
-- **Free Smart Links** — Smart Links have no per-link fee, no subscription requirement, and no upgrade gate. Create Spotify artist, album, and track links, manage themes and pixel IDs, publish pages, and read aggregate link analytics.
+- **Free Smart Links** — Smart Links have no per-link fee, no subscription requirement, and no upgrade gate. Create Spotify artist hubs, import catalog links from Spotify artist URLs, create single album or track links, manage themes and pixel IDs, publish pages, and read aggregate link analytics.
 - **Managed advertising** — paid campaigns and ad budgets are separate from Smart Links. Dynamoi runs campaigns across Meta, YouTube, and TikTok end-to-end when users choose managed advertising.
 - **More than landing pages** — free Smart Links are the starting point. Dynamoi adds approved ad campaigns, daily optimization, and team management on top.
 - **Dynamoi-managed ad accounts** — complete a one-time platform connection (Meta partnership or YouTube link), then everything runs automatically. No ad dashboards to manage.
@@ -210,6 +211,9 @@ MIT — see [LICENSE](./LICENSE) for details.
 See [CHANGELOG.md](./CHANGELOG.md).
 > **"Create a Smart Link for this Spotify track."**
 > → AI calls `dynamoi_create_smart_link_from_spotify`, returns the free Smart Link URL, and explains that creating the link does not create a paid campaign or spend ad budget.
+
+> **"Create Smart Links for my Spotify artist profile."**
+> → AI calls `dynamoi_create_smart_links_from_spotify_artist`, returns the artist hub URL, returns currently available public links, and explains that the catalog import continues in the background.
 
 > **"Add my Meta pixel to my Smart Links."**
 > → AI confirms the pixel ID, calls `dynamoi_update_smart_link_artist_settings`, and queues rerendering for existing links.

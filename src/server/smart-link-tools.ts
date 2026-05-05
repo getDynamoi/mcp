@@ -1,6 +1,7 @@
 import * as z from "zod/v4";
 import {
 	CreateSmartLinkFromSpotifyOutputEnvelopeSchema,
+	CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema,
 	GetSmartLinkAnalyticsOutputEnvelopeSchema,
 	GetSmartLinkOutputEnvelopeSchema,
 	ListSmartLinksOutputEnvelopeSchema,
@@ -84,6 +85,16 @@ export const DynamoiCreateSmartLinkFromSpotifyInputSchema = z
 		customDescription: z.string().trim().max(500).optional(),
 		format: ToolFormatSchema.optional(),
 		spotifyUrl: z.string().trim().min(1).max(500),
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
+
+export const DynamoiCreateSmartLinksFromSpotifyArtistInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		clientRequestId: RequiredClientRequestIdSchema.optional(),
+		format: ToolFormatSchema.optional(),
+		spotifyArtistUrl: z.string().trim().min(1).max(500),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
@@ -182,7 +193,7 @@ export const DynamoiPublishSmartLinkInputSchema = z
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user wants to create a free Dynamoi Smart Link from a Spotify artist, album, or track URL/URI. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
+			"Use this when the user wants to create one free Dynamoi Smart Link from a Spotify album or track URL/URI, or a single starter release from a Spotify artist URL. For full-catalog artist imports or artist hub requests, prefer dynamoi_create_smart_links_from_spotify_artist. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_link_from_spotify",
@@ -194,7 +205,19 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to list free Smart Links for one artist, including release title, public URL, publish state, claim state, render state, and theme. Do not use this for paid campaign lists; use dynamoi_list_campaigns for campaigns. In the final answer, show public URLs and avoid internal IDs unless asked.",
+			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
+		destructiveHint: false,
+		idempotentHint: true,
+		name: "dynamoi_create_smart_links_from_spotify_artist",
+		openWorldHint: true,
+		outputSchema: CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
+		title: "Create Free Smart Links for Spotify Artist",
+	},
+	{
+		description:
+			"Use this when the user wants to list free Smart Links for one artist, including release title, public URL, publish state, claim state, render state, and theme. Do not use this for paid campaign lists; use dynamoi_list_campaigns for campaigns. In the final answer, show public URLs and avoid internal IDs unless asked. If empty for an artist with connected Spotify, suggest dynamoi_create_smart_links_from_spotify_artist for catalog import or dynamoi_create_smart_link_from_spotify for one release instead of stopping at 'no Smart Links yet'.",
 		destructiveHint: false,
 		name: "dynamoi_list_smart_links",
 		openWorldHint: false,

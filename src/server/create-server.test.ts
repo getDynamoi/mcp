@@ -133,6 +133,7 @@ describe("createDynamoiMcpServer", () => {
 		const envelope = {
 			data: {
 				actionRequired: [],
+				artistHubUrl: "https://play.dynamoi.com/92-keys",
 				artistId: "00000000-0000-0000-0000-000000000000",
 				artistName: "92 Keys",
 				claimStatus: "auto_approved",

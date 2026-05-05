@@ -7,6 +7,14 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added `dynamoi_create_smart_links_from_spotify_artist` so assistants can start a free Spotify artist catalog Smart Link import, return the artist hub, and keep users in the MCP flow instead of sending them to the dashboard.
+
+### Changed
+
+- Smart Link tool metadata, instructions, resources, and docs now distinguish single-release creation from full artist catalog/hub creation.
+
 ## [0.6.0] - 2026-05-02
 
 ### Added
