@@ -13,7 +13,7 @@ export function createPhaseOnboardingToolDefinitions(
 	return [
 		{
 			description:
-				"Use this when the user is ready to activate Dynamoi managed advertising billing for one artist. This creates or reuses a secure Stripe Checkout URL that the user can open from chat. Checkout returns to a Dynamoi page that tells the user to come back to the AI assistant; after that, poll dynamoi_get_billing with the returned onboardingAttemptId to confirm the subscription became active. Do not use this for billing status checks; use dynamoi_get_billing.",
+				"Use this when the user is ready to activate Dynamoi managed advertising billing for one artist. This creates or reuses a secure Stripe Checkout URL that the user can open from chat. Checkout returns to a Dynamoi page that tells the user to come back to the AI assistant; after that, poll dynamoi_get_billing with the returned onboardingAttemptId to confirm billing became active. Do not use this for billing status checks; use dynamoi_get_billing.",
 			destructiveHint: false,
 			idempotentHint: true,
 			name: "dynamoi_start_subscription_checkout",

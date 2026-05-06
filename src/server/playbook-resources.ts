@@ -20,7 +20,7 @@ export function registerPlaybookResources(server: McpServer) {
 						freePlanReminder:
 							"Free Smart Links have no per-link fee, no subscription, and no upgrade gate. Creating a Smart Link does not create a paid campaign or spend ad budget.",
 						marginCopyGuard:
-							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Stick to the canonical framing: managed advertising at $300/month covers Dynamoi running campaigns end-to-end. The internal media-spend margin is not part of any client-facing copy.",
+							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Stick to the canonical framing: managed advertising starts with $25 activation, $50 in campaign credits, and saved-card billing as campaigns run. The internal media-spend margin is not part of any client-facing copy.",
 						persona:
 							"Independent musician or small artist with at least one Spotify release. Goal: increase Spotify streams.",
 						sampleScript:
@@ -34,7 +34,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising is $300/month, has no contract, includes a $600 first-month launch budget match when eligible, and unused credits roll over for 12 months.",
+									"Managed advertising starts with a $25 activation payment, includes $50 in campaign credits, has no contract, and continues automatically with saved-card billing as campaigns run.",
 								trigger:
 									"User hesitates about price, commitment, or whether the first month is enough to test.",
 							},
@@ -99,7 +99,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising is $300/month, has no contract, includes a $600 first-month launch budget match when eligible, and unused credits roll over for 12 months.",
+									"Managed advertising starts with a $25 activation payment, includes $50 in campaign credits, has no contract, and continues automatically with saved-card billing as campaigns run.",
 								trigger:
 									"User expresses pricing concern or asks whether they can test without a long commitment.",
 							},
@@ -165,7 +165,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising is $300/month, has no contract, includes a $600 first-month launch budget match when eligible, and unused credits roll over for 12 months.",
+									"Managed advertising starts with a $25 activation payment, includes $50 in campaign credits, has no contract, and continues automatically with saved-card billing as campaigns run.",
 								trigger:
 									"User asks whether billing scales per seat or wants to test with one artist first.",
 							},

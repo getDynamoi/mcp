@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 
-Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. Managed advertising is separate: $300/month for Dynamoi to run your music campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard. First month: $600 launch budget. Cancel anytime.
+Dynamoi helps music artists get more Spotify streams and YouTube creators grow their channels and AdSense revenue. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. Managed advertising is separate: pay $25 to activate, get $50 in campaign credits, then continue automatically with saved-card billing as campaigns run. Dynamoi runs campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard. Pause campaigns anytime.
 
 **Website:** [dynamoi.com](https://dynamoi.com)
 **Hosted endpoint:** `https://dynamoi.com/mcp`
@@ -48,7 +48,7 @@ White-glove onboarding and ongoing support included — need help setting up you
 | `dynamoi_list_campaigns` | List campaigns with content title, type, budget, status, and platforms |
 | `dynamoi_get_campaign` | Full campaign details — budget, targeting, platform status, blockers; pass `includeAnalytics`, `includeDeploymentStatus`, or `includeCountries` for deeper reads |
 | `dynamoi_get_artist_analytics` | Artist-level rollup analytics across all campaigns — totals + optional daily rows by platform |
-| `dynamoi_get_billing` | Credit balance, subscription tier, billing status, and recent spend |
+| `dynamoi_get_billing` | Credit balance, billing status, activation state, and recent spend |
 | `dynamoi_get_platform_status` | Connection health for Spotify, Meta, and YouTube — status, expiry, next steps |
 | `dynamoi_list_available_countries` | Campaign-type-aware country targeting list for Smart Campaigns or YouTube campaigns |
 | `dynamoi_get_campaign_readiness` | No-write launch preflight for proposed campaign inputs and targeting |
@@ -67,7 +67,7 @@ White-glove onboarding and ongoing support included — need help setting up you
 | Tool | Description |
 |---|---|
 | `dynamoi_list_media_assets` | Browse uploaded creative assets for campaign launches |
-| `dynamoi_start_subscription_checkout` | Start managed-advertising billing with a secure Stripe Checkout URL |
+| `dynamoi_start_subscription_checkout` | Start managed-advertising activation with a secure Stripe Checkout URL |
 | `dynamoi_start_youtube_channel_link` | Start YouTube channel linking with a signed Google OAuth URL |
 | `dynamoi_start_meta_connection` | Start Meta connection with a signed OAuth URL and chat-first return page |
 | `dynamoi_create_smart_link_from_spotify` | Create or return an existing free Smart Link from a Spotify artist, album, or track URL |
@@ -112,12 +112,11 @@ Unlike smart-link-only services like Feature.fm, Linkfire, Hypeddit, and ToneDen
 
 **Free Smart Links** — no per-link fee, no subscription requirement, and no upgrade gate for Smart Links, themes, pixel IDs, publishing, and aggregate link analytics.
 
-**$300/month** — managed advertising. Dynamoi runs your music campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard.
+**$25 activation** — pay $25, get $50 in campaign credits, then continue automatically with saved-card billing as campaigns run. Dynamoi runs your music campaigns across Meta, YouTube, and TikTok end-to-end — targeting, creative, pacing, and ongoing optimization, with live campaign performance from the ad network APIs reported in the dashboard.
 
-- **First month $600 launch budget** — a one-time match to launch your first campaigns
-- Unused budget rolls over for 12 months
+- **$50 activation credits** — credits are applied before saved-card charges
 - Unlimited team seats and unlimited artists included
-- No contracts, cancel anytime
+- No contracts, pause campaigns anytime
 
 Campaign minimums: $10/day (daily) · $100 total (Smart Campaign for Spotify) · $50 total (YouTube)
 
