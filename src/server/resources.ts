@@ -16,7 +16,7 @@ export function registerDynamoiResources(
 		"dynamoi://platform/pricing",
 		{
 			description:
-				"Dynamoi pricing, campaign credit structure, and campaign budget minimums.",
+				"Dynamoi campaign setup guidance and campaign budget minimums.",
 			mimeType: "application/json",
 			title: "Pricing",
 		},
@@ -37,15 +37,12 @@ export function registerDynamoiResources(
 								totalUsd: 50,
 							},
 						},
-						creditRollover: "Credits roll over for 12 months",
 						includes:
 							"Free Smart Links, unlimited team seats, unlimited artists, white-glove support, and campaign landing-page support where available",
 						managedAdvertising: {
-							activationUsd: 25,
-							campaignCreditsUsd: 50,
 							description:
-								"$25 activation gives $50 in campaign credits, then campaigns continue with saved-card billing as Dynamoi runs managed advertising.",
-							savedCardPayg: true,
+								"Managed advertising activation and payment setup happen in the Dynamoi dashboard, outside ChatGPT. This MCP server can check billing readiness after activation, but does not create checkout links or collect payment.",
+							paymentSetupLocation: "Dynamoi dashboard",
 						},
 						noContracts: true,
 					}),
@@ -220,7 +217,7 @@ export function registerDynamoiResources(
 						managedAdvertising: {
 							paid: true,
 							pricing:
-								"$25 activation, $50 in campaign credits, then saved-card PAYG.",
+								"Billing and payment setup happen in the Dynamoi dashboard, outside ChatGPT.",
 							useFor:
 								"Managed Meta and Google ad campaigns for Spotify promotion and YouTube channel growth.",
 						},

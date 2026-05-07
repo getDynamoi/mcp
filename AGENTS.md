@@ -67,7 +67,6 @@ White-glove onboarding and ongoing support included — need help setting up you
 | Tool | Description |
 |---|---|
 | `dynamoi_list_media_assets` | Browse uploaded creative assets for campaign launches |
-| `dynamoi_start_subscription_checkout` | Start managed-advertising activation with a secure Stripe Checkout URL |
 | `dynamoi_start_youtube_channel_link` | Start YouTube channel linking with a signed Google OAuth URL |
 | `dynamoi_start_meta_connection` | Start Meta connection with a signed OAuth URL and chat-first return page |
 | `dynamoi_create_smart_link_from_spotify` | Create or return an existing free Smart Link from a Spotify artist, album, or track URL |

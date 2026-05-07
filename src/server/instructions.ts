@@ -20,7 +20,7 @@ Route by state from dynamoi_get_account_overview:
 
 - state.hasAnyArtist === true && state.hasAnyActiveCampaign === false: Offer dynamoi_get_campaign_readiness to validate launch inputs without creating anything.
 
-- state.hasAnyArtist === true && billing blocks a launch: offer dynamoi_start_subscription_checkout for the target artist. After the user completes Stripe Checkout and returns to chat, poll dynamoi_get_billing with the returned onboardingAttemptId.
+- state.hasAnyArtist === true && billing blocks a launch: tell the user managed-advertising activation must happen in the Dynamoi dashboard, not through a ChatGPT checkout link. After they activate or restore billing there, poll dynamoi_get_billing for the target artist to confirm billing is active.
 
 - state.hasAnyArtist === true && state.hasAnyConnectedMeta === false and the user wants Spotify Smart Campaigns: offer dynamoi_start_meta_connection, then poll dynamoi_get_platform_status for the target artist with the returned onboardingAttemptId and onboardingFlow=meta after the browser return page sends them back to chat. Treat platforms.meta.status as complete when it is oauth_complete, partnership_pending, or partnership_active.
 

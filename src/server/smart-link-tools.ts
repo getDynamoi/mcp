@@ -306,8 +306,8 @@ export const DynamoiPublishSmartLinkInputSchema = z
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user wants to create one free Dynamoi Smart Link from a Spotify album or track URL/URI, or a single starter release from a Spotify artist URL. For full-catalog artist imports or artist hub requests, prefer dynamoi_create_smart_links_from_spotify_artist. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
-		destructiveHint: false,
+			"Use this when the user wants to create one free Dynamoi Smart Link from a Spotify album or track URL/URI, or a single starter release from a Spotify artist URL. For full-catalog artist imports or artist hub requests, prefer dynamoi_create_smart_links_from_spotify_artist. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate; if customDescription is provided, update that Smart Link's public description. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
+		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_link_from_spotify",
 		openWorldHint: true,
@@ -353,7 +353,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
 			"Use this when the user wants to change one Smart Link's public description, publish/unpublish the public landing page, or update artist-level Smart Link theme/pixel settings. Set action to update_description, publish, unpublish, or update_artist_settings. This updates public landing-page behavior and may queue background rendering.",
-		destructiveHint: false,
+		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_smart_link",
 		openWorldHint: true,

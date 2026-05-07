@@ -47,9 +47,9 @@ describe("mcp/tools phase 1 definitions", () => {
 			...PHASE_4_TOOL_DEFINITIONS,
 		];
 		expect(publicTools.length).toBeLessThanOrEqual(23);
-		expect(publicTools.map((tool) => tool.name)).toContain(
-			"dynamoi_start_meta_connection",
-		);
+		const toolNames = publicTools.map((tool) => tool.name);
+		expect(toolNames).toContain("dynamoi_start_meta_connection");
+		expect(toolNames).not.toContain("dynamoi_start_subscription_checkout");
 	});
 
 	test("read tools include required annotations", () => {
@@ -332,11 +332,19 @@ describe("mcp/tools phase 3 definitions", () => {
 		for (const def of PHASE_3_TOOL_DEFINITIONS) {
 			// Phase 3 includes both read and write tools; both must set all annotations.
 			expect(typeof def.readOnlyHint).toBe("boolean");
-			expect(def.destructiveHint).toBe(false);
+			expect(typeof def.destructiveHint).toBe("boolean");
 			expect(typeof def.openWorldHint).toBe("boolean");
 			expect(def.outputSchema).toBeDefined();
 			expect(def.title.length).toBeGreaterThan(0);
 		}
+		expect(
+			getToolDefinition(PHASE_3_TOOL_DEFINITIONS, "dynamoi_list_media_assets")
+				.destructiveHint,
+		).toBe(false);
+		expect(
+			getToolDefinition(PHASE_3_TOOL_DEFINITIONS, "dynamoi_launch_campaign")
+				.destructiveHint,
+		).toBe(true);
 	});
 
 	test("launch campaign schema accepts review-style smart campaign inputs", () => {

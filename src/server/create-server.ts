@@ -45,7 +45,6 @@ import type {
 	SearchSummaryData,
 	SmartLinkSettingsData,
 	StartMetaConnectionData,
-	StartSubscriptionCheckoutData,
 	StartYoutubeChannelLinkData,
 	UpdateBudgetData,
 	UpdateCampaignData,
@@ -107,9 +106,6 @@ export type Phase3Adapter = {
 	getBilling(
 		input: unknown,
 	): Promise<ResultEnvelope<GetBillingData | GetBillingSummaryData>>;
-	startSubscriptionCheckout(
-		input: unknown,
-	): Promise<ResultEnvelope<StartSubscriptionCheckoutData>>;
 	startMetaConnection(
 		input: unknown,
 	): Promise<ResultEnvelope<StartMetaConnectionData>>;
@@ -347,12 +343,6 @@ export function createDynamoiMcpServer(options: {
 					case "dynamoi_get_billing":
 						return asValidatedTextResult({
 							envelope: await options.adapter.getBilling(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_start_subscription_checkout":
-						return asValidatedTextResult({
-							envelope: await options.adapter.startSubscriptionCheckout(input),
 							outputSchema: def.outputSchema,
 							toolName: def.name,
 						});

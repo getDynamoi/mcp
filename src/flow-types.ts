@@ -31,31 +31,6 @@ export type GetBillingSummaryData = {
 	actionRequired?: string[];
 };
 
-export type StartSubscriptionCheckoutData = {
-	artistId: string;
-	artistName: string;
-	onboardingAttemptId: string;
-	status:
-		| "checkout_url"
-		| "already_active"
-		| "connections_required"
-		| "setup_required"
-		| "tenant_managed"
-		| "activated";
-	checkoutUrl: string | null;
-	checkoutSource?: "checkout_created" | "checkout_reused" | "portal";
-	subscriptionId?: string;
-	setupReason?: string;
-	completionCheck: {
-		pollTools: string[];
-		onboardingFlow: "billing";
-		expectedBillingStatus: "ACTIVE";
-	};
-	summary: string;
-	warnings?: string[];
-	actionRequired?: string[];
-};
-
 export type GetPlatformStatusData = {
 	platforms: {
 		spotify: { connected: boolean; artistName?: string; artistUrl?: string };
