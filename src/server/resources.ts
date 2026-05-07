@@ -40,14 +40,14 @@ export function registerDynamoiResources(
 						creditRollover: "Credits roll over for 12 months",
 						includes:
 							"Free Smart Links, unlimited team seats, unlimited artists, white-glove support, and campaign landing-page support where available",
+						managedAdvertising: {
+							activationUsd: 25,
+							campaignCreditsUsd: 50,
+							description:
+								"$25 activation gives $50 in campaign credits, then campaigns continue with saved-card billing as Dynamoi runs managed advertising.",
+							savedCardPayg: true,
+						},
 						noContracts: true,
-						tiers: [
-							{
-								name: "Plus",
-								note: "Managed advertising is separate from free Smart Links.",
-								priceUsdMonthly: 300,
-							},
-						],
 					}),
 					uri: uri.href,
 				},
@@ -219,6 +219,8 @@ export function registerDynamoiResources(
 						},
 						managedAdvertising: {
 							paid: true,
+							pricing:
+								"$25 activation, $50 in campaign credits, then saved-card PAYG.",
 							useFor:
 								"Managed Meta and Google ad campaigns for Spotify promotion and YouTube channel growth.",
 						},

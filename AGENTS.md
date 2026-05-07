@@ -147,7 +147,7 @@ The MCP server includes static resources to help AI assistants make better decis
 
 | Resource | What It Provides |
 |---|---|
-| `dynamoi://platform/pricing` | Tiers, activation bonus, credit structure, budget minimums |
+| `dynamoi://platform/pricing` | Activation pricing, campaign credits, saved-card billing, budget minimums |
 | `dynamoi://smart-links/free-plan` | Smart Link free-plan terms and the managed-advertising distinction |
 | `dynamoi://smart-links/capabilities` | Supported Spotify inputs, analytics, themes, pixels, publish, and unpublish behavior |
 | `dynamoi://platform/country-targeting` | Smart Campaign vs YouTube country-targeting rules |
