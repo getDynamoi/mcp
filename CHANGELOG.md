@@ -7,6 +7,8 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-07
+
 ### Added
 
 - Added `dynamoi_create_smart_links_from_spotify_artist` so assistants can start a free Spotify artist catalog Smart Link import, return the artist hub, and keep users in the MCP flow instead of sending them to the dashboard.
@@ -17,7 +19,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Smart Link tool metadata, instructions, resources, and docs now distinguish single-release creation from full artist catalog/hub creation.
 - Consolidated the public tool surface: campaign analytics/deployment now live behind `dynamoi_get_campaign` include flags, campaign mutations use `dynamoi_update_campaign`, and Smart Link analytics/settings/publish controls are folded into `dynamoi_get_smart_link` and `dynamoi_update_smart_link`.
 - `dynamoi_list_artists` now accepts `artistId` for one artist's full profile/readiness details, replacing the separate one-artist read tool in the advertised connector surface.
-- Billing guidance now reflects the $25 managed-advertising activation model with $50 in campaign credits and saved-card billing as campaigns run.
+- Billing guidance now reflects managed-advertising activation in the Dynamoi dashboard instead of the former subscription model.
 
 ### Removed
 
@@ -99,7 +101,6 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Removed
 
 - Removed wording in public docs that could be misinterpreted as describing internal spend calculations.
-
 
 ## [0.3.0] - 2026-02-12
 
