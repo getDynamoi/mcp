@@ -24,7 +24,7 @@ export function createPhaseOnboardingToolDefinitions(
 		},
 		{
 			description:
-				"Use this when the user is ready to connect Meta for Spotify Smart Campaigns from chat. This returns a signed Meta OAuth URL and may send the user through a Page/Instagram selection step before the chat-first return page. After the user returns, poll dynamoi_get_platform_status with the returned onboardingAttemptId and onboardingFlow=meta until platforms.meta.status is oauth_complete, partnership_pending, or partnership_active.",
+				"Use this when billing is active and the user is ready to connect Meta for Spotify Smart Campaigns from chat. This returns a signed Meta OAuth URL and may send the user through a Page/Instagram selection step before the chat-first return page. If billing is not active, it returns billing_required instead of an OAuth URL. If billing cannot be verified due to a transient snapshot/API issue, it returns billing_check_unavailable and should be retried shortly. After the user returns, poll dynamoi_get_platform_status with the returned onboardingAttemptId and onboardingFlow=meta until platforms.meta.status is oauth_complete, partnership_pending, or partnership_active.",
 			destructiveHint: false,
 			idempotentHint: true,
 			name: "dynamoi_start_meta_connection",

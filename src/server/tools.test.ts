@@ -224,6 +224,7 @@ describe("mcp/tools onboarding definitions", () => {
 		);
 		expect(meta.description).toContain("platforms.meta.status");
 		expect(meta.description).toContain("oauth_complete");
+		expect(meta.description).toContain("billing_check_unavailable");
 	});
 });
 

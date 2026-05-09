@@ -83,7 +83,11 @@ export type StartMetaConnectionData = {
 	artistId: string;
 	artistName: string;
 	onboardingAttemptId: string | null;
-	status: "authorization_url" | "already_connected";
+	status:
+		| "authorization_url"
+		| "already_connected"
+		| "billing_check_unavailable"
+		| "billing_required";
 	authorizationUrl: string | null;
 	expiresAt: string | null;
 	completionCheck: {

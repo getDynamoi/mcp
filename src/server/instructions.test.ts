@@ -30,6 +30,12 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		);
 	});
 
+	test("keeps transient Meta billing checks retryable", () => {
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			"If it returns billing_check_unavailable, retry shortly instead of treating the user as unpaid.",
+		);
+	});
+
 	test("preserves the existing principles block after the routine", () => {
 		const routineEnd = DYNAMOI_MCP_INSTRUCTIONS.indexOf(
 			"=== End Session Start Routine ===",
