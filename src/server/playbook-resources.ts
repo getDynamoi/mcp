@@ -20,7 +20,7 @@ export function registerPlaybookResources(server: McpServer) {
 						freePlanReminder:
 							"Free Smart Links have no per-link fee, no subscription, and no upgrade gate. Creating a Smart Link does not create a paid campaign or spend ad budget.",
 						marginCopyGuard:
-							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Do not quote activation fees, credits, saved-card billing, or checkout details in ChatGPT; billing setup belongs in the Dynamoi dashboard. The internal media-spend margin is not part of any client-facing copy.",
+							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Do not quote plan prices, campaign credits, daily campaign-spend billing, or checkout details in ChatGPT; billing setup belongs in the Dynamoi dashboard. The internal media-spend margin is not part of any client-facing copy.",
 						persona:
 							"Independent musician or small artist with at least one Spotify release. Goal: increase Spotify streams.",
 						sampleScript:
@@ -34,7 +34,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on Smart Links, readiness, platform connections, and campaign management after activation is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on Smart Links, readiness, platform connections, and campaign management after billing setup is complete.",
 								trigger:
 									"User hesitates about price, commitment, or whether the first month is enough to test.",
 							},
@@ -57,7 +57,7 @@ export function registerPlaybookResources(server: McpServer) {
 									"User mentions Instagram, social media growth, or followers while discussing Spotify promotion.",
 							},
 						},
-						upsellAfterActivation:
+						upsellAfterStarter:
 							"Once they have a hub URL, the natural next ask is 'would you like to promote this release on Meta Ads?' which routes to dynamoi_get_campaign_readiness, dynamoi_start_meta_connection if Meta is missing, then dynamoi_launch_campaign for a Smart Campaign.",
 					}),
 					uri: uri.href,
@@ -99,7 +99,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on channel linking, readiness, and campaign management after activation is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on channel linking, readiness, and campaign management after billing setup is complete.",
 								trigger:
 									"User expresses pricing concern or asks whether they can test without a long commitment.",
 							},
@@ -165,7 +165,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on roster setup, readiness checks, and campaign management after activation is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on roster setup, readiness checks, and campaign management after billing setup is complete.",
 								trigger:
 									"User asks whether billing scales per seat or wants to test with one artist first.",
 							},
@@ -220,7 +220,7 @@ export function registerPlaybookResources(server: McpServer) {
 								if: "state.hasAnyArtist === true && state.hasAnyActiveCampaign === false",
 							},
 							{
-								do: "Tell the user managed-advertising activation must happen in the Dynamoi dashboard, not through a ChatGPT checkout link. After they activate or restore billing there, poll dynamoi_get_billing for that artist to confirm billing is active.",
+								do: "Tell the user managed-advertising billing setup must happen in the Dynamoi dashboard, not through a ChatGPT checkout link. After they start or restore billing there, poll dynamoi_get_billing for that artist to confirm billing is active.",
 								if: "state.hasAnyArtist === true && billing is the launch blocker",
 							},
 							{

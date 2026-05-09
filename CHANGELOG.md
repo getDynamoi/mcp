@@ -19,11 +19,11 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Smart Link tool metadata, instructions, resources, and docs now distinguish single-release creation from full artist catalog/hub creation.
 - Consolidated the public tool surface: campaign analytics/deployment now live behind `dynamoi_get_campaign` include flags, campaign mutations use `dynamoi_update_campaign`, and Smart Link analytics/settings/publish controls are folded into `dynamoi_get_smart_link` and `dynamoi_update_smart_link`.
 - `dynamoi_list_artists` now accepts `artistId` for one artist's full profile/readiness details, replacing the separate one-artist read tool in the advertised connector surface.
-- Billing guidance now reflects managed-advertising activation in the Dynamoi dashboard instead of the former subscription model.
+- Billing guidance now routes managed-advertising payment setup through the Dynamoi dashboard instead of direct ChatGPT checkout.
 
 ### Removed
 
-- Removed `dynamoi_start_subscription_checkout` from the public connector surface so the ChatGPT app does not expose direct paid activation checkout. Assistants should use `dynamoi_get_billing` for status and direct users to complete activation in Dynamoi.
+- Removed `dynamoi_start_subscription_checkout` from the public connector surface so the ChatGPT app does not expose direct paid checkout. Assistants should use `dynamoi_get_billing` for status and direct users to complete billing setup in Dynamoi.
 
 ## [0.6.0] - 2026-05-02
 

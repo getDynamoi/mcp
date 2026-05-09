@@ -507,7 +507,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks about billing state, credit balance, promo limits, activation status, or whether billing blocks launches for one artist. This is a read-only status check; it does not create checkout links or collect payment. If billing blocks a launch, direct the user to activate or restore managed advertising in the Dynamoi dashboard, then call this tool again to confirm the status. Do not use this for campaign analytics or platform connection troubleshooting.",
+			"Use this when the user asks about billing state, credit balance, promo limits, subscription status, or whether billing blocks launches for one artist. This is a read-only status check; it does not create checkout links or collect payment. If billing blocks a launch, direct the user to start or restore managed advertising in the Dynamoi dashboard, then call this tool again to confirm the status. Do not use this for campaign analytics or platform connection troubleshooting.",
 		destructiveHint: false,
 		name: "dynamoi_get_billing",
 		openWorldHint: false,
@@ -518,7 +518,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. When polling after dynamoi_start_meta_connection or dynamoi_start_youtube_channel_link, pass the returned onboardingAttemptId and onboardingFlow so Dynamoi ops can correlate the chat-first browser step. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or activation billing state. Never use this to personalize generic Instagram or marketing-advice questions.",
+			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. When polling after dynamoi_start_meta_connection or dynamoi_start_youtube_channel_link, pass the returned onboardingAttemptId and onboardingFlow so Dynamoi ops can correlate the chat-first browser step. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription billing state. Never use this to personalize generic Instagram or marketing-advice questions.",
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,

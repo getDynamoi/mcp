@@ -41,7 +41,7 @@ export function registerDynamoiResources(
 							"Free Smart Links, unlimited team seats, unlimited artists, white-glove support, and campaign landing-page support where available",
 						managedAdvertising: {
 							description:
-								"Managed advertising activation and payment setup happen in the Dynamoi dashboard, outside ChatGPT. This MCP server can check billing readiness after activation, but does not create checkout links or collect payment.",
+								"Managed advertising subscription and payment setup happen in the Dynamoi dashboard, outside ChatGPT. This MCP server can check billing readiness after setup, but does not create checkout links or collect payment.",
 							paymentSetupLocation: "Dynamoi dashboard",
 						},
 						noContracts: true,
