@@ -3,7 +3,7 @@
   "name": "io.github.getDynamoi/dynamoi",
   "title": "Dynamoi",
   "description": "Create free Smart Links and artist hubs from Spotify, view analytics, and manage Dynamoi music and YouTube campaigns.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "websiteUrl": "https://dynamoi.com",
   "repository": {
     "url": "https://github.com/getDynamoi/mcp",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "@dynamoi/mcp",
-      "version": "0.6.1",
+      "version": "0.6.2",
       "transport": {
         "type": "streamable-http",
         "url": "https://dynamoi.com/mcp"

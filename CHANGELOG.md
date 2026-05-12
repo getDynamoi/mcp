@@ -7,6 +7,16 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-05-12
+
+### Added
+
+- Added a public package README so npm users can see the hosted MCP endpoint, assistant capabilities, safety model, and package usage examples directly on npmjs.com.
+
+### Changed
+
+- Included `README.md` in the published package file list so the npm package page renders the public overview with each release.
+
 ## [0.6.1] - 2026-05-07
 
 ### Added
