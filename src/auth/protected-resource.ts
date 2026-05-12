@@ -6,7 +6,17 @@ type ProtectedResourceMetadata = {
 	scopes_supported: string[];
 };
 
-export const DYNAMOI_MCP_SCOPES = ["email", "profile"] as const;
+export const DYNAMOI_MCP_SCOPES = [
+	"email",
+	"profile",
+	"dynamoi:read",
+	"dynamoi:billing.read",
+	"dynamoi:platform.read",
+	"dynamoi:platform.write",
+	"dynamoi:campaign.write",
+	"dynamoi:campaign.launch",
+	"dynamoi:smart_links.write",
+] as const;
 
 export function buildProtectedResourceMetadata(options: {
 	resource: string;
