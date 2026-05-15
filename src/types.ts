@@ -201,6 +201,7 @@ export type GetSmartLinkSummaryData = {
 export type SmartLinkAnalyticsTotals = {
 	anonymousVisits: number;
 	streamingServiceClicks: number;
+	youtubeVideoPlays: number;
 	shareClicks: number;
 	promoteCtaClicks: number;
 };
