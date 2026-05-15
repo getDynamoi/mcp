@@ -18,7 +18,7 @@ export function registerPlaybookResources(server: McpServer) {
 						fastestPath:
 							"Ask the user for their Spotify artist URL, then call dynamoi_create_smart_links_from_spotify_artist with that URL. Return the artist hub URL plus the starter Smart Link URL. Catalog import continues in the background.",
 						freePlanReminder:
-							"Free Smart Links have no per-link fee, no subscription, and no upgrade gate. Creating a Smart Link does not create a paid campaign or spend ad budget.",
+							"Free Smart Links have no per-link fee for creation or management. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship. Creating a Smart Link does not create a paid campaign or spend ad budget.",
 						marginCopyGuard:
 							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Do not quote plan prices, campaign credits, daily campaign-spend billing, or checkout details in ChatGPT; billing setup belongs in the Dynamoi dashboard. The internal media-spend margin is not part of any client-facing copy.",
 						persona:

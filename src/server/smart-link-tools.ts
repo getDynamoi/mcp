@@ -58,6 +58,7 @@ const SmartLinkStatusFiltersSchema = {
 		.enum([
 			"auto_approved",
 			"pending_ops_review",
+			"verification_deferred",
 			"approved_by_ops",
 			"rejected",
 		])
@@ -306,7 +307,7 @@ export const DynamoiPublishSmartLinkInputSchema = z
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user wants to create one free Dynamoi Smart Link from a Spotify album or track URL/URI, or a single starter release from a Spotify artist URL. For full-catalog artist imports or artist hub requests, prefer dynamoi_create_smart_links_from_spotify_artist. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate; if customDescription is provided, update that Smart Link's public description. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
+			"Use this when the user wants to create one free Dynamoi Smart Link from a Spotify album or track URL/URI, or a single starter release from a Spotify artist URL. For full-catalog artist imports or artist hub requests, prefer dynamoi_create_smart_links_from_spotify_artist. Smart Links are free to create and manage. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship. This does not create a paid ad campaign. Spotify playlist URLs are not supported today. If the Smart Link already exists, return the existing link instead of creating a duplicate; if customDescription is provided, update that Smart Link's public description. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_link_from_spotify",
@@ -318,7 +319,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. If the signed-in user has no Dynamoi artist yet, omit artistId so Dynamoi can create the first artist from the Spotify artist profile. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
+			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. If the signed-in user has no Dynamoi artist yet, omit artistId so Dynamoi can create the first artist from the Spotify artist profile. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free to create and manage. High-popularity or unverifiable artist catalog links may stay unpublished in verification hold until Dynamoi can verify the client relationship. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_links_from_spotify_artist",

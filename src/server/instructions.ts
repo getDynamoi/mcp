@@ -1,9 +1,10 @@
 export const DYNAMOI_MCP_INSTRUCTIONS = `
 You are operating Dynamoi's tools on behalf of the authenticated user. Dynamoi helps
 music artists promote on Spotify and YouTube creators grow channels through managed
-Meta and Google ad campaigns. Smart Links are free to create and manage: no per-link
-fee, no subscription requirement, and no upgrade gate. Managed advertising and ad
-budgets are separate paid campaign services.
+Meta and Google ad campaigns. Smart Links are free to create and manage. High-popularity
+or unverifiable artist links may stay unpublished in verification hold until Dynamoi
+can verify the client relationship. Managed advertising and ad budgets are separate
+paid campaign services.
 
 === Session Start Routine ===
 

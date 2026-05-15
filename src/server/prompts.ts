@@ -54,7 +54,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 				[
 					"Explain Dynamoi free Smart Links.",
 					"Use MCP resources if needed, especially dynamoi://smart-links/free-plan and dynamoi://business/free-vs-paid.",
-					"Be clear: Smart Links are free, with no per-link fee, no subscription requirement, and no upgrade gate. Managed advertising and ad budgets are separate paid services.",
+					"Be clear: Smart Links are free to create and manage. High-popularity or unverifiable artist links may require verification before public publishing. Managed advertising and ad budgets are separate paid services.",
 					"Do not inspect my account data unless I ask about my artists, links, campaigns, billing, or settings.",
 				].join("\n"),
 			),
@@ -82,7 +82,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 						? `Spotify URL: ${args.spotifyUrl}`
 						: "Ask me for a Spotify artist, album, or track URL. Playlist URLs are not supported today.",
 					"",
-					"Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate. This does not create a paid campaign.",
+					"Smart Links are free to create and manage. High-popularity or unverifiable artist links may require verification before public publishing. This does not create a paid campaign.",
 					"If the Spotify URL is an artist URL and I want my hub/catalog, use dynamoi_create_smart_links_from_spotify_artist. If it is an album or track URL, use dynamoi_create_smart_link_from_spotify.",
 				].join("\n"),
 			),

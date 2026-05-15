@@ -120,6 +120,7 @@ export type GetCurrentUserData = {
 export type SmartLinkClaimStatus =
 	| "auto_approved"
 	| "pending_ops_review"
+	| "verification_deferred"
 	| "approved_by_ops"
 	| "rejected";
 export type SmartLinkPublishState = "published" | "unpublished";

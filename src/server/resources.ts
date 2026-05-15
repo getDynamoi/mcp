@@ -148,7 +148,7 @@ export function registerDynamoiResources(
 							"Publish and unpublish controls",
 						],
 						noCatch:
-							"No per-link fee, no subscription requirement, and no upgrade gate for Smart Links.",
+							"No per-link fee for Smart Link creation or management. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship.",
 						paidSeparately:
 							"Managed advertising campaigns and ad budgets are separate paid products.",
 					}),
@@ -210,7 +210,7 @@ export function registerDynamoiResources(
 							"Do not imply that a Smart Link creates an ad campaign. Do not imply that campaign budgets are free.",
 						freeSmartLinks: {
 							claim:
-								"Smart Links are free: no per-link fee, no subscription requirement, and no upgrade gate.",
+								"Smart Links are free to create and manage. High-popularity or unverifiable artist links may require verification before public publishing.",
 							useFor:
 								"Spotify landing pages, public release links, link sharing, basic link analytics, artist-level themes, and validated pixel IDs.",
 						},

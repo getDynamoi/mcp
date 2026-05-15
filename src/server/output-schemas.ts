@@ -50,6 +50,7 @@ const SmartLinkStatusSchemas = {
 	claimStatus: z.enum([
 		"auto_approved",
 		"pending_ops_review",
+		"verification_deferred",
 		"approved_by_ops",
 		"rejected",
 	]),
