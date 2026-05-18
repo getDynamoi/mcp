@@ -34,6 +34,10 @@ function isValidCalendarDate(value: string): boolean {
 	);
 }
 
+const IsoCalendarDateSchema = IsoDateSchema.refine(isValidCalendarDate, {
+	message: "must be a valid calendar date",
+});
+
 export const DynamoiListArtistsInputSchema = z
 	.object({
 		artistId: z.string().uuid().optional(),
@@ -224,7 +228,7 @@ export const DynamoiGetCampaignReadinessInputSchema = z
 		budgetType: z.enum(["DAILY", "TOTAL"]).optional(),
 		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
 		contentType: z.enum(["TRACK", "ALBUM", "PLAYLIST", "VIDEO"]).optional(),
-		endDate: IsoDateSchema.optional(),
+		endDate: IsoCalendarDateSchema.optional(),
 		format: ToolFormatSchema.optional(),
 		locationTargets: z.array(LocationTargetSchema).optional(),
 		mediaAssetIds: z.array(z.string().uuid()).optional(),
@@ -263,9 +267,9 @@ export const DynamoiUpdateBudgetInputSchema = z
 		budgetAmount: z.number().finite().positive(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
-		endDate: IsoDateSchema.optional(),
+		endDate: IsoCalendarDateSchema.optional(),
 		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
-		expectedCurrentEndDate: IsoDateSchema.optional(),
+		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
@@ -276,9 +280,9 @@ export const DynamoiUpdateCampaignInputSchema = z
 		budgetAmount: z.number().finite().positive().optional(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
-		endDate: IsoDateSchema.optional(),
+		endDate: IsoCalendarDateSchema.optional(),
 		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
-		expectedCurrentEndDate: IsoDateSchema.optional(),
+		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		expectedCurrentStatus: ExpectedCampaignStatusSchema,
 		userIntentSummary: UserIntentSummarySchema,
 	})
@@ -341,10 +345,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 		// Content
 		contentTitle: z.string().trim().min(1).max(160),
 		contentType: z.enum(["TRACK", "ALBUM", "PLAYLIST", "VIDEO"]),
-		endDate: z
-			.string()
-			.regex(/^\d{4}-\d{2}-\d{2}$/)
-			.optional(),
+		endDate: IsoCalendarDateSchema.optional(),
 
 		// Targeting
 		locationTargets: z.array(LocationTargetSchema).optional(),

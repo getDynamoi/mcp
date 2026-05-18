@@ -19,6 +19,7 @@ import {
 	DynamoiGetPlatformStatusInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
+	DynamoiUpdateBudgetInputSchema,
 	DynamoiUpdateCampaignInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -141,6 +142,17 @@ describe("mcp/tools phase 1 definitions", () => {
 		expect(parsed.locationTargets?.[0]?.code).toBe("US");
 	});
 
+	test("campaign readiness schema rejects impossible calendar end dates", () => {
+		expect(() =>
+			DynamoiGetCampaignReadinessInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				budgetAmount: 100,
+				budgetType: "TOTAL",
+				campaignType: "YOUTUBE",
+				endDate: "2026-02-31",
+			}),
+		).toThrow();
+	});
 	test("OpenAI Connectors search and fetch tools are registered as read tools", () => {
 		const search = getToolDefinition(PHASE_1_TOOL_DEFINITIONS, "search");
 		expect(search.description).toContain("OpenAI ChatGPT Deep Research");
@@ -317,6 +329,32 @@ describe("mcp/tools phase 2 definitions", () => {
 		expect(parsed.expectedCurrentEndDate).toBe("2026-05-15");
 	});
 
+	test("campaign budget schemas reject impossible calendar end dates", () => {
+		expect(() =>
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "update_budget",
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				endDate: "2026-02-31",
+			}),
+		).toThrow();
+		expect(() =>
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "update_budget",
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				expectedCurrentEndDate: "2026-02-31",
+			}),
+		).toThrow();
+		expect(() =>
+			DynamoiUpdateBudgetInputSchema.parse({
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				endDate: "2026-02-31",
+			}),
+		).toThrow();
+	});
+
 	test("pause and resume reject budget-only fields", () => {
 		expect(() =>
 			DynamoiUpdateCampaignInputSchema.parse({
@@ -368,6 +406,23 @@ describe("mcp/tools phase 3 definitions", () => {
 
 		expect(parsed.endDate).toBeUndefined();
 		expect(parsed.spotifyUrl).toBeUndefined();
+	});
+
+	test("launch campaign schema rejects impossible calendar end dates", () => {
+		expect(() =>
+			DynamoiLaunchCampaignInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				budgetAmount: 100,
+				budgetSplits: { GOOGLE: 0, META: 100 },
+				budgetType: "TOTAL",
+				campaignType: "SMART_CAMPAIGN",
+				clientRequestId: "00000000-0000-0000-0000-000000000000",
+				contentTitle: "Song",
+				contentType: "TRACK",
+				endDate: "2026-02-31",
+				mediaAssetIds: ["00000000-0000-0000-0000-000000000000"],
+			}),
+		).toThrow();
 	});
 
 	test("launch campaign metadata documents reviewer-safe defaults", () => {
@@ -423,6 +478,12 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 			expect(def.outputSchema).toBeDefined();
 			expect(def.title.length).toBeGreaterThan(0);
 		}
+		expect(
+			getToolDefinition(
+				PHASE_4_TOOL_DEFINITIONS,
+				"dynamoi_create_smart_links_from_spotify_artist",
+			).destructiveHint,
+		).toBe(true);
 	});
 
 	test("smart link descriptions keep the free plan and paid campaign boundary clear", () => {
