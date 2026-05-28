@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import * as z from "zod/v4";
+import { DYNAMOI_MCP_SCOPES } from "../auth/protected-resource";
 import {
 	asTextResult,
 	asValidatedTextResult,
@@ -9,6 +10,21 @@ import {
 	type Phase3Adapter,
 } from "./create-server";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
+
+function buildStubAdapter(
+	overrides: Partial<Phase3Adapter> = {},
+): Phase3Adapter {
+	const unusedAdapterMethod = async () => ({
+		message: "Adapter method not used in create-server tests.",
+		status: "error" as const,
+	});
+	return new Proxy(overrides, {
+		get: (target, property) =>
+			typeof property === "string" && property in target
+				? target[property as keyof Phase3Adapter]
+				: unusedAdapterMethod,
+	}) as Phase3Adapter;
+}
 
 describe("asTextResult", () => {
 	test("marks tool execution error envelopes as MCP tool errors", () => {
@@ -80,8 +96,35 @@ describe("asTextResult", () => {
 });
 
 describe("createDynamoiMcpServer", () => {
+	test("advertises OpenAI-compatible OAuth security schemes on tools", async () => {
+		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.listTools();
+			const search = result.tools.find((tool) => tool.name === "search") as
+				| ((typeof result.tools)[number] & {
+						_meta?: Record<string, unknown>;
+						securitySchemes?: unknown;
+				  })
+				| undefined;
+			const expected = [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" }];
+
+			expect(search?._meta?.["securitySchemes"]).toEqual(expected);
+		} finally {
+			await client.close();
+		}
+	});
+
 	test("calls tools whose canonical output schemas are success/error unions", async () => {
-		const adapter = {
+		const adapter = buildStubAdapter({
 			search: async () => ({
 				data: {
 					results: [],
@@ -90,7 +133,7 @@ describe("createDynamoiMcpServer", () => {
 				},
 				status: "success",
 			}),
-		} as unknown as Phase3Adapter;
+		});
 		const server = createDynamoiMcpServer({ adapter });
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =

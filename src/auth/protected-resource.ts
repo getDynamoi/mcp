@@ -6,17 +6,9 @@ type ProtectedResourceMetadata = {
 	scopes_supported: string[];
 };
 
-export const DYNAMOI_MCP_SCOPES = [
-	"email",
-	"profile",
-	"dynamoi:read",
-	"dynamoi:billing.read",
-	"dynamoi:platform.read",
-	"dynamoi:platform.write",
-	"dynamoi:campaign.write",
-	"dynamoi:campaign.launch",
-	"dynamoi:smart_links.write",
-] as const;
+// Supabase OAuth Server currently rejects custom resource scopes, so the public
+// MCP auth contract advertises only the standard identity scopes it can mint.
+export const DYNAMOI_MCP_SCOPES = ["email", "profile"] as const;
 
 export function buildProtectedResourceMetadata(options: {
 	resource: string;
@@ -39,11 +31,27 @@ export function buildProtectedResourceMetadata(options: {
 
 export function buildWwwAuthenticateHeader(options: {
 	resourceMetadataUrl: string;
+	errorDescription?: string;
 	error?: "insufficient_scope" | "invalid_token";
 	scope?: string;
 }): string {
 	const scope = options.scope ?? "email profile";
-	const error = options.error ? `, error="${options.error}"` : "";
+	const error = options.error ?? "invalid_token";
+	const errorDescription =
+		options.errorDescription ??
+		(error === "insufficient_scope"
+			? "Additional Dynamoi permissions are required."
+			: "Sign in to Dynamoi to continue.");
+	const params = [
+		`resource_metadata="${escapeHeaderValue(options.resourceMetadataUrl)}"`,
+		`scope="${escapeHeaderValue(scope)}"`,
+		`error="${escapeHeaderValue(error)}"`,
+		`error_description="${escapeHeaderValue(errorDescription)}"`,
+	];
 	// RFC 6750 style with resource metadata extension.
-	return `Bearer resource_metadata="${options.resourceMetadataUrl}", scope="${scope}"${error}`;
+	return `Bearer ${params.join(", ")}`;
+}
+
+function escapeHeaderValue(value: string): string {
+	return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }

@@ -6,11 +6,17 @@ import {
 	GetCampaignReadinessOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
 } from "./output-schemas";
+import {
+	ClientRequestIdSchema,
+	IsoCalendarDateSchema,
+	DateRangeSchema as SharedDateRangeSchema,
+	ToolFormatSchema as SharedToolFormatSchema,
+	UserIntentSummarySchema,
+} from "./shared-schemas";
 
-export const ToolFormatSchema = z.enum(["json", "summary"]);
-const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const UserIntentSummarySchema = z.string().trim().max(500).optional();
-const ClientRequestIdSchema = z.string().uuid().optional();
+export const DateRangeSchema = SharedDateRangeSchema;
+export const ToolFormatSchema = SharedToolFormatSchema;
+
 const OnboardingAttemptIdSchema = z.string().trim().min(1).max(120).optional();
 const ExpectedCampaignStatusSchema = z
 	.enum([
@@ -26,17 +32,6 @@ const ExpectedCampaignStatusSchema = z
 		"SUBSCRIPTION_PAUSED",
 	])
 	.optional();
-
-function isValidCalendarDate(value: string): boolean {
-	const date = new Date(`${value}T00:00:00.000Z`);
-	return (
-		Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
-	);
-}
-
-const IsoCalendarDateSchema = IsoDateSchema.refine(isValidCalendarDate, {
-	message: "must be a valid calendar date",
-});
 
 export const DynamoiListArtistsInputSchema = z
 	.object({
@@ -99,40 +94,6 @@ export const DynamoiListCampaignsInputSchema = z
 		status: z.string().trim().optional(),
 	})
 	.strict();
-
-export const DateRangeSchema = z
-	.object({
-		end: IsoDateSchema,
-		start: IsoDateSchema,
-	})
-	.strict()
-	.superRefine((data, ctx) => {
-		if (!isValidCalendarDate(data.start)) {
-			ctx.addIssue({
-				code: "custom",
-				message: "start must be a valid calendar date",
-				path: ["start"],
-			});
-		}
-		if (!isValidCalendarDate(data.end)) {
-			ctx.addIssue({
-				code: "custom",
-				message: "end must be a valid calendar date",
-				path: ["end"],
-			});
-		}
-		if (
-			isValidCalendarDate(data.start) &&
-			isValidCalendarDate(data.end) &&
-			data.start > data.end
-		) {
-			ctx.addIssue({
-				code: "custom",
-				message: "start must be on or before end",
-				path: ["start"],
-			});
-		}
-	});
 
 export const DynamoiGetCampaignInputSchema = z
 	.object({

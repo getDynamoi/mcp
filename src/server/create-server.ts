@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
+import { DYNAMOI_MCP_SCOPES } from "../auth/protected-resource";
 import type {
 	CreateSmartLinkFromSpotifyData,
 	CreateSmartLinksFromSpotifyArtistData,
@@ -69,6 +70,10 @@ const SdkToolOutputEnvelopeSchema = z
 		status: z.enum(["success", "partial_success", "error"]),
 	})
 	.passthrough();
+
+function buildDynamoiToolSecuritySchemes() {
+	return [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" as const }];
+}
 
 export type Phase3Adapter = {
 	getCurrentUser(
@@ -276,6 +281,9 @@ export function createDynamoiMcpServer(options: {
 		server.registerTool(
 			def.name,
 			{
+				_meta: {
+					securitySchemes: buildDynamoiToolSecuritySchemes(),
+				},
 				annotations: {
 					destructiveHint: def.destructiveHint,
 					...(typeof idempotentHint === "boolean" ? { idempotentHint } : {}),
