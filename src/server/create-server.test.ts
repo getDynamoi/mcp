@@ -10,6 +10,21 @@ import {
 	type Phase3Adapter,
 } from "./create-server";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
+import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
+import {
+	PHASE_1_TOOL_DEFINITIONS,
+	PHASE_2_TOOL_DEFINITIONS,
+	PHASE_ONBOARDING_TOOL_DEFINITIONS,
+} from "./tools";
+import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
+
+const REGISTERED_TOOL_DEFINITIONS = [
+	...PHASE_1_TOOL_DEFINITIONS,
+	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
+	...PHASE_2_TOOL_DEFINITIONS,
+	...PHASE_3_TOOL_DEFINITIONS,
+	...PHASE_4_TOOL_DEFINITIONS,
+];
 
 function buildStubAdapter(
 	overrides: Partial<Phase3Adapter> = {},
@@ -96,6 +111,32 @@ describe("asTextResult", () => {
 });
 
 describe("createDynamoiMcpServer", () => {
+	test("registers every public tool definition once", async () => {
+		const expectedToolNames = REGISTERED_TOOL_DEFINITIONS.map(
+			(definition) => definition.name,
+		);
+		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.listTools();
+
+			expect(new Set(expectedToolNames).size).toBe(expectedToolNames.length);
+			expect(result.tools.map((tool) => tool.name).sort()).toEqual(
+				[...expectedToolNames].sort(),
+			);
+		} finally {
+			await client.close();
+		}
+	});
+
 	test("advertises OpenAI-compatible OAuth security schemes on tools", async () => {
 		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
 		const client = new Client({ name: "test-client", version: "1.0.0" });

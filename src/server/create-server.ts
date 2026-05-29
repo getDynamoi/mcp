@@ -75,6 +75,14 @@ function buildDynamoiToolSecuritySchemes() {
 	return [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" as const }];
 }
 
+const DYNAMOI_TOOL_DEFINITIONS = [
+	...PHASE_1_TOOL_DEFINITIONS,
+	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
+	...PHASE_2_TOOL_DEFINITIONS,
+	...PHASE_3_TOOL_DEFINITIONS,
+	...PHASE_4_TOOL_DEFINITIONS,
+] as const;
+
 export type Phase3Adapter = {
 	getCurrentUser(
 		input: unknown,
@@ -200,6 +208,46 @@ export type Phase3Adapter = {
 	): Promise<ResultEnvelope<PublishSmartLinkData>>;
 };
 
+type DynamoiToolName = (typeof DYNAMOI_TOOL_DEFINITIONS)[number]["name"];
+type DynamoiToolDispatcher = (
+	adapter: Phase3Adapter,
+	input: unknown,
+) => Promise<ResultEnvelope<unknown>>;
+
+const DYNAMOI_TOOL_DISPATCHERS = {
+	dynamoi_create_smart_link_from_spotify: (adapter, input) =>
+		adapter.createSmartLinkFromSpotify(input),
+	dynamoi_create_smart_links_from_spotify_artist: (adapter, input) =>
+		adapter.createSmartLinksFromSpotifyArtist(input),
+	dynamoi_get_account_overview: (adapter, input) =>
+		adapter.getCurrentUser(input),
+	dynamoi_get_artist_analytics: (adapter, input) =>
+		adapter.getArtistAnalytics(input),
+	dynamoi_get_billing: (adapter, input) => adapter.getBilling(input),
+	dynamoi_get_campaign: (adapter, input) => adapter.getCampaign(input),
+	dynamoi_get_campaign_readiness: (adapter, input) =>
+		adapter.getCampaignReadiness(input),
+	dynamoi_get_platform_status: (adapter, input) =>
+		adapter.getPlatformStatus(input),
+	dynamoi_get_smart_link: (adapter, input) => adapter.getSmartLink(input),
+	dynamoi_launch_campaign: (adapter, input) => adapter.launchCampaign(input),
+	dynamoi_list_artists: (adapter, input) => adapter.listArtists(input),
+	dynamoi_list_available_countries: (adapter, input) =>
+		adapter.listAvailableCountries(input),
+	dynamoi_list_campaigns: (adapter, input) => adapter.listCampaigns(input),
+	dynamoi_list_media_assets: (adapter, input) => adapter.listMediaAssets(input),
+	dynamoi_list_smart_links: (adapter, input) => adapter.listSmartLinks(input),
+	dynamoi_search: (adapter, input) => adapter.search(input),
+	dynamoi_start_meta_connection: (adapter, input) =>
+		adapter.startMetaConnection(input),
+	dynamoi_start_youtube_channel_link: (adapter, input) =>
+		adapter.startYoutubeChannelLink(input),
+	dynamoi_update_campaign: (adapter, input) => adapter.updateCampaign(input),
+	dynamoi_update_smart_link: (adapter, input) => adapter.updateSmartLink(input),
+	fetch: (adapter, input) => adapter.openAiFetch(input),
+	search: (adapter, input) => adapter.openAiSearch(input),
+} satisfies Record<DynamoiToolName, DynamoiToolDispatcher>;
+
 export function asTextResult(envelope: unknown) {
 	const isToolError =
 		Boolean(envelope) &&
@@ -266,14 +314,9 @@ export function createDynamoiMcpServer(options: {
 	);
 
 	// Tools (Phase 1 + Phase 2)
-	for (const def of [
-		...PHASE_1_TOOL_DEFINITIONS,
-		...PHASE_ONBOARDING_TOOL_DEFINITIONS,
-		...PHASE_2_TOOL_DEFINITIONS,
-		...PHASE_3_TOOL_DEFINITIONS,
-		...PHASE_4_TOOL_DEFINITIONS,
-	]) {
+	for (const def of DYNAMOI_TOOL_DEFINITIONS) {
 		const title = def.title;
+		const dispatcher = DYNAMOI_TOOL_DISPATCHERS[def.name];
 		const idempotentHint =
 			"idempotentHint" in def && typeof def.idempotentHint === "boolean"
 				? def.idempotentHint
@@ -298,148 +341,12 @@ export function createDynamoiMcpServer(options: {
 				outputSchema: SdkToolOutputEnvelopeSchema,
 				title,
 			},
-			async (input: unknown) => {
-				switch (def.name) {
-					case "dynamoi_get_account_overview":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getCurrentUser(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_list_artists":
-						return asValidatedTextResult({
-							envelope: await options.adapter.listArtists(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_search":
-						return asValidatedTextResult({
-							envelope: await options.adapter.search(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "search":
-						return asValidatedTextResult({
-							envelope: await options.adapter.openAiSearch(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "fetch":
-						return asValidatedTextResult({
-							envelope: await options.adapter.openAiFetch(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_artist_analytics":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getArtistAnalytics(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_list_campaigns":
-						return asValidatedTextResult({
-							envelope: await options.adapter.listCampaigns(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_campaign":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getCampaign(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_billing":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getBilling(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_start_meta_connection":
-						return asValidatedTextResult({
-							envelope: await options.adapter.startMetaConnection(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_platform_status":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getPlatformStatus(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_start_youtube_channel_link":
-						return asValidatedTextResult({
-							envelope: await options.adapter.startYoutubeChannelLink(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_list_available_countries":
-						return asValidatedTextResult({
-							envelope: await options.adapter.listAvailableCountries(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_campaign_readiness":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getCampaignReadiness(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_update_campaign":
-						return asValidatedTextResult({
-							envelope: await options.adapter.updateCampaign(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_list_media_assets":
-						return asValidatedTextResult({
-							envelope: await options.adapter.listMediaAssets(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_launch_campaign":
-						return asValidatedTextResult({
-							envelope: await options.adapter.launchCampaign(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_create_smart_link_from_spotify":
-						return asValidatedTextResult({
-							envelope: await options.adapter.createSmartLinkFromSpotify(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_create_smart_links_from_spotify_artist":
-						return asValidatedTextResult({
-							envelope:
-								await options.adapter.createSmartLinksFromSpotifyArtist(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_list_smart_links":
-						return asValidatedTextResult({
-							envelope: await options.adapter.listSmartLinks(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_get_smart_link":
-						return asValidatedTextResult({
-							envelope: await options.adapter.getSmartLink(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					case "dynamoi_update_smart_link":
-						return asValidatedTextResult({
-							envelope: await options.adapter.updateSmartLink(input),
-							outputSchema: def.outputSchema,
-							toolName: def.name,
-						});
-					default:
-						return asTextResult({
-							message: "Unknown tool",
-							status: "error",
-						} satisfies ResultEnvelope<never>);
-				}
-			},
+			async (input: unknown) =>
+				asValidatedTextResult({
+					envelope: await dispatcher(options.adapter, input),
+					outputSchema: def.outputSchema,
+					toolName: def.name,
+				}),
 		);
 	}
 
