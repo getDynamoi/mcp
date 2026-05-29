@@ -6,7 +6,6 @@ import {
 import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
-	DynamoiGetSmartLinkInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
 	PHASE_4_TOOL_DEFINITIONS,
 } from "./smart-link-tools";
@@ -541,22 +540,6 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 		});
 
 		expect(parsed.spotifyArtistUrl).toContain("/artist/");
-	});
-
-	test("get smart link schema supports consolidated includes", () => {
-		const parsed = DynamoiGetSmartLinkInputSchema.parse({
-			artistId: "00000000-0000-0000-0000-000000000000",
-			include: ["analytics", "artist_settings"],
-			playLinkId: "22222222-2222-4222-8222-222222222222",
-		});
-
-		expect(parsed.include).toContain("analytics");
-		expect(
-			DynamoiGetSmartLinkInputSchema.parse({
-				artistId: "00000000-0000-0000-0000-000000000000",
-				include: ["artist_settings"],
-			}).artistId,
-		).toBe("00000000-0000-0000-0000-000000000000");
 	});
 
 	test("smart link update schema supports theme and validated pixel id fields only", () => {

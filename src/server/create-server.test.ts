@@ -3,6 +3,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import * as z from "zod/v4";
 import { DYNAMOI_MCP_SCOPES } from "../auth/protected-resource";
+import { handleMcpHttpRequest } from "../transport/http";
+import { DYNAMOI_MCP_VERSION } from "../version";
 import {
 	asTextResult,
 	asValidatedTextResult,
@@ -137,6 +139,11 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
+	test("uses a concrete MCP server version in source and bundled builds", () => {
+		expect(DYNAMOI_MCP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
+		expect(DYNAMOI_MCP_VERSION).not.toContain("__");
+	});
+
 	test("advertises OpenAI-compatible OAuth security schemes on tools", async () => {
 		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
 		const client = new Client({ name: "test-client", version: "1.0.0" });
@@ -162,6 +169,122 @@ describe("createDynamoiMcpServer", () => {
 		} finally {
 			await client.close();
 		}
+	});
+
+	test("chatgpt-app profile omits paid launch, billing, and connection-start tools", async () => {
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter(),
+			toolProfile: "chatgpt-app",
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.listTools();
+			const toolNames = result.tools.map((tool) => tool.name);
+
+			expect(toolNames).toHaveLength(14);
+			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
+			expect(toolNames).toContain(
+				"dynamoi_create_smart_links_from_spotify_artist",
+			);
+			expect(toolNames).toContain("dynamoi_get_campaign");
+			expect(toolNames).not.toContain("dynamoi_get_billing");
+			expect(toolNames).not.toContain("dynamoi_get_campaign_readiness");
+			expect(toolNames).not.toContain("dynamoi_launch_campaign");
+			expect(toolNames).not.toContain("dynamoi_start_meta_connection");
+			expect(toolNames).not.toContain("dynamoi_start_youtube_channel_link");
+			expect(toolNames).not.toContain("dynamoi_update_campaign");
+			const chatGptDescriptions = result.tools
+				.map((tool) => tool.description ?? "")
+				.join("\n");
+			expect(chatGptDescriptions).not.toContain("dynamoi_get_billing");
+			expect(chatGptDescriptions).not.toContain(
+				"dynamoi_get_campaign_readiness",
+			);
+			expect(chatGptDescriptions).not.toContain(
+				"dynamoi_start_meta_connection",
+			);
+			expect(chatGptDescriptions).not.toContain(
+				"dynamoi_start_youtube_channel_link",
+			);
+			expect(chatGptDescriptions).not.toContain("dynamoi://");
+
+			const getSmartLink = result.tools.find(
+				(tool) => tool.name === "dynamoi_get_smart_link",
+			);
+			const getSmartLinkProperties = getSmartLink?.inputSchema?.properties as
+				| Record<string, unknown>
+				| undefined;
+			expect(getSmartLinkProperties?.playLinkId).toMatchObject({
+				type: "string",
+			});
+			expect(getSmartLinkProperties?.includeAnalytics).toEqual({
+				type: "boolean",
+			});
+			expect(getSmartLinkProperties?.includeArtistSettings).toEqual({
+				type: "boolean",
+			});
+			expect(getSmartLinkProperties?.include).toBeUndefined();
+		} finally {
+			await client.close();
+		}
+	});
+
+	test("normalizes legacy Smart Link include arrays before HTTP tool validation", async () => {
+		let receivedInput: unknown;
+		const requestBody = {
+			id: 1,
+			jsonrpc: "2.0",
+			method: "tools/call",
+			params: {
+				arguments: {
+					include: ["analytics"],
+					playLinkId: "22222222-2222-4222-8222-222222222222",
+				},
+				name: "dynamoi_get_smart_link",
+			},
+		};
+
+		const response = await handleMcpHttpRequest({
+			createServer: () =>
+				createDynamoiMcpServer({
+					adapter: buildStubAdapter({
+						getSmartLink: async (input) => {
+							receivedInput = input;
+							return {
+								data: { summary: "Smart Link details loaded." },
+								status: "success",
+							};
+						},
+					}),
+					toolProfile: "chatgpt-app",
+				}),
+			enableSessions: false,
+			parsedBody: requestBody,
+			request: new Request("http://example.com/mcp", {
+				body: JSON.stringify(requestBody),
+				headers: {
+					accept: "application/json, text/event-stream",
+					"content-type": "application/json",
+				},
+				method: "POST",
+			}),
+			sessionContextKey: "legacy-smart-link-include",
+		});
+
+		expect(response.status).toBe(200);
+		expect(await response.text()).toContain("Smart Link details loaded.");
+		expect(receivedInput).toEqual(
+			expect.objectContaining({ includeAnalytics: true }),
+		);
+		expect((receivedInput as Record<string, unknown>).include).toBeUndefined();
 	});
 
 	test("calls tools whose canonical output schemas are success/error unions", async () => {

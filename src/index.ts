@@ -6,7 +6,11 @@ export {
 } from "./auth/protected-resource";
 export { verifyAccessToken } from "./auth/verify-token";
 export type { Phase3Adapter } from "./server/create-server";
-export { createDynamoiMcpServer } from "./server/create-server";
+export {
+	createDynamoiMcpServer,
+	type DynamoiMcpToolProfile,
+	getDynamoiToolDefinitions,
+} from "./server/create-server";
 export {
 	DynamoiOpenAiFetchInputSchema,
 	DynamoiOpenAiSearchInputSchema,
@@ -24,6 +28,7 @@ export {
 	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
 	PHASE_4_TOOL_DEFINITIONS,
+	parseDynamoiGetSmartLinkInput,
 } from "./server/smart-link-tools";
 export {
 	DateRangeSchema,
@@ -120,3 +125,4 @@ export type {
 	UpdateSmartLinkArtistSettingsData,
 	UpdateSmartLinkData,
 } from "./types";
+export { DYNAMOI_MCP_VERSION } from "./version";

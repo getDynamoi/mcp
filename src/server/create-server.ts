@@ -53,7 +53,10 @@ import type {
 	UpdateSmartLinkData,
 } from "../types";
 import { DYNAMOI_MCP_VERSION } from "../version";
-import { DYNAMOI_MCP_INSTRUCTIONS } from "./instructions";
+import {
+	DYNAMOI_CHATGPT_APP_INSTRUCTIONS,
+	DYNAMOI_MCP_INSTRUCTIONS,
+} from "./instructions";
 import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
@@ -75,13 +78,45 @@ function buildDynamoiToolSecuritySchemes() {
 	return [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" as const }];
 }
 
+export type DynamoiMcpToolProfile = "full" | "chatgpt-app";
+
+type DynamoiToolDefinition =
+	| (typeof PHASE_1_TOOL_DEFINITIONS)[number]
+	| (typeof PHASE_ONBOARDING_TOOL_DEFINITIONS)[number]
+	| (typeof PHASE_2_TOOL_DEFINITIONS)[number]
+	| (typeof PHASE_3_TOOL_DEFINITIONS)[number]
+	| (typeof PHASE_4_TOOL_DEFINITIONS)[number];
+
 const DYNAMOI_TOOL_DEFINITIONS = [
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
 	...PHASE_4_TOOL_DEFINITIONS,
-] as const;
+] as const satisfies readonly DynamoiToolDefinition[];
+
+const CHATGPT_APP_EXCLUDED_TOOL_NAMES = new Set<string>([
+	"dynamoi_get_billing",
+	"dynamoi_get_campaign_readiness",
+	"dynamoi_launch_campaign",
+	"dynamoi_list_available_countries",
+	"dynamoi_list_media_assets",
+	"dynamoi_start_meta_connection",
+	"dynamoi_start_youtube_channel_link",
+	"dynamoi_update_campaign",
+]);
+
+export function getDynamoiToolDefinitions(options?: {
+	toolProfile?: DynamoiMcpToolProfile;
+}): DynamoiToolDefinition[] {
+	const definitions = [...DYNAMOI_TOOL_DEFINITIONS];
+	if ((options?.toolProfile ?? "full") !== "chatgpt-app") {
+		return definitions;
+	}
+	return definitions.filter(
+		(definition) => !CHATGPT_APP_EXCLUDED_TOOL_NAMES.has(definition.name),
+	);
+}
 
 export type Phase3Adapter = {
 	getCurrentUser(
@@ -302,19 +337,25 @@ export function asValidatedTextResult(options: {
 
 export function createDynamoiMcpServer(options: {
 	adapter: Phase3Adapter;
+	toolProfile?: DynamoiMcpToolProfile;
 	websiteUrl?: string;
 }): McpServer {
+	const toolProfile = options.toolProfile ?? "full";
 	const server = new McpServer(
 		{
 			name: "dynamoi",
 			version: DYNAMOI_MCP_VERSION,
 			websiteUrl: options.websiteUrl ?? "https://dynamoi.com",
 		},
-		{ instructions: DYNAMOI_MCP_INSTRUCTIONS },
+		{
+			instructions:
+				toolProfile === "chatgpt-app"
+					? DYNAMOI_CHATGPT_APP_INSTRUCTIONS
+					: DYNAMOI_MCP_INSTRUCTIONS,
+		},
 	);
 
-	// Tools (Phase 1 + Phase 2)
-	for (const def of DYNAMOI_TOOL_DEFINITIONS) {
+	for (const def of getDynamoiToolDefinitions({ toolProfile })) {
 		const title = def.title;
 		const dispatcher = DYNAMOI_TOOL_DISPATCHERS[def.name];
 		const idempotentHint =
@@ -350,9 +391,10 @@ export function createDynamoiMcpServer(options: {
 		);
 	}
 
-	// Prompts: curated workflow starters for assistants.
-	registerDynamoiPrompts(server);
-	registerDynamoiResources(server, options.adapter);
+	if (toolProfile === "full") {
+		registerDynamoiPrompts(server);
+		registerDynamoiResources(server, options.adapter);
+	}
 
 	return server;
 }

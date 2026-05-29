@@ -33,6 +33,39 @@ const SmartLinkThemeSchema = z.enum([
 	"aurora",
 	"cinematic",
 ]);
+const LegacySmartLinkIncludeSchema = z.array(
+	z.enum(["analytics", "artist_settings"]),
+);
+
+export function normalizeLegacySmartLinkInclude(rawInput: unknown) {
+	if (!rawInput || typeof rawInput !== "object" || Array.isArray(rawInput)) {
+		return rawInput;
+	}
+	const input = rawInput as Record<string, unknown>;
+	if (!Object.hasOwn(input, "include")) {
+		return rawInput;
+	}
+
+	const legacyInclude = LegacySmartLinkIncludeSchema.safeParse(input.include);
+	if (!legacyInclude.success) {
+		return rawInput;
+	}
+
+	const { include: _include, ...normalized } = input;
+	if (
+		normalized.includeAnalytics === undefined &&
+		legacyInclude.data.includes("analytics")
+	) {
+		normalized.includeAnalytics = true;
+	}
+	if (
+		normalized.includeArtistSettings === undefined &&
+		legacyInclude.data.includes("artist_settings")
+	) {
+		normalized.includeArtistSettings = true;
+	}
+	return normalized;
+}
 
 export const DynamoiCreateSmartLinkFromSpotifyInputSchema = z
 	.object({
@@ -66,49 +99,63 @@ export const DynamoiListSmartLinksInputSchema = z
 	})
 	.strict();
 
-export const DynamoiGetSmartLinkInputSchema = z
-	.object({
-		artistId: z.string().uuid().optional(),
-		dateRange: DateRangeSchema.optional(),
-		format: ToolFormatSchema.optional(),
-		granularity: z.enum(["TOTAL", "DAILY"]).optional(),
-		include: z
-			.array(z.enum(["analytics", "artist_settings"]))
-			.max(2)
-			.optional(),
-		includeBreakdowns: z.boolean().optional(),
-		playLinkId: z.string().uuid().optional(),
-		spotifyUrl: z.string().trim().min(1).max(500).optional(),
-	})
+const DynamoiGetSmartLinkInputShape = {
+	artistId: z.string().uuid().optional(),
+	dateRange: DateRangeSchema.optional(),
+	format: ToolFormatSchema.optional(),
+	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
+	includeAnalytics: z.boolean().optional(),
+	includeArtistSettings: z.boolean().optional(),
+	includeBreakdowns: z.boolean().optional(),
+	playLinkId: z.string().uuid().optional(),
+	spotifyUrl: z.string().trim().min(1).max(500).optional(),
+} as const;
+
+function validateDynamoiGetSmartLinkInput(
+	data: z.infer<z.ZodObject<typeof DynamoiGetSmartLinkInputShape>>,
+	ctx: z.RefinementCtx,
+) {
+	const settingsOnly =
+		data.includeArtistSettings === true &&
+		!data.playLinkId &&
+		!data.spotifyUrl &&
+		Boolean(data.artistId);
+	if (
+		!(data.playLinkId || (data.artistId && data.spotifyUrl) || settingsOnly)
+	) {
+		ctx.addIssue({
+			code: "custom",
+			message:
+				"Provide playLinkId, artistId with spotifyUrl, or artistId with includeArtistSettings=true",
+			path: ["playLinkId"],
+		});
+	}
+	if (
+		(data.dateRange || data.granularity || data.includeBreakdowns) &&
+		data.includeAnalytics !== true
+	) {
+		ctx.addIssue({
+			code: "custom",
+			message:
+				"dateRange, granularity, and includeBreakdowns require includeAnalytics=true",
+			path: ["includeAnalytics"],
+		});
+	}
+}
+
+const StrictDynamoiGetSmartLinkInputSchema = z
+	.object(DynamoiGetSmartLinkInputShape)
 	.strict()
-	.superRefine((data, ctx) => {
-		const settingsOnly =
-			data.include?.includes("artist_settings") &&
-			!data.playLinkId &&
-			!data.spotifyUrl &&
-			Boolean(data.artistId);
-		if (
-			!(data.playLinkId || (data.artistId && data.spotifyUrl) || settingsOnly)
-		) {
-			ctx.addIssue({
-				code: "custom",
-				message:
-					"Provide playLinkId, artistId with spotifyUrl, or artistId with include=['artist_settings']",
-				path: ["playLinkId"],
-			});
-		}
-		if (
-			(data.dateRange || data.granularity || data.includeBreakdowns) &&
-			!data.include?.includes("analytics")
-		) {
-			ctx.addIssue({
-				code: "custom",
-				message:
-					"dateRange, granularity, and includeBreakdowns require include to contain analytics",
-				path: ["include"],
-			});
-		}
-	});
+	.superRefine(validateDynamoiGetSmartLinkInput);
+
+export const DynamoiGetSmartLinkInputSchema =
+	StrictDynamoiGetSmartLinkInputSchema;
+
+export function parseDynamoiGetSmartLinkInput(rawInput: unknown) {
+	return StrictDynamoiGetSmartLinkInputSchema.parse(
+		normalizeLegacySmartLinkInclude(rawInput),
+	);
+}
 
 export const DynamoiGetSmartLinkAnalyticsInputSchema = z
 	.object({
@@ -302,7 +349,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions. Add include=['analytics'] for visit/click analytics and include=['artist_settings'] for artist-level theme/pixel settings. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
+			"Use this when the user wants full details for one free Smart Link, including release, Spotify URL, public play.dynamoi.com URL, current status, theme source, and next actions. Set includeAnalytics=true for visit/click analytics and includeArtistSettings=true for artist-level theme/pixel settings. In the final answer, lead with the public URL and do not expose internal IDs unless asked.",
 		destructiveHint: false,
 		name: "dynamoi_get_smart_link",
 		openWorldHint: false,

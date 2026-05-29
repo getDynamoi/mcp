@@ -1,3 +1,12 @@
-// This constant is replaced at build time by tsup (see tsup.config.ts).
-// It must stay a string literal so the define replacement is reliable.
-export const DYNAMOI_MCP_VERSION = "__DYNAMOI_MCP_VERSION__";
+// This identifier is replaced at build time by tsup (see tsup.config.ts).
+// The source fallback keeps dashboard runtime imports from leaking a placeholder.
+declare const __DYNAMOI_MCP_VERSION__: string | undefined;
+
+const BUNDLED_DYNAMOI_MCP_VERSION =
+	typeof __DYNAMOI_MCP_VERSION__ === "string" ? __DYNAMOI_MCP_VERSION__ : "";
+
+export const DYNAMOI_MCP_VERSION =
+	BUNDLED_DYNAMOI_MCP_VERSION.length > 0 &&
+	!BUNDLED_DYNAMOI_MCP_VERSION.includes("__")
+		? BUNDLED_DYNAMOI_MCP_VERSION
+		: "0.6.2";

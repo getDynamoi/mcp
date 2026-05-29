@@ -18,20 +18,22 @@ export const DateRangeSchema = SharedDateRangeSchema;
 export const ToolFormatSchema = SharedToolFormatSchema;
 
 const OnboardingAttemptIdSchema = z.string().trim().min(1).max(120).optional();
-const ExpectedCampaignStatusSchema = z
-	.enum([
-		"AWAITING_SMART_LINK",
-		"ACTIVE",
-		"ARCHIVED",
-		"CONTENT_VALIDATION",
-		"DEPLOYING",
-		"ENDED",
-		"FAILED",
-		"PAUSED",
-		"READY_FOR_REVIEW",
-		"SUBSCRIPTION_PAUSED",
-	])
-	.optional();
+const ExpectedCampaignStatusEnum = z.enum([
+	"AWAITING_SMART_LINK",
+	"ACTIVE",
+	"ARCHIVED",
+	"CONTENT_VALIDATION",
+	"DEPLOYING",
+	"ENDED",
+	"FAILED",
+	"PAUSED",
+	"READY_FOR_REVIEW",
+	"SUBSCRIPTION_PAUSED",
+]);
+const ExpectedCampaignStatusSchema = ExpectedCampaignStatusEnum.optional();
+const CampaignStatusFilterSchema = ExpectedCampaignStatusEnum.exclude([
+	"ENDED",
+]).optional();
 
 export const DynamoiListArtistsInputSchema = z
 	.object({
@@ -91,7 +93,7 @@ export const DynamoiListCampaignsInputSchema = z
 		cursor: z.string().optional(),
 		format: ToolFormatSchema.optional(),
 		limit: z.number().int().min(1).max(50).optional(),
-		status: z.string().trim().optional(),
+		status: CampaignStatusFilterSchema,
 	})
 	.strict();
 
@@ -413,7 +415,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Pass artistId when you need the full profile/readiness details for one artist instead of a roster page. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster. If the result is empty, the user is brand-new — do not stop with 'no records found'; instead route via dynamoi_get_account_overview.recommendedNextActions or read dynamoi://playbooks/onboarding-tree.",
+			"Use this when the user wants to see which artists or YouTube channels they manage, along with billing status, active campaign count, and their role. Pass artistId when you need the full profile/readiness details for one artist instead of a roster page. Do not use this for campaign details; use dynamoi_list_campaigns or dynamoi_get_campaign. Never use this for generic social-media or marketing advice, including Instagram follower-growth questions, unless the user explicitly asked about their Dynamoi roster. If the result is empty, the user is brand-new — do not stop with 'no records found'; route through dynamoi_get_account_overview.recommendedNextActions.",
 		destructiveHint: false,
 		name: "dynamoi_list_artists",
 		openWorldHint: false,
@@ -424,7 +426,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user mentions an artist, release, campaign, or smart link but you do not yet know the exact record to inspect. Do not use this for analytics summaries or billing questions once you already know the target record. If the result is empty for a brand-new user (no artists yet), do not respond 'no records found' as a terminal answer — instead suggest creating their first artist hub via dynamoi_create_smart_links_from_spotify_artist or read dynamoi://playbooks/onboarding-tree.",
+			"Use this when the user mentions an artist, release, campaign, or smart link but you do not yet know the exact record to inspect. Do not use this for analytics summaries or billing questions once you already know the target record. If the result is empty for a brand-new user (no artists yet), do not respond 'no records found' as a terminal answer — instead suggest creating their first artist hub via dynamoi_create_smart_links_from_spotify_artist.",
 		destructiveHint: false,
 		name: "dynamoi_search",
 		openWorldHint: false,
@@ -480,7 +482,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. When polling after dynamoi_start_meta_connection or dynamoi_start_youtube_channel_link, pass the returned onboardingAttemptId and onboardingFlow so Dynamoi ops can correlate the chat-first browser step. Do not use this for billing details; use dynamoi_get_billing when the question is about credits or subscription billing state. Never use this to personalize generic Instagram or marketing-advice questions.",
+			"Use this when the user wants to know whether Spotify, Meta, or YouTube are connected and what setup steps still block launches. When polling after a connection-start flow, pass the returned onboardingAttemptId and onboardingFlow so Dynamoi ops can correlate the browser step. Do not use this for detailed billing questions. Never use this to personalize generic Instagram or marketing-advice questions.",
 		destructiveHint: false,
 		name: "dynamoi_get_platform_status",
 		openWorldHint: false,

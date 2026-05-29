@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { normalizeLegacySmartLinkInclude } from "../server/smart-link-tools";
 
 type HandleOptions = {
 	createServer: () => McpServer;
@@ -97,11 +98,44 @@ function jsonRpcSessionNotFound(): Response {
 	);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeLegacyDynamoiToolCallArguments(parsedBody: unknown): unknown {
+	if (Array.isArray(parsedBody)) {
+		return parsedBody.map((message) =>
+			normalizeLegacyDynamoiToolCallArguments(message),
+		);
+	}
+	if (!isRecord(parsedBody) || parsedBody.method !== "tools/call") {
+		return parsedBody;
+	}
+	const params = parsedBody.params;
+	if (!isRecord(params) || params.name !== "dynamoi_get_smart_link") {
+		return parsedBody;
+	}
+	const normalizedArguments = normalizeLegacySmartLinkInclude(params.arguments);
+	if (normalizedArguments === params.arguments) {
+		return parsedBody;
+	}
+	return {
+		...parsedBody,
+		params: {
+			...params,
+			arguments: normalizedArguments,
+		},
+	};
+}
+
 export async function handleMcpHttpRequest(
 	options: HandleOptions,
 ): Promise<Response> {
 	const nowMs = Date.now();
 	const enableSessions = options.enableSessions ?? true;
+	const parsedBody = normalizeLegacyDynamoiToolCallArguments(
+		options.parsedBody,
+	);
 	cleanupTransports(nowMs);
 
 	const sessionId = enableSessions
@@ -119,7 +153,7 @@ export async function handleMcpHttpRequest(
 
 		existing.lastUsedAtMs = nowMs;
 		const response = await existing.transport.handleRequest(options.request, {
-			parsedBody: options.parsedBody,
+			parsedBody,
 		});
 		// Streamable HTTP uses DELETE to close a session.
 		if (options.request.method.toUpperCase() === "DELETE" && sessionId) {
@@ -130,13 +164,13 @@ export async function handleMcpHttpRequest(
 		return response;
 	}
 
-	if (sessionId && !isInitializeRequest(options.parsedBody)) {
+	if (sessionId && !isInitializeRequest(parsedBody)) {
 		return jsonRpcSessionNotFound();
 	}
 
 	// Create a new transport per request. If the request is an initialize call,
 	// we attach a session ID generator so clients that support sessions can reuse it.
-	const isInit = isInitializeRequest(options.parsedBody);
+	const isInit = isInitializeRequest(parsedBody);
 	const transport = new WebStandardStreamableHTTPServerTransport({
 		onsessioninitialized: (sid) => {
 			transports.set(sid, {
@@ -156,6 +190,6 @@ export async function handleMcpHttpRequest(
 	await server.connect(transport);
 
 	return transport.handleRequest(options.request, {
-		parsedBody: options.parsedBody,
+		parsedBody,
 	});
 }
