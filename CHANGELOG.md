@@ -7,6 +7,24 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-05-30
+
+### Added
+
+- Added a ChatGPT app review profile that exposes the approved 14-tool surface while keeping the broader MCP package available for other clients.
+- Added regression coverage for profile-specific server behavior and ChatGPT app review schemas.
+
+### Changed
+
+- Tightened Smart Link detail inputs to explicit include booleans and closed schemas for app-review clients.
+- Advertised concrete campaign status enum values for campaign listing instead of a free-form status string.
+- Hid billing, paid launch/readiness, campaign mutation, OAuth-start, media asset, and country-catalog tools from the ChatGPT app review profile.
+
+### Fixed
+
+- Fixed legacy Smart Link include normalization under the repo-wide strict TypeScript settings.
+- Added a package version fallback so unbundled runtime metadata reports the published package version instead of a placeholder build token.
+
 ## [0.6.2] - 2026-05-12
 
 ### Added
