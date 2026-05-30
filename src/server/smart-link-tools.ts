@@ -46,23 +46,25 @@ export function normalizeLegacySmartLinkInclude(rawInput: unknown) {
 		return rawInput;
 	}
 
-	const legacyInclude = LegacySmartLinkIncludeSchema.safeParse(input.include);
+	const legacyInclude = LegacySmartLinkIncludeSchema.safeParse(
+		input["include"],
+	);
 	if (!legacyInclude.success) {
 		return rawInput;
 	}
 
 	const { include: _include, ...normalized } = input;
 	if (
-		normalized.includeAnalytics === undefined &&
+		normalized["includeAnalytics"] === undefined &&
 		legacyInclude.data.includes("analytics")
 	) {
-		normalized.includeAnalytics = true;
+		normalized["includeAnalytics"] = true;
 	}
 	if (
-		normalized.includeArtistSettings === undefined &&
+		normalized["includeArtistSettings"] === undefined &&
 		legacyInclude.data.includes("artist_settings")
 	) {
-		normalized.includeArtistSettings = true;
+		normalized["includeArtistSettings"] = true;
 	}
 	return normalized;
 }
