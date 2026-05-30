@@ -7,6 +7,15 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-05-30
+
+### Changed
+
+- Rewrote the public README and package description for musicians, labels, and
+  MCP-capable AI agent builders, with clearer release-promotion language,
+  richer Markdown structure, badges, emoji section cues, example prompts,
+  package usage, and safety model.
+
 ## [0.6.3] - 2026-05-30
 
 ### Added

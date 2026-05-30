@@ -4,6 +4,6 @@ This folder is the public npm package `@dynamoi/mcp`. Keep this file scoped to a
 
 - Keep public package code framework-agnostic. Dashboard adapters and private domain logic live in `apps/dashboard/app/lib/domains/mcp` and `apps/dashboard/app/mcp`.
 - Do not add ChatGPT-visible checkout tools, stale price promises, raw ad-spend data, or internal margin language here. Use the current MCP spec and business-context guardrails before changing tool descriptions, resources, prompts, or submission copy.
-- For package releases, update `package.json`, `CHANGELOG.md`, `server.json`, and Changesets together when applicable. The package version must not regress.
+- For package releases, update `package.json`, `CHANGELOG.md`, `server.json`, and `src/version.ts` together. The package version must not regress.
 - Run the package checks before reporting code changes complete: `bun --cwd packages/mcp build` and `bun --cwd packages/mcp typecheck`.
-- For published package release notes, use Changesets plus the package changelog policy in `.changeset/AGENTS.md`.
+- The package-local Changesets config is retained for release metadata, but `@changesets/cli` currently resolves this monorepo from the repo root and fails because the root has no `.changeset` directory. Until a root-level Changesets workflow exists, keep published release notes in `CHANGELOG.md` and manually sync the version surfaces above.

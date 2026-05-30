@@ -1,35 +1,80 @@
-# Dynamoi MCP
+# Dynamoi MCP 🎧
 
-Music promotion tools for AI assistants.
+> Let any MCP-capable AI agent help artists and labels get releases ready to promote.
 
-Dynamoi lets ChatGPT, Claude, Gemini, and other MCP clients work with an artist's
-real promotion workspace: Smart Links, artist hubs, campaign readiness, platform
-connections, YouTube growth, Meta campaigns, billing status, and launch workflows.
+[![npm version](https://img.shields.io/npm/v/@dynamoi/mcp?label=npm)](https://www.npmjs.com/package/@dynamoi/mcp)
+[![license](https://img.shields.io/npm/l/@dynamoi/mcp)](./LICENSE)
+[![hosted MCP](https://img.shields.io/badge/hosted%20MCP-dynamoi.com%2Fmcp-7c3aed)](https://dynamoi.com/mcp)
+[![artists](https://img.shields.io/badge/built%20for-artists%20%2B%20labels-10b981)](https://dynamoi.com)
 
-The normal way to use it is the hosted remote MCP server:
+Musicians, managers, and labels already have enough to chase down: Spotify
+links, artist pages, campaign setup, ad account connections, billing checks,
+analytics, and launch notes.
+
+**Dynamoi MCP lets an AI agent help with that work directly.** A connected agent
+can create a free Smart Link, pull artist and campaign context, check what is
+blocking a launch, start YouTube or Meta connection flows, and keep the next
+promotion step clear.
+
+It works with any MCP host that supports remote Streamable HTTP and OAuth:
+ChatGPT, Claude, Gemini, local agent runtimes, internal label tools, or custom
+automation.
 
 ```txt
 https://dynamoi.com/mcp
 ```
 
-This npm package is the public contract behind that server: tool schemas, resource
-metadata, transport helpers, and TypeScript types for the hosted implementation.
+## ✨ The Short Version
 
-## What It Does
-
-| Area | Assistant can help with |
+| When someone asks... | The agent can help with... |
 | --- | --- |
-| Free Smart Links | Create Spotify release links, import artist catalogs, return public URLs, inspect analytics, update themes, and publish or unpublish links. |
-| Artist workspace | List artists, search records, summarize account state, and explain the best next action for a brand-new or returning user. |
-| Campaign planning | Check launch readiness, country availability, billing state, platform connections, and media assets before anything is created. |
-| Managed campaigns | Launch, pause, resume, and update Dynamoi campaign workflows after clear user confirmation. |
-| YouTube growth | Start YouTube channel linking and inspect campaign/account readiness for creator growth workflows. |
-| OpenAI connectors | Expose `search` and `fetch` for ChatGPT Deep Research style retrieval. |
+| 🎧 "Make a link for this release." | Create a free Smart Link from Spotify and return the public URL. |
+| 🚦 "Why is this campaign not ready?" | Check the missing setup: billing, platform connections, countries, assets, and launch state. |
+| 📈 "What do we have live right now?" | Search artists, Smart Links, campaigns, analytics, and account status. |
+| 📺 "Connect our YouTube channel." | Start the correct connection flow from the conversation. |
+| 🚀 "Can we promote this?" | Keep the free-link workflow separate from managed advertising, then point to the next safe step. |
 
-## Connect
+## 🎤 Who It Is For
 
-Use Dynamoi from the ChatGPT app directory, or add the remote server URL to any MCP
-client that supports Streamable HTTP remote servers.
+**Artists and managers** use Dynamoi MCP to make links, check campaign setup,
+and see what needs attention before a release gets promoted.
+
+**Record labels and teams** can wire Dynamoi into internal agent workflows for
+campaign checks, artist lookup, reporting, and release operations.
+
+**Developers** can install this package when they need the public MCP contract,
+schemas, OAuth metadata, transport helpers, or TypeScript types behind the hosted
+Dynamoi server.
+
+## 🔗 Smart Links First
+
+Free Smart Links are the easiest place for an agent to help:
+
+- Turn a Spotify release into a public landing page.
+- Import an artist catalog into an artist hub.
+- Return the shareable URL immediately.
+- Check link status, analytics, theme/settings, and publish state.
+- Update or publish a link when the user clearly asks.
+
+That gives artists something useful right away, and it gives promotion teams a
+clean next step when the release is ready to push.
+
+## 🚦 Promotion Readiness
+
+Before a campaign can move, a lot of small things have to be true. Dynamoi MCP
+helps agents answer the practical questions:
+
+| Question | What Dynamoi can check |
+| --- | --- |
+| "Is this artist ready?" | Account access, artist records, platform status, and missing setup. |
+| "Can this campaign launch?" | Readiness, billing state, supported countries, media assets, and deployment status. |
+| "What needs attention?" | Active campaigns, Smart Links, analytics, and next actions. |
+| "Are we connected?" | YouTube and Meta connection state, plus connection-start flows where available. |
+
+## 🧠 Built For Any MCP Agent
+
+This is a general MCP server, not a single-chat-product integration. Use the
+hosted endpoint from any MCP-capable client that supports remote Streamable HTTP:
 
 ```json
 {
@@ -41,47 +86,17 @@ client that supports Streamable HTTP remote servers.
 }
 ```
 
-Authentication is handled through Dynamoi OAuth. Users sign in with their Dynamoi
-account, and the assistant only receives the scopes needed for the tools it calls.
+Authentication runs through Dynamoi OAuth. Users sign in with their Dynamoi
+account, and the connected agent receives only the scopes needed for the tools it
+calls.
 
-## Why Artists Use It
+## 🧰 Package Usage
 
-Most music tools stop at a dashboard. Dynamoi is built for the moment after the
-dashboard exists, when an artist asks:
+Most artists and labels do **not** need to install anything. They should connect
+the hosted MCP server.
 
-- "Make me a link for this release."
-- "What is blocking my campaign?"
-- "Which countries can I launch in?"
-- "Connect my YouTube channel."
-- "Get my Smart Link ready, then help me promote it."
-
-The assistant can move through those steps with the user instead of sending them
-back and forth between tabs.
-
-## Tool Surface
-
-The public server includes tools for:
-
-- account overview and routing
-- artist and campaign search
-- artist analytics
-- campaign lists, details, readiness, deployment status, and updates
-- billing and platform status checks
-- Meta and YouTube connection starts
-- media asset selection
-- managed campaign launch workflows
-- Smart Link creation, listing, details, analytics, settings, and publishing
-- OpenAI `search` and `fetch`
-
-The server also publishes prompts and resources that teach assistants how to answer
-Dynamoi-specific questions without over-calling tools or creating paid workflows
-when the user only asked for a free Smart Link.
-
-## Package Usage
-
-Most users do not need to install this package. Install it when you are working on
-the Dynamoi MCP server implementation, testing the public contract, or consuming
-the exported schemas and types.
+Install `@dynamoi/mcp` when you are building against the public Dynamoi MCP
+contract:
 
 ```bash
 npm install @dynamoi/mcp
@@ -106,20 +121,52 @@ const server = createDynamoiMcpServer({
 ```
 
 `handleMcpHttpRequest` provides Streamable HTTP request handling with session
-binding so an MCP session cannot drift across authenticated users.
+binding, so an MCP session cannot drift across authenticated users.
 
-## Safety Model
+### What Ships In This Package
 
-- Read tools are annotated as read-only.
-- Mutating tools describe the external action they may take.
-- Launch and campaign-update workflows require explicit user intent.
-- Direct paid checkout is not exposed through the ChatGPT-visible tool surface.
-- Smart Link creation is separate from managed advertising launch.
+| Included | Purpose |
+| --- | --- |
+| Tool schemas | The public MCP contract exposed by Dynamoi. |
+| Prompts and resources | Guidance for Dynamoi-specific agent workflows. |
+| Protected-resource metadata | OAuth discovery metadata for compatible clients. |
+| HTTP transport helpers | Streamable HTTP handling with session binding. |
+| TypeScript types | Integration-safe contracts for hosted server code. |
 
-## Links
+## 🛡️ Safety Model
 
-- Website: <https://dynamoi.com>
-- Hosted MCP endpoint: <https://dynamoi.com/mcp>
-- Package: <https://www.npmjs.com/package/@dynamoi/mcp>
-- Repository: <https://github.com/getDynamoi/mcp>
-- Changelog: [CHANGELOG.md](./CHANGELOG.md)
+Dynamoi MCP is built for real artist and label workflows, so the server keeps
+clear boundaries around what an agent can do.
+
+| Safety layer | What it protects |
+| --- | --- |
+| 🔐 OAuth scopes | Agents only get the account access the user grants. |
+| 👀 Read-only hints | Read tools are marked as read-only. |
+| ✍️ Mutation descriptions | Write tools describe the external action they may take. |
+| ✅ User intent gates | Launch and campaign-update workflows require clear user intent. |
+| 💳 Paid-flow separation | Direct paid checkout is not exposed to connected agents. |
+| 🔗 Smart Link boundary | Free Smart Link creation stays separate from managed advertising launch. |
+
+## 💬 Good First Prompts
+
+Try these from any connected MCP agent:
+
+> 🎧 Create a Smart Link for this Spotify release.
+
+> 🚦 What is blocking this campaign from launching?
+
+> 📈 Show me the active campaigns that need attention.
+
+> 📺 Help me connect my YouTube channel.
+
+> 🚀 Get this release ready to promote.
+
+## 🔗 Links
+
+| Resource | URL |
+| --- | --- |
+| Website | <https://dynamoi.com> |
+| Hosted MCP endpoint | <https://dynamoi.com/mcp> |
+| npm package | <https://www.npmjs.com/package/@dynamoi/mcp> |
+| Repository | <https://github.com/getDynamoi/mcp> |
+| Changelog | [CHANGELOG.md](./CHANGELOG.md) |

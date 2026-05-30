@@ -7,4 +7,10 @@ Common commands:
 - Apply changesets (bump versions): `bun --cwd packages/mcp changeset:version`
 - Publish to npm (in CI): `bun --cwd packages/mcp changeset:publish`
 
-Note: We maintain package changelogs manually using Keep a Changelog (`packages/mcp/CHANGELOG.md`), so Changesets changelog generation is disabled in `.changeset/config.json`.
+Current caveat: `@changesets/cli` resolves the workspace from the repo root in
+this monorepo, and the repo root does not have a `.changeset` directory. Until a
+root-level Changesets workflow exists, manual package publishes should keep
+`package.json`, `server.json`, `src/version.ts`, and `CHANGELOG.md` synced
+directly. We still maintain package changelogs manually using Keep a Changelog
+(`packages/mcp/CHANGELOG.md`), so Changesets changelog generation is disabled in
+`.changeset/config.json`.

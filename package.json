@@ -1,11 +1,11 @@
 {
 	"$schema": "https://www.schemastore.org/package",
 	"name": "@dynamoi/mcp",
-	"version": "0.6.3",
+	"version": "0.6.4",
 	"mcpName": "io.github.getDynamoi/dynamoi",
 	"type": "module",
 	"license": "MIT",
-	"description": "Manage music promotion and YouTube growth campaigns through AI assistants like ChatGPT, Claude, and Gemini. Create free Smart Links and artist hubs, check readiness, and coordinate managed advertising across Meta, YouTube, and TikTok.",
+	"description": "Remote MCP server for music promotion agents. Create free Smart Links, check artist and campaign readiness, and help musicians and labels get releases ready to promote.",
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
