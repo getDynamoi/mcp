@@ -202,8 +202,6 @@ export type SmartLinkAnalyticsTotals = {
 	anonymousVisits: number;
 	streamingServiceClicks: number;
 	youtubeVideoPlays: number;
-	shareClicks: number;
-	promoteCtaClicks: number;
 };
 
 export type GetSmartLinkAnalyticsData = {
@@ -269,11 +267,6 @@ export type UpdateSmartLinkData = GetSmartLinkData & {
 export type UpdateSmartLinkArtistSettingsData = SmartLinkSettingsData & {
 	renderQueuedCount: number;
 	renderWarning: string | null;
-};
-
-export type PublishSmartLinkData = GetSmartLinkData & {
-	workflowRunId: string | null;
-	workflowWarning: string | null;
 };
 
 export type GetCurrentUserSummaryData = {

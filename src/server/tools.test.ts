@@ -574,9 +574,15 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 		).toThrow();
 		expect(() =>
 			DynamoiUpdateSmartLinkInputSchema.parse({
+				action: "update_description",
+				expectedPublishState: "published",
+				playLinkId: "00000000-0000-0000-0000-000000000000",
+			}),
+		).toThrow();
+		expect(() =>
+			DynamoiUpdateSmartLinkInputSchema.parse({
 				action: "publish",
 				playLinkId: "00000000-0000-0000-0000-000000000000",
-				publicUrl: "https://play.dynamoi.com/x",
 			}),
 		).toThrow();
 	});

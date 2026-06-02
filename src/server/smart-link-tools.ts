@@ -178,16 +178,10 @@ export const DynamoiGetSmartLinkArtistSettingsInputSchema = z
 
 export const DynamoiUpdateSmartLinkInputSchema = z
 	.object({
-		action: z.enum([
-			"update_description",
-			"update_artist_settings",
-			"publish",
-			"unpublish",
-		]),
+		action: z.enum(["update_description", "update_artist_settings"]),
 		artistId: z.string().uuid().optional(),
 		clientRequestId: ClientRequestIdSchema,
 		customDescription: z.string().max(500).nullable().optional(),
-		expectedPublishState: z.enum(["published", "unpublished"]).optional(),
 		expectedUpdatedAt: z.string().datetime().optional(),
 		googleAdsConversionId: z.string().trim().max(32).nullable().optional(),
 		metaPixelId: z.string().trim().max(32).nullable().optional(),
@@ -212,8 +206,7 @@ export const DynamoiUpdateSmartLinkInputSchema = z
 		if (data.action !== "update_artist_settings" && !data.playLinkId) {
 			ctx.addIssue({
 				code: "custom",
-				message:
-					"playLinkId is required when action is update_description, publish, or unpublish",
+				message: "playLinkId is required when action is update_description",
 				path: ["playLinkId"],
 			});
 		}
@@ -238,16 +231,6 @@ export const DynamoiUpdateSmartLinkInputSchema = z
 				});
 			}
 		}
-		if (
-			(data.action === "publish" || data.action === "unpublish") &&
-			data.customDescription !== undefined
-		) {
-			ctx.addIssue({
-				code: "custom",
-				message: "customDescription is only valid for update_description",
-				path: ["customDescription"],
-			});
-		}
 		if (data.action !== "update_artist_settings") {
 			for (const field of [
 				"artistId",
@@ -264,17 +247,6 @@ export const DynamoiUpdateSmartLinkInputSchema = z
 					});
 				}
 			}
-		}
-		if (
-			data.action !== "publish" &&
-			data.action !== "unpublish" &&
-			data.expectedPublishState !== undefined
-		) {
-			ctx.addIssue({
-				code: "custom",
-				message: "expectedPublishState is only valid for publish or unpublish",
-				path: ["expectedPublishState"],
-			});
 		}
 	});
 
@@ -303,15 +275,6 @@ export const DynamoiUpdateSmartLinkArtistSettingsInputSchema = z
 			});
 		}
 	});
-
-export const DynamoiPublishSmartLinkInputSchema = z
-	.object({
-		clientRequestId: ClientRequestIdSchema,
-		expectedPublishState: z.enum(["published", "unpublished"]).optional(),
-		playLinkId: z.string().uuid(),
-		userIntentSummary: UserIntentSummarySchema,
-	})
-	.strict();
 
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
@@ -362,7 +325,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to change one Smart Link's public description, publish/unpublish the public landing page, or update artist-level Smart Link theme/pixel settings. Set action to update_description, publish, unpublish, or update_artist_settings. This updates public landing-page behavior and may queue background rendering.",
+			"Use this when the user wants to change one Smart Link's public description or update artist-level Smart Link theme/pixel settings. Set action to update_description or update_artist_settings. Public availability is artist-wide in the dashboard; this tool does not publish or unpublish individual links. Updates may queue background rendering.",
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_smart_link",

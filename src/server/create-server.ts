@@ -40,7 +40,6 @@ import type {
 	ListSmartLinksData,
 	ListSmartLinksSummaryData,
 	PauseResumeCampaignData,
-	PublishSmartLinkData,
 	ResultEnvelope,
 	SearchData,
 	SearchSummaryData,
@@ -226,21 +225,11 @@ export type Phase3Adapter = {
 	updateSmartLink(
 		input: unknown,
 	): Promise<
-		ResultEnvelope<
-			| UpdateSmartLinkData
-			| UpdateSmartLinkArtistSettingsData
-			| PublishSmartLinkData
-		>
+		ResultEnvelope<UpdateSmartLinkData | UpdateSmartLinkArtistSettingsData>
 	>;
 	updateSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<UpdateSmartLinkArtistSettingsData>>;
-	publishSmartLink(
-		input: unknown,
-	): Promise<ResultEnvelope<PublishSmartLinkData>>;
-	unpublishSmartLink(
-		input: unknown,
-	): Promise<ResultEnvelope<PublishSmartLinkData>>;
 };
 
 type DynamoiToolName = (typeof DYNAMOI_TOOL_DEFINITIONS)[number]["name"];

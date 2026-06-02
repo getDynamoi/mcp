@@ -145,7 +145,7 @@ export function registerDynamoiResources(
 							"Smart Link analytics",
 							"Artist-level themes",
 							"Validated Meta, TikTok, and Google Ads pixel IDs",
-							"Publish and unpublish controls",
+							"Artist-level public availability controls",
 						],
 						noCatch:
 							"No per-link fee for Smart Link creation or management. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship.",
@@ -180,7 +180,7 @@ export function registerDynamoiResources(
 								"tiktokPixelId",
 								"googleAdsConversionId",
 							],
-							perLink: ["customDescription", "publishState"],
+							perLink: ["customDescription"],
 						},
 						pixelPolicy:
 							"Only validated pixel IDs are accepted. Arbitrary JavaScript, tag snippets, and script URLs are not supported.",
@@ -247,7 +247,7 @@ export function registerDynamoiResources(
 							"release title",
 							"artist name",
 							"public URL",
-							"publish/live status",
+							"public status",
 							"one next action when relevant",
 						],
 						avoidByDefault: [
@@ -257,7 +257,7 @@ export function registerDynamoiResources(
 							"provider implementation details",
 						],
 						whenToUse:
-							"Use Smart Link tools when the user asks for free release links, artist hubs, full-catalog Spotify landing pages, streaming landing pages, Spotify link pages, Smart Link analytics, themes, pixels, publish state, or public URLs.",
+							"Use Smart Link tools when the user asks for free release links, artist hubs, full-catalog Spotify landing pages, streaming landing pages, Spotify link pages, Smart Link analytics, themes, pixels, public status, or public URLs.",
 					}),
 					uri: uri.href,
 				},
