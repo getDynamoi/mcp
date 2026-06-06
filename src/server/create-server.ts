@@ -59,6 +59,12 @@ import {
 import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
+import {
+	previewSmartLinkThemes,
+	registerSmartLinkThemePreviewResource,
+	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
+} from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
@@ -84,13 +90,15 @@ type DynamoiToolDefinition =
 	| (typeof PHASE_ONBOARDING_TOOL_DEFINITIONS)[number]
 	| (typeof PHASE_2_TOOL_DEFINITIONS)[number]
 	| (typeof PHASE_3_TOOL_DEFINITIONS)[number]
-	| (typeof PHASE_4_TOOL_DEFINITIONS)[number];
+	| (typeof PHASE_4_TOOL_DEFINITIONS)[number]
+	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION;
 
 const DYNAMOI_TOOL_DEFINITIONS = [
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
+	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ] as const satisfies readonly DynamoiToolDefinition[];
 
@@ -261,6 +269,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_list_campaigns: (adapter, input) => adapter.listCampaigns(input),
 	dynamoi_list_media_assets: (adapter, input) => adapter.listMediaAssets(input),
 	dynamoi_list_smart_links: (adapter, input) => adapter.listSmartLinks(input),
+	dynamoi_preview_smart_link_themes: (_adapter, input) =>
+		Promise.resolve(previewSmartLinkThemes(input)),
 	dynamoi_search: (adapter, input) => adapter.search(input),
 	dynamoi_start_meta_connection: (adapter, input) =>
 		adapter.startMetaConnection(input),
@@ -356,6 +366,12 @@ export function createDynamoiMcpServer(options: {
 			{
 				_meta: {
 					securitySchemes: buildDynamoiToolSecuritySchemes(),
+					...(def.name === "dynamoi_preview_smart_link_themes"
+						? {
+								"openai/outputTemplate": SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+								ui: { resourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI },
+							}
+						: {}),
 				},
 				annotations: {
 					destructiveHint: def.destructiveHint,
@@ -379,6 +395,8 @@ export function createDynamoiMcpServer(options: {
 				}),
 		);
 	}
+
+	registerSmartLinkThemePreviewResource(server);
 
 	if (toolProfile === "full") {
 		registerDynamoiPrompts(server);

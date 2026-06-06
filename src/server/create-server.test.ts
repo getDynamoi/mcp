@@ -12,6 +12,10 @@ import {
 	type Phase3Adapter,
 } from "./create-server";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
+import {
+	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
+} from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
@@ -25,6 +29,7 @@ const REGISTERED_TOOL_DEFINITIONS = [
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
+	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ];
 
@@ -189,12 +194,13 @@ describe("createDynamoiMcpServer", () => {
 			const result = await client.listTools();
 			const toolNames = result.tools.map((tool) => tool.name);
 
-			expect(toolNames).toHaveLength(14);
+			expect(toolNames).toHaveLength(15);
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
 			expect(toolNames).toContain(
 				"dynamoi_create_smart_links_from_spotify_artist",
 			);
 			expect(toolNames).toContain("dynamoi_get_campaign");
+			expect(toolNames).toContain("dynamoi_preview_smart_link_themes");
 			expect(toolNames).not.toContain("dynamoi_get_billing");
 			expect(toolNames).not.toContain("dynamoi_get_campaign_readiness");
 			expect(toolNames).not.toContain("dynamoi_launch_campaign");
@@ -232,6 +238,80 @@ describe("createDynamoiMcpServer", () => {
 				type: "boolean",
 			});
 			expect(getSmartLinkProperties?.include).toBeUndefined();
+		} finally {
+			await client.close();
+		}
+	});
+
+	test("chatgpt-app profile advertises the Smart Link theme preview widget", async () => {
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter(),
+			toolProfile: "chatgpt-app",
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const tools = await client.listTools();
+			const previewTool = tools.tools.find(
+				(tool) => tool.name === "dynamoi_preview_smart_link_themes",
+			) as
+				| ((typeof tools.tools)[number] & { _meta?: Record<string, unknown> })
+				| undefined;
+			expect(previewTool?._meta?.["openai/outputTemplate"]).toBe(
+				SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+			);
+			expect(previewTool?._meta?.ui).toEqual({
+				resourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+			});
+
+			const resource = await client.readResource({
+				uri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+			});
+			expect(resource.contents).toHaveLength(1);
+			expect(resource.contents[0]).toMatchObject({
+				_meta: {
+					ui: {
+						csp: {
+							connectDomains: [],
+							resourceDomains: [],
+						},
+						domain: "https://dynamoi.com",
+						prefersBorder: true,
+					},
+				},
+				mimeType: "text/html;profile=mcp-app",
+				uri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+			});
+			expect(resource.contents[0]?.text).toContain("Smart Link themes");
+
+			const result = await client.callTool({
+				arguments: {
+					artistName: "92 Keys",
+					releaseTitle: "Demo Review Single",
+				},
+				name: "dynamoi_preview_smart_link_themes",
+			});
+			expect(result.structuredContent).toMatchObject({
+				data: {
+					artistName: "92 Keys",
+					releaseTitle: "Demo Review Single",
+					themes: [
+						{ id: "classic", name: "Classic" },
+						{ id: "brutalist", name: "Brutalist" },
+						{ id: "aurora", name: "Aurora" },
+						{ id: "cinematic", name: "Cinematic" },
+					],
+					widgetResourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
+				},
+				status: "success",
+			});
 		} finally {
 			await client.close();
 		}

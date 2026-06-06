@@ -7,6 +7,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added `dynamoi_preview_smart_link_themes` with a ChatGPT Apps SDK UI resource
+  so reviewers can see the four Smart Link themes without creating or updating
+  a Smart Link.
+
 ## [0.6.4] - 2026-05-30
 
 ### Changed
