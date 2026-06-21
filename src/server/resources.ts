@@ -29,7 +29,7 @@ export function registerDynamoiResources(
 							smartCampaign: {
 								dailyUsd: 10,
 								note: "Meta Ads for Spotify promotion",
-								totalUsd: 100,
+								totalUsd: 50,
 							},
 							youtube: {
 								dailyUsd: 10,
