@@ -59,7 +59,7 @@
 	"scripts": {
 		"build": "NODE_OPTIONS=--require=./scripts/typescript-6-compat-require.cjs tsup",
 		"dev": "NODE_OPTIONS=--require=./scripts/typescript-6-compat-require.cjs tsup --watch",
-		"typecheck": "tsgo --noEmit -p tsconfig.json",
+		"typecheck": "node scripts/typescript-7.cjs --noEmit -p tsconfig.json",
 		"changeset": "changeset",
 		"changeset:version": "changeset version",
 		"changeset:publish": "changeset publish"
@@ -73,6 +73,7 @@
 		"@types/node": "25.6.0",
 		"@changesets/cli": "2.31.0",
 		"typescript": "6.0.3",
+		"typescript-7": "npm:typescript@7.0.2",
 		"tsup": "8.5.1"
 	}
 }
