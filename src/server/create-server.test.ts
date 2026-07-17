@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import * as z from "zod/v4";
-import { DYNAMOI_MCP_SCOPES } from "../auth/protected-resource";
+import { DYNAMOI_BETTER_AUTH_MCP_SCOPES } from "../auth/protected-resource";
 import { handleMcpHttpRequest } from "../transport/http";
 import { DYNAMOI_MCP_VERSION } from "../version";
 import {
@@ -149,8 +149,11 @@ describe("createDynamoiMcpServer", () => {
 		expect(DYNAMOI_MCP_VERSION).not.toContain("__");
 	});
 
-	test("advertises OpenAI-compatible OAuth security schemes on tools", async () => {
-		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
+	test("advertises each tool's least-privilege OAuth scopes", async () => {
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter(),
+			oauthScopes: DYNAMOI_BETTER_AUTH_MCP_SCOPES,
+		});
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =
 			InMemoryTransport.createLinkedPair();
@@ -162,15 +165,25 @@ describe("createDynamoiMcpServer", () => {
 
 		try {
 			const result = await client.listTools();
-			const search = result.tools.find((tool) => tool.name === "search") as
-				| ((typeof result.tools)[number] & {
-						_meta?: Record<string, unknown>;
-						securitySchemes?: unknown;
-				  })
-				| undefined;
-			const expected = [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" }];
-
-			expect(search?._meta?.["securitySchemes"]).toEqual(expected);
+			const scopesFor = (toolName: string) =>
+				result.tools.find((tool) => tool.name === toolName)?._meta?.[
+					"securitySchemes"
+				];
+			expect(scopesFor("search")).toEqual([
+				{ scopes: ["dynamoi:read"], type: "oauth2" },
+			]);
+			expect(scopesFor("dynamoi_get_billing")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:billing.read"],
+					type: "oauth2",
+				},
+			]);
+			expect(scopesFor("dynamoi_launch_campaign")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:campaign.launch"],
+					type: "oauth2",
+				},
+			]);
 		} finally {
 			await client.close();
 		}

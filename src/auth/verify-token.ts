@@ -5,11 +5,15 @@ type VerifiedAccessToken = {
 	iss: string;
 	aud: string | string[] | undefined;
 	exp: number;
+	grantId: string | null;
 	clientId: string | null;
+	jti: string | null;
 	scopes: string[];
+	sessionId: string | null;
 };
 
 type VerifyAccessTokenOptions = {
+	algorithms?: Array<"ES256" | "RS256">;
 	token: string;
 	jwksUrl: string;
 	issuer: string;
@@ -63,7 +67,7 @@ export async function verifyAccessToken(
 ): Promise<VerifiedAccessToken> {
 	const jwks = getRemoteJwks(options.jwksUrl);
 	const verifyOptions: JWTVerifyOptions = {
-		algorithms: ["ES256", "RS256"],
+		algorithms: options.algorithms ?? ["ES256", "RS256"],
 		audience: options.audienceAllowlist,
 		issuer: options.issuer,
 	};
@@ -88,8 +92,11 @@ export async function verifyAccessToken(
 		aud,
 		clientId: extractClientId(payload as Record<string, unknown>),
 		exp,
+		grantId: typeof payload["gid"] === "string" ? payload["gid"] : null,
 		iss,
+		jti: typeof payload.jti === "string" ? payload.jti : null,
 		scopes: extractScopes(payload as Record<string, unknown>),
+		sessionId: typeof payload.sid === "string" ? payload.sid : null,
 		sub,
 	};
 }

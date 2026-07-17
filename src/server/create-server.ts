@@ -1,6 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
-import { DYNAMOI_MCP_SCOPES } from "../auth/protected-resource";
+import {
+	DYNAMOI_MCP_SCOPES,
+	DYNAMOI_MCP_TOOL_SCOPES,
+} from "../auth/protected-resource";
 import type {
 	CreateSmartLinkFromSpotifyData,
 	CreateSmartLinksFromSpotifyArtistData,
@@ -79,8 +82,27 @@ const SdkToolOutputEnvelopeSchema = z
 	})
 	.passthrough();
 
-function buildDynamoiToolSecuritySchemes() {
-	return [{ scopes: [...DYNAMOI_MCP_SCOPES], type: "oauth2" as const }];
+function buildDynamoiToolSecuritySchemes(scopes: readonly string[]) {
+	return [{ scopes: [...scopes], type: "oauth2" as const }];
+}
+
+function getDynamoiToolOAuthScopes(
+	toolName: keyof typeof DYNAMOI_MCP_TOOL_SCOPES,
+	providerScopes: readonly string[],
+): readonly string[] {
+	const requiredScopes = DYNAMOI_MCP_TOOL_SCOPES[toolName];
+	if (!providerScopes.some((scope) => scope.startsWith("dynamoi:"))) {
+		return providerScopes;
+	}
+	const missingScopes = requiredScopes.filter(
+		(scope) => !providerScopes.includes(scope),
+	);
+	if (missingScopes.length > 0) {
+		throw new Error(
+			`MCP provider does not support ${toolName} scopes: ${missingScopes.join(", ")}`,
+		);
+	}
+	return requiredScopes;
 }
 
 export type DynamoiMcpToolProfile = "full" | "chatgpt-app";
@@ -336,6 +358,7 @@ export function asValidatedTextResult(options: {
 
 export function createDynamoiMcpServer(options: {
 	adapter: Phase3Adapter;
+	oauthScopes?: readonly string[];
 	toolProfile?: DynamoiMcpToolProfile;
 	websiteUrl?: string;
 }): McpServer {
@@ -365,7 +388,12 @@ export function createDynamoiMcpServer(options: {
 			def.name,
 			{
 				_meta: {
-					securitySchemes: buildDynamoiToolSecuritySchemes(),
+					securitySchemes: buildDynamoiToolSecuritySchemes(
+						getDynamoiToolOAuthScopes(
+							def.name,
+							options.oauthScopes ?? DYNAMOI_MCP_SCOPES,
+						),
+					),
 					...(def.name === "dynamoi_preview_smart_link_themes"
 						? {
 								"openai/outputTemplate": SMART_LINK_THEME_PREVIEW_RESOURCE_URI,

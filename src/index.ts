@@ -2,7 +2,9 @@
 export {
 	buildProtectedResourceMetadata,
 	buildWwwAuthenticateHeader,
+	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
 	DYNAMOI_MCP_SCOPES,
+	DYNAMOI_MCP_TOOL_SCOPES,
 } from "./auth/protected-resource";
 export { verifyAccessToken } from "./auth/verify-token";
 export type { Phase3Adapter } from "./server/create-server";
