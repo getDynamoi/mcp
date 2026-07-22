@@ -9,7 +9,8 @@
 				"src/**",
 				"package.json",
 				"tsconfig.json",
-				"tsup.config.ts",
+				"scripts/build.cjs",
+				"scripts/typescript-6-compat-require.cjs",
 				"server.json"
 			],
 			"description": "Build @dynamoi/mcp for workspace consumers"
