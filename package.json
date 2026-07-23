@@ -59,7 +59,7 @@
 	"scripts": {
 		"build": "NODE_OPTIONS=--require=./scripts/typescript-6-compat-require.cjs node scripts/build.cjs",
 		"dev": "NODE_OPTIONS=--require=./scripts/typescript-6-compat-require.cjs node scripts/build.cjs --watch",
-		"typecheck": "node scripts/typescript-7.cjs --noEmit -p tsconfig.json",
+		"typecheck": "bun ../../scripts/validate/with-heavy-slot.ts --class typecheck --wait-timeout-minutes 60 -- node scripts/typescript-7.cjs --noEmit -p tsconfig.json",
 		"changeset": "changeset",
 		"changeset:version": "changeset version",
 		"changeset:publish": "changeset publish"
