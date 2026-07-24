@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod/v4";
 import {
-	DYNAMOI_MCP_SCOPES,
+	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
 	DYNAMOI_MCP_TOOL_SCOPES,
 } from "../auth/protected-resource";
 import type {
@@ -391,7 +391,7 @@ export function createDynamoiMcpServer(options: {
 					securitySchemes: buildDynamoiToolSecuritySchemes(
 						getDynamoiToolOAuthScopes(
 							def.name,
-							options.oauthScopes ?? DYNAMOI_MCP_SCOPES,
+							options.oauthScopes ?? DYNAMOI_BETTER_AUTH_MCP_SCOPES,
 						),
 					),
 					...(def.name === "dynamoi_preview_smart_link_themes"

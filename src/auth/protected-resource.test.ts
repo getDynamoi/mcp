@@ -2,18 +2,23 @@ import { describe, expect, test } from "bun:test";
 import {
 	buildProtectedResourceMetadata,
 	buildWwwAuthenticateHeader,
+	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
+	// biome-ignore lint/suspicious/noDeprecatedImports: This contract test protects the deprecated public alias.
 	DYNAMOI_MCP_SCOPES,
 } from "./protected-resource";
 
 describe("protected resource metadata", () => {
-	test("advertises only Supabase-supported OAuth scopes by default", () => {
+	test("keeps the public scope alias on the strict Better Auth contract", () => {
+		expect(DYNAMOI_MCP_SCOPES).toBe(DYNAMOI_BETTER_AUTH_MCP_SCOPES);
+	});
+
+	test("advertises Better Auth resource scopes by default", () => {
 		expect(
 			buildProtectedResourceMetadata({
-				authorizationServers: ["https://project-ref.supabase.co/auth/v1"],
+				authorizationServers: ["https://dynamoi.com/api/auth"],
 				resource: "https://dynamoi.com/mcp",
 			}).scopes_supported,
-		).toEqual([...DYNAMOI_MCP_SCOPES]);
-		expect(DYNAMOI_MCP_SCOPES).toEqual(["email", "profile"]);
+		).toEqual([...DYNAMOI_BETTER_AUTH_MCP_SCOPES]);
 	});
 
 	test("includes OAuth error details in WWW-Authenticate challenges", () => {
@@ -23,7 +28,7 @@ describe("protected resource metadata", () => {
 					"https://dynamoi.com/.well-known/oauth-protected-resource",
 			}),
 		).toBe(
-			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="email profile", error="invalid_token", error_description="Sign in to Dynamoi to continue."',
+			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="dynamoi:read", error="invalid_token", error_description="Sign in to Dynamoi to continue."',
 		);
 
 		expect(

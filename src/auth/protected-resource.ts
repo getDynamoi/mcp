@@ -6,9 +6,6 @@ type ProtectedResourceMetadata = {
 	scopes_supported: string[];
 };
 
-// Supabase OAuth Server currently rejects custom resource scopes, so its MCP
-// contract advertises only the standard identity scopes it can mint.
-export const DYNAMOI_MCP_SCOPES = ["email", "profile"] as const;
 export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:read",
 	"dynamoi:billing.read",
@@ -18,6 +15,8 @@ export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:platform.write",
 	"dynamoi:smart_links.write",
 ] as const;
+/** @deprecated Use DYNAMOI_BETTER_AUTH_MCP_SCOPES. */
+export const DYNAMOI_MCP_SCOPES = DYNAMOI_BETTER_AUTH_MCP_SCOPES;
 export const DYNAMOI_MCP_TOOL_SCOPES = {
 	dynamoi_create_smart_link_from_spotify: [
 		"dynamoi:read",
@@ -65,9 +64,9 @@ export function buildProtectedResourceMetadata(options: {
 		...(options.resourceDocumentation
 			? { resource_documentation: options.resourceDocumentation }
 			: {}),
-		// Supabase OAuth Server (beta) can fail token exchange when `openid` is requested
-		// (it attempts to mint an ID token). Our MCP only needs an access token.
-		scopes_supported: options.scopesSupported ?? [...DYNAMOI_MCP_SCOPES],
+		scopes_supported: options.scopesSupported ?? [
+			...DYNAMOI_BETTER_AUTH_MCP_SCOPES,
+		],
 	};
 }
 
@@ -77,7 +76,7 @@ export function buildWwwAuthenticateHeader(options: {
 	error?: "insufficient_scope" | "invalid_token";
 	scope?: string;
 }): string {
-	const scope = options.scope ?? "email profile";
+	const scope = options.scope ?? "dynamoi:read";
 	const error = options.error ?? "invalid_token";
 	const errorDescription =
 		options.errorDescription ??
