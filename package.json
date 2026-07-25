@@ -51,6 +51,11 @@
 			"types": "./dist/auth/protected-resource.d.ts",
 			"import": "./dist/auth/protected-resource.js",
 			"default": "./dist/auth/protected-resource.js"
+		},
+		"./consent": {
+			"types": "./dist/consent.d.ts",
+			"import": "./dist/consent.js",
+			"default": "./dist/consent.js"
 		}
 	},
 	"publishConfig": {

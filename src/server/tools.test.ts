@@ -4,6 +4,10 @@ import {
 	DynamoiOpenAiSearchInputSchema,
 } from "./openai-tools";
 import {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+} from "../consent";
+import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
@@ -316,6 +320,10 @@ describe("mcp/tools phase 2 definitions", () => {
 	test("update budget schema accepts idempotency and expected-state guards", () => {
 		const parsed = DynamoiUpdateCampaignInputSchema.parse({
 			action: "update_budget",
+			acceptedConsentCopyHash:
+				"36efa2138175fe14ec7b104d6f240bdce89d21b86ffccbd9f968100c50123e15",
+			acceptedConsentVersion: "managed-ads-prospective-daily-v1",
+			authorizeAutomaticDailyFunding: true,
 			budgetAmount: 250,
 			campaignId: "00000000-0000-0000-0000-000000000000",
 			clientRequestId: "11111111-1111-4111-8111-111111111111",
@@ -326,6 +334,29 @@ describe("mcp/tools phase 2 definitions", () => {
 
 		expect(parsed.clientRequestId).toBe("11111111-1111-4111-8111-111111111111");
 		expect(parsed.expectedCurrentEndDate).toBe("2026-05-15");
+		expect(parsed.authorizeAutomaticDailyFunding).toBe(true);
+	});
+
+	test("automatic funding requires the displayed consent identity", () => {
+		expect(() =>
+			DynamoiUpdateBudgetInputSchema.parse({
+				authorizeAutomaticDailyFunding: true,
+				budgetAmount: 100,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+			}),
+		).toThrow(
+			"acceptedConsentCopyHash, acceptedConsentVersion, and clientRequestId",
+		);
+		expect(() =>
+			DynamoiUpdateBudgetInputSchema.parse({
+				acceptedConsentCopyHash: "0".repeat(64),
+				acceptedConsentVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+				authorizeAutomaticDailyFunding: true,
+				budgetAmount: 100,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+			}),
+		).toThrow();
+		expect(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH).toHaveLength(64);
 	});
 
 	test("campaign budget schemas reject impossible calendar end dates", () => {
@@ -359,6 +390,13 @@ describe("mcp/tools phase 2 definitions", () => {
 			DynamoiUpdateCampaignInputSchema.parse({
 				action: "pause",
 				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+			}),
+		).toThrow();
+		expect(() =>
+			DynamoiUpdateCampaignInputSchema.parse({
+				action: "resume",
+				authorizeAutomaticDailyFunding: true,
 				campaignId: "00000000-0000-0000-0000-000000000000",
 			}),
 		).toThrow();

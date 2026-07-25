@@ -15,7 +15,7 @@ build({
 		__DYNAMOI_MCP_VERSION__: JSON.stringify(packageMetadata.version),
 	},
 	dts: true,
-	entry: ["src/index.ts", "src/auth/protected-resource.ts"],
+	entry: ["src/index.ts", "src/auth/protected-resource.ts", "src/consent.ts"],
 	external: ["@modelcontextprotocol/sdk", "jose", "zod"],
 	format: ["esm"],
 	minify: false,

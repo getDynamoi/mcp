@@ -60,6 +60,11 @@ export {
 	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	ToolFormatSchema,
 } from "./server/tools";
+export {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+} from "./consent";
 export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
 export { handleMcpHttpRequest } from "./transport/http";
 export type {

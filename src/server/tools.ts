@@ -1,4 +1,9 @@
 import * as z from "zod/v4";
+import {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY as prospectiveFundingConsentCopy,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH as prospectiveFundingConsentCopyHash,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION as prospectiveFundingConsentVersion,
+} from "../consent";
 import { createPhaseOnboardingToolDefinitions } from "./onboarding-tool-definitions";
 import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 import {
@@ -227,6 +232,18 @@ export const DynamoiResumeCampaignInputSchema = z
 
 export const DynamoiUpdateBudgetInputSchema = z
 	.object({
+		acceptedConsentCopyHash: z
+			.literal(prospectiveFundingConsentCopyHash)
+			.optional(),
+		acceptedConsentVersion: z
+			.literal(prospectiveFundingConsentVersion)
+			.optional(),
+		authorizeAutomaticDailyFunding: z
+			.literal(true)
+			.describe(
+				`Set only after the client explicitly accepts: “${prospectiveFundingConsentCopy}”`,
+			)
+			.optional(),
 		budgetAmount: z.number().finite().positive(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
@@ -235,11 +252,40 @@ export const DynamoiUpdateBudgetInputSchema = z
 		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
-	.strict();
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.authorizeAutomaticDailyFunding &&
+			!(
+				data.acceptedConsentCopyHash &&
+				data.acceptedConsentVersion &&
+				data.clientRequestId
+			)
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"acceptedConsentCopyHash, acceptedConsentVersion, and clientRequestId are required with automatic daily funding authorization",
+				path: ["authorizeAutomaticDailyFunding"],
+			});
+		}
+	});
 
 export const DynamoiUpdateCampaignInputSchema = z
 	.object({
 		action: z.enum(["pause", "resume", "update_budget"]),
+		acceptedConsentCopyHash: z
+			.literal(prospectiveFundingConsentCopyHash)
+			.optional(),
+		acceptedConsentVersion: z
+			.literal(prospectiveFundingConsentVersion)
+			.optional(),
+		authorizeAutomaticDailyFunding: z
+			.literal(true)
+			.describe(
+				`Set only after the client explicitly accepts: “${prospectiveFundingConsentCopy}”`,
+			)
+			.optional(),
 		budgetAmount: z.number().finite().positive().optional(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
@@ -260,7 +306,10 @@ export const DynamoiUpdateCampaignInputSchema = z
 		}
 		if (data.action !== "update_budget") {
 			for (const field of [
+				"acceptedConsentCopyHash",
+				"acceptedConsentVersion",
 				"budgetAmount",
+				"authorizeAutomaticDailyFunding",
 				"endDate",
 				"expectedCurrentBudgetAmount",
 				"expectedCurrentEndDate",
@@ -273,6 +322,21 @@ export const DynamoiUpdateCampaignInputSchema = z
 					});
 				}
 			}
+		}
+		if (
+			data.authorizeAutomaticDailyFunding &&
+			!(
+				data.acceptedConsentCopyHash &&
+				data.acceptedConsentVersion &&
+				data.clientRequestId
+			)
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"acceptedConsentCopyHash, acceptedConsentVersion, and clientRequestId are required with automatic daily funding authorization",
+				path: ["authorizeAutomaticDailyFunding"],
+			});
 		}
 	});
 
