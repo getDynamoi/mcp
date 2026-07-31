@@ -1,7 +1,6 @@
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
 
-require("./typescript-6-compat-require.cjs");
 const { build } = require("tsup");
 
 const packageRoot = path.resolve(__dirname, "..");
