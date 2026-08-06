@@ -133,7 +133,7 @@ function render(output) {
 		return '<article class="theme theme-' + theme.id + '" style="' + style + '">' +
 			'<div class="cover" style="background:' + theme.accentColor + '"><span></span></div>' +
 			'<div class="theme-copy"><h2>' + theme.name + '</h2><p>' + theme.description + '</p></div>' +
-			'<button type="button" style="border-color:' + theme.accentColor + ';color:' + theme.textColor + '">Listen on Spotify</button>' +
+			'<span class="preview-cta" style="border-color:' + theme.accentColor + ';color:' + theme.textColor + '">Listen on Spotify</span>' +
 		'</article>';
 	}).join("");
 }
@@ -223,7 +223,7 @@ header p:last-child {
 	margin: 0;
 	opacity: 0.78;
 }
-button {
+.preview-cta {
 	background: transparent;
 	border: 1px solid currentColor;
 	border-radius: 999px;
@@ -243,7 +243,7 @@ button {
 		min-height: 0;
 	}
 	.cover { grid-row: span 2; }
-	button { grid-column: 2; }
+	.preview-cta { grid-column: 2; }
 }
 </style>
 `.trim();

@@ -76,14 +76,133 @@ import {
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
-const SdkToolOutputEnvelopeSchema = z
+function buildDynamoiToolSecuritySchemes(scopes: readonly string[]) {
+	return [{ scopes: [...scopes], type: "oauth2" as const }];
+}
+
+const DescriptiveEntitySchema = z
 	.object({
-		status: z.enum(["success", "partial_success", "error"]),
+		id: z.string().optional(),
+		name: z.string().optional(),
+		publicUrl: z.string().optional(),
+		summary: z.string().optional(),
 	})
 	.passthrough();
 
-function buildDynamoiToolSecuritySchemes(scopes: readonly string[]) {
-	return [{ scopes: [...scopes], type: "oauth2" as const }];
+const CHATGPT_DESCRIPTIVE_DATA_SCHEMAS = {
+	dynamoi_get_account_overview: z
+		.object({
+			artistCount: z.number().optional(),
+			artists: z
+				.object({
+					count: z.number(),
+					summaries: z.array(DescriptiveEntitySchema),
+				})
+				.optional(),
+			organizationCount: z.number().optional(),
+			recommendedNextActions: z.array(z.string()).optional(),
+			state: z.object({}).passthrough().optional(),
+			summary: z.string().optional(),
+			user: z.object({ name: z.string().optional() }).optional(),
+		})
+		.passthrough(),
+	dynamoi_get_artist_analytics: z
+		.object({
+			artistId: z.string().optional(),
+			artistName: z.string().optional(),
+			dateRange: z.object({ end: z.string(), start: z.string() }).optional(),
+			summary: z.string().optional(),
+		})
+		.passthrough(),
+	dynamoi_get_campaign: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		contentTitle: z.string().optional(),
+		nextActions: z.array(z.string()).optional(),
+		status: z.string().optional(),
+	}).passthrough(),
+	dynamoi_get_platform_status: z
+		.object({
+			artistId: z.string().optional(),
+			artistName: z.string().optional(),
+			platforms: z.object({}).passthrough().optional(),
+			summary: z.string().optional(),
+		})
+		.passthrough(),
+	dynamoi_get_smart_link: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		artistName: z.string().optional(),
+		nextActions: z.array(z.string()).optional(),
+		publishState: z.string().optional(),
+		releaseTitle: z.string().optional(),
+		theme: z.string().optional(),
+	}).passthrough(),
+	dynamoi_list_artists: z
+		.object({
+			artists: z.array(DescriptiveEntitySchema).optional(),
+			nextCursor: z.string().optional(),
+			summary: z.string().optional(),
+			totalCount: z.number().optional(),
+		})
+		.passthrough(),
+	dynamoi_list_campaigns: z
+		.object({
+			campaigns: z.array(DescriptiveEntitySchema).optional(),
+			nextCursor: z.string().optional(),
+			summary: z.string().optional(),
+			totalCount: z.number().optional(),
+		})
+		.passthrough(),
+	dynamoi_preview_smart_link_themes: z
+		.object({
+			artistName: z.string(),
+			releaseTitle: z.string(),
+			themes: z.array(DescriptiveEntitySchema),
+		})
+		.passthrough(),
+	dynamoi_search: z
+		.object({
+			nextCursor: z.string().optional(),
+			results: z.array(DescriptiveEntitySchema).optional(),
+			summary: z.string().optional(),
+			totalCount: z.number().optional(),
+		})
+		.passthrough(),
+	dynamoi_update_smart_link: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		artistName: z.string().optional(),
+		defaultTheme: z.string().optional(),
+		renderQueuedCount: z.number().optional(),
+		renderWarning: z.string().nullable().optional(),
+	}).passthrough(),
+	fetch: DescriptiveEntitySchema,
+	search: z
+		.object({ results: z.array(DescriptiveEntitySchema).optional() })
+		.passthrough(),
+} as const;
+
+function getAdvertisedToolOutputSchema(options: {
+	canonical: z.ZodType;
+	toolName: string;
+	toolProfile: DynamoiMcpToolProfile;
+}) {
+	if (options.toolProfile !== "chatgpt-app") {
+		return options.canonical;
+	}
+	const dataSchema =
+		CHATGPT_DESCRIPTIVE_DATA_SCHEMAS[
+			options.toolName as keyof typeof CHATGPT_DESCRIPTIVE_DATA_SCHEMAS
+		];
+	if (!dataSchema) {
+		return options.canonical;
+	}
+	return z
+		.object({
+			data: dataSchema.optional(),
+			kind: z.string().optional(),
+			message: z.string().optional(),
+			status: z.enum(["success", "partial_success", "error"]),
+		})
+		.passthrough();
 }
 
 function getDynamoiToolOAuthScopes(
@@ -409,10 +528,11 @@ export function createDynamoiMcpServer(options: {
 				},
 				description: def.description,
 				inputSchema: def.schema,
-				// The SDK's runtime output validator currently only normalizes object
-				// schemas; our canonical output schemas are unions of success/error
-				// envelopes and are validated below in asValidatedTextResult().
-				outputSchema: SdkToolOutputEnvelopeSchema,
+				outputSchema: getAdvertisedToolOutputSchema({
+					canonical: def.outputSchema,
+					toolName: def.name,
+					toolProfile,
+				}),
 				title,
 			},
 			async (input: unknown) =>

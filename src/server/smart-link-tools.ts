@@ -325,7 +325,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants to change one Smart Link's public description or update artist-level Smart Link theme/pixel settings. Set action to update_description or update_artist_settings. Public availability is artist-wide in the dashboard; this tool does not publish or unpublish individual links. Updates may queue background rendering.",
+			"Use this when the user wants to change one Smart Link's public description or update artist-level Smart Link theme/pixel settings. Set action to update_description or update_artist_settings. Public availability is artist-wide in the dashboard; this tool does not publish or unpublish individual links. Theme-only updates switch instantly; description or pixel changes may queue background rendering.",
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_smart_link",

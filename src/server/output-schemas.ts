@@ -7,13 +7,40 @@ const MoneyDisplayOutputSchema = z
 	})
 	.strict();
 
-const ErrorEnvelopeOutputSchema = z
-	.object({
-		kind: z.enum(["validation", "business", "platform", "unknown"]).optional(),
-		message: z.string(),
-		status: z.literal("error"),
-	})
-	.strict();
+function createOutputEnvelopeSchema(
+	dataSchema: z.ZodType,
+	options?: { allowPartial?: boolean },
+) {
+	const statuses = options?.allowPartial
+		? (["success", "partial_success", "error"] as const)
+		: (["success", "error"] as const);
+	return z
+		.object({
+			data: dataSchema.optional(),
+			kind: z
+				.enum(["validation", "business", "platform", "unknown"])
+				.optional(),
+			message: z.string().optional(),
+			status: z.enum(statuses),
+		})
+		.strict()
+		.superRefine((value, context) => {
+			if (value.status === "error" && !value.message) {
+				context.addIssue({
+					code: "custom",
+					message: "Error tool results require a message.",
+					path: ["message"],
+				});
+			}
+			if (value.status !== "error" && value.data === undefined) {
+				context.addIssue({
+					code: "custom",
+					message: "Successful tool results require data.",
+					path: ["data"],
+				});
+			}
+		});
+}
 
 const AnyToolDataOutputSchema = z.object({}).passthrough();
 
@@ -90,9 +117,6 @@ const SmartLinkDetailsOutputSchema = SmartLinkSummaryOutputSchema.extend({
 	customDescription: z.string().nullable(),
 	nextActions: z.array(z.string()),
 	originalSpotifyUrl: z.string().nullable(),
-	resourceUri: z.string(),
-	settingsResourceUri: z.string(),
-	spotifyDiscographyId: z.string(),
 	summary: z.string(),
 	warnings: z.array(z.string()).optional(),
 }).strict();
@@ -177,7 +201,6 @@ const GetCampaignReadinessDataOutputSchema = z
 const CreateSmartLinkFromSpotifyDataOutputSchema =
 	SmartLinkDetailsOutputSchema.extend({
 		outcome: z.enum(["created", "existing"]),
-		workflowRunId: z.string().nullable(),
 		workflowWarning: z.string().nullable(),
 	}).strict();
 
@@ -188,10 +211,8 @@ const CreateSmartLinksFromSpotifyArtistDataOutputSchema = z
 		artistId: z.string(),
 		artistName: z.string(),
 		catalogImportStatus: z.enum(["started", "start_failed"]),
-		catalogWorkflowRunId: z.string().nullable(),
 		currentSmartLinkCount: z.number(),
 		existingCount: z.number(),
-		initialRenderRunId: z.string().nullable(),
 		initialSmartLink: SmartLinkSummaryOutputSchema.nullable(),
 		newlyAvailableCount: z.number(),
 		nextActions: z.array(z.string()),
@@ -219,80 +240,41 @@ const LaunchCampaignDataOutputSchema = z
 	})
 	.strict();
 
-export const AnyOutputEnvelopeSchema = z.union([
-	z.object({ data: AnyToolDataOutputSchema, status: z.literal("success") }),
-	z.object({
-		data: AnyToolDataOutputSchema,
-		message: z.string(),
-		status: z.literal("partial_success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const AnyOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	AnyToolDataOutputSchema,
+	{ allowPartial: true },
+);
 
-export const ListMediaAssetsOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			ListMediaAssetsDataOutputSchema,
-			ListMediaAssetsSummaryOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const ListMediaAssetsOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	z.union([
+		ListMediaAssetsDataOutputSchema,
+		ListMediaAssetsSummaryOutputSchema,
+	]),
+);
 
-export const LaunchCampaignOutputEnvelopeSchema = z.union([
-	z.object({
-		data: LaunchCampaignDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const LaunchCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	LaunchCampaignDataOutputSchema,
+);
 
-export const ListAvailableCountriesOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			ListAvailableCountriesDataOutputSchema,
-			SummaryCountOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const ListAvailableCountriesOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(
+		z.union([ListAvailableCountriesDataOutputSchema, SummaryCountOutputSchema]),
+	);
 
-export const GetCampaignReadinessOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
+export const GetCampaignReadinessOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(
+		z.union([
 			GetCampaignReadinessDataOutputSchema,
 			SummaryWarningsActionsOutputSchema,
 		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+	);
 
-export const CreateSmartLinkFromSpotifyOutputEnvelopeSchema = z.union([
-	z.object({
-		data: CreateSmartLinkFromSpotifyDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const CreateSmartLinkFromSpotifyOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(CreateSmartLinkFromSpotifyDataOutputSchema);
 
-export const CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema = z.union([
-	z.object({
-		data: CreateSmartLinksFromSpotifyArtistDataOutputSchema,
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(CreateSmartLinksFromSpotifyArtistDataOutputSchema);
 
-export const ListSmartLinksOutputEnvelopeSchema = z.union([
-	z.object({
-		data: z.union([
-			ListSmartLinksDataOutputSchema,
-			ListSmartLinksSummaryOutputSchema,
-		]),
-		status: z.literal("success"),
-	}),
-	ErrorEnvelopeOutputSchema,
-]);
+export const ListSmartLinksOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	z.union([ListSmartLinksDataOutputSchema, ListSmartLinksSummaryOutputSchema]),
+);

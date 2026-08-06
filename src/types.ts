@@ -101,10 +101,7 @@ export type GetCurrentUserState = {
 
 export type GetCurrentUserData = {
 	user: {
-		id: string;
-		email?: string;
 		name?: string;
-		isSuperAdmin: boolean;
 	};
 	organizationCount: number;
 	artistCount: number;
@@ -183,9 +180,6 @@ export type ListSmartLinksSummaryData = {
 export type GetSmartLinkData = SmartLinkSummary & {
 	customDescription: string | null;
 	originalSpotifyUrl: string | null;
-	spotifyDiscographyId: string;
-	resourceUri: string;
-	settingsResourceUri: string;
 	nextActions: string[];
 	summary: string;
 	warnings?: string[];
@@ -236,7 +230,6 @@ export type GetSmartLinkAnalyticsSummaryData = {
 
 export type CreateSmartLinkFromSpotifyData = GetSmartLinkData & {
 	outcome: "created" | "existing";
-	workflowRunId: string | null;
 	workflowWarning: string | null;
 };
 
@@ -247,9 +240,7 @@ export type CreateSmartLinksFromSpotifyArtistData = {
 	spotifyArtistUrl: string;
 	artistCreatedFromSpotify?: boolean;
 	catalogImportStatus: "started" | "start_failed";
-	catalogWorkflowRunId: string | null;
 	initialSmartLink: SmartLinkSummary | null;
-	initialRenderRunId: string | null;
 	currentSmartLinkCount: number;
 	newlyAvailableCount: number;
 	existingCount: number;
@@ -260,7 +251,6 @@ export type CreateSmartLinksFromSpotifyArtistData = {
 };
 
 export type UpdateSmartLinkData = GetSmartLinkData & {
-	renderRunId: string | null;
 	renderWarning: string | null;
 };
 

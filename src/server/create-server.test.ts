@@ -234,6 +234,16 @@ describe("createDynamoiMcpServer", () => {
 				"dynamoi_start_youtube_channel_link",
 			);
 			expect(chatGptDescriptions).not.toContain("dynamoi://");
+			for (const tool of result.tools) {
+				const outputProperties = tool.outputSchema?.properties as
+					| Record<string, { anyOf?: unknown[]; properties?: unknown }>
+					| undefined;
+				const dataSchema = outputProperties?.data;
+				expect(
+					Boolean(dataSchema?.properties) ||
+						(dataSchema?.anyOf?.length ?? 0) > 0,
+				).toBe(true);
+			}
 
 			const getSmartLink = result.tools.find(
 				(tool) => tool.name === "dynamoi_get_smart_link",
@@ -451,11 +461,6 @@ describe("createDynamoiMcpServer", () => {
 				releaseTitle: "Song",
 				releaseType: "track",
 				renderState: "rendered",
-				resourceUri:
-					"dynamoi://smart-link/11111111-1111-4111-8111-111111111111",
-				settingsResourceUri:
-					"dynamoi://artist/00000000-0000-0000-0000-000000000000/smart-link-settings",
-				spotifyDiscographyId: "22222222-2222-4222-8222-222222222222",
 				spotifyUrl: "https://open.spotify.com/track/abc",
 				summary: [
 					"# Song",
@@ -472,10 +477,10 @@ describe("createDynamoiMcpServer", () => {
 
 		const result = asTextResult(envelope);
 
-		expect(result.content[0]?.text).toContain(
+		expect(result.content[0].text).toContain(
 			"Public URL: https://play.dynamoi.com/92-keys/song",
 		);
-		expect(result.content[0]?.text).not.toContain(
+		expect(result.content[0].text).not.toContain(
 			"11111111-1111-4111-8111-111111111111",
 		);
 		expect(result.structuredContent).toEqual(envelope);
