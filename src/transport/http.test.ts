@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-	LATEST_PROTOCOL_VERSION,
-	SUPPORTED_PROTOCOL_VERSIONS,
-} from "@modelcontextprotocol/sdk/types.js";
+import { LATEST_PROTOCOL_VERSION } from "@modelcontextprotocol/sdk/types.js";
 import { handleMcpHttpRequest } from "./http";
 
 function makeInitializeBody() {
@@ -19,272 +18,125 @@ function makeInitializeBody() {
 	};
 }
 
-describe("mcp/transport session binding", () => {
-	test("reusing a session across different auth contexts is rejected", async () => {
-		const initReq = new Request("http://example.com/mcp", {
-			body: JSON.stringify(makeInitializeBody()),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-			},
-			method: "POST",
+function makePostRequest(body: unknown, headers: HeadersInit = {}) {
+	return new Request("http://example.com/mcp", {
+		body: JSON.stringify(body),
+		headers: {
+			accept: "application/json, text/event-stream",
+			"content-type": "application/json",
+			...headers,
+		},
+		method: "POST",
+	});
+}
+
+function createTestServer() {
+	const server = new McpServer({ name: "test", version: "0.0.0" });
+	server.registerTool(
+		"ping",
+		{ description: "Return pong.", inputSchema: {} },
+		async () => ({ content: [{ text: "pong", type: "text" }] }),
+	);
+	return server;
+}
+
+describe("mcp/transport stateless HTTP", () => {
+	test("declines standalone SSE because there is no reusable session stream", async () => {
+		const response = await handleMcpHttpRequest({
+			createServer: createTestServer,
+			parsedBody: null,
+			request: new Request("http://example.com/mcp", {
+				headers: { accept: "text/event-stream" },
+				method: "GET",
+			}),
 		});
 
-		const initRes = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			parsedBody: makeInitializeBody(),
-			request: initReq,
-			sessionContextKey: "user-a:client-x",
-		});
-
-		const sid = initRes.headers.get("mcp-session-id");
-		expect(sid).toBeTruthy();
-		if (!sid) {
-			throw new Error("Expected mcp-session-id header on initialize response");
-		}
-
-		const nextReq = new Request("http://example.com/mcp", {
-			body: JSON.stringify({ id: 2, jsonrpc: "2.0", method: "tools/list" }),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-				"mcp-session-id": sid,
-			},
-			method: "POST",
-		});
-
-		const mismatchRes = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			parsedBody: { id: 2, jsonrpc: "2.0", method: "tools/list" },
-			request: nextReq,
-			sessionContextKey: "user-b:client-x",
-		});
-
-		expect(mismatchRes.status).toBe(404);
-		const json = (await mismatchRes.json()) as {
-			error?: { code?: number; message?: string };
-		};
-		expect(json.error?.code).toBe(-32_001);
-		expect(json.error?.message).toBe("Session not found");
+		expect(response.status).toBe(405);
+		expect(response.headers.get("allow")).toBe("POST");
 	});
 
-	test("unknown session IDs are rejected instead of creating a new session", async () => {
-		const requestBody = { id: 2, jsonrpc: "2.0", method: "tools/list" };
-		const request = new Request("http://example.com/mcp", {
-			body: JSON.stringify(requestBody),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-				"mcp-session-id": "missing-session",
-			},
-			method: "POST",
-		});
-
+	test("initialize does not advertise a reusable session", async () => {
+		const body = makeInitializeBody();
 		const response = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			parsedBody: requestBody,
-			request,
-			sessionContextKey: "user-a:client-x",
+			createServer: createTestServer,
+			parsedBody: body,
+			request: makePostRequest(body),
 		});
 
-		expect(response.status).toBe(404);
-		const json = (await response.json()) as {
-			error?: { code?: number; message?: string };
-		};
-		expect(json.error?.code).toBe(-32_001);
-		expect(json.error?.message).toBe("Session not found");
-	});
-
-	test("stateless initialize requests do not create reusable session ids", async () => {
-		const request = new Request("http://example.com/mcp", {
-			body: JSON.stringify(makeInitializeBody()),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-			},
-			method: "POST",
-		});
-
-		const response = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			enableSessions: false,
-			parsedBody: makeInitializeBody(),
-			request,
-			sessionContextKey: "public-discovery",
-		});
-
+		expect(response.status).toBe(200);
 		expect(response.headers.get("mcp-session-id")).toBeNull();
 	});
 
-	test("stateless requests ignore stale session headers without evicting authenticated sessions", async () => {
-		const initReq = new Request("http://example.com/mcp", {
-			body: JSON.stringify(makeInitializeBody()),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-			},
-			method: "POST",
-		});
-		const authenticatedServer = new McpServer({
-			name: "test",
-			version: "0.0.0",
-		});
-		const initRes = await handleMcpHttpRequest({
-			createServer: () => authenticatedServer,
-			parsedBody: makeInitializeBody(),
-			request: initReq,
-			sessionContextKey: "user-discovery-test:client-x",
-		});
-		const sid = initRes.headers.get("mcp-session-id");
-		if (!sid) {
-			throw new Error("Expected mcp-session-id header on initialize response");
-		}
-
-		const discoveryBody = { id: 2, jsonrpc: "2.0", method: "tools/list" };
-		const discoveryResponse = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			enableSessions: false,
-			parsedBody: discoveryBody,
-			request: new Request("http://example.com/mcp", {
-				body: JSON.stringify(discoveryBody),
-				headers: {
-					accept: "application/json, text/event-stream",
-					"content-type": "application/json",
-					"mcp-session-id": sid,
-				},
-				method: "POST",
+	test("independent requests do not depend on process-local session state", async () => {
+		const body = { id: 2, jsonrpc: "2.0", method: "tools/list" };
+		const response = await handleMcpHttpRequest({
+			createServer: createTestServer,
+			parsedBody: body,
+			request: makePostRequest(body, {
+				"mcp-session-id": "stale-session-from-another-instance",
 			}),
-			sessionContextKey: "public-discovery",
 		});
-		expect(discoveryResponse.status).not.toBe(404);
 
-		const authenticatedBody = { id: 3, jsonrpc: "2.0", method: "tools/list" };
-		const authenticatedResponse = await handleMcpHttpRequest({
-			createServer: () => authenticatedServer,
-			parsedBody: authenticatedBody,
-			request: new Request("http://example.com/mcp", {
-				body: JSON.stringify(authenticatedBody),
-				headers: {
-					accept: "application/json, text/event-stream",
-					"content-type": "application/json",
-					"mcp-session-id": sid,
-				},
-				method: "POST",
-			}),
-			sessionContextKey: "user-discovery-test:client-x",
-		});
-		expect(authenticatedResponse.status).not.toBe(404);
+		expect(response.status).toBe(200);
+		expect(await response.text()).toContain('"name":"ping"');
 	});
 
-	test("invalid MCP protocol versions are rejected on session requests", async () => {
-		const initReq = new Request("http://example.com/mcp", {
-			body: JSON.stringify(makeInitializeBody()),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
+	test("the official client initializes and lists tools across fresh server instances", async () => {
+		const requests: Array<{ method: string; sessionId: string | null }> = [];
+		let serverCount = 0;
+		const transport = new StreamableHTTPClientTransport(
+			new URL("http://example.com/mcp"),
+			{
+				fetch: async (input, init) => {
+					const request = new Request(input, init);
+					requests.push({
+						method: request.method,
+						sessionId: request.headers.get("mcp-session-id"),
+					});
+					const parsedBody =
+						request.method === "POST" ? await request.clone().json() : null;
+					return handleMcpHttpRequest({
+						createServer: () => {
+							serverCount += 1;
+							return createTestServer();
+						},
+						parsedBody,
+						request,
+					});
+				},
 			},
-			method: "POST",
-		});
-		const initRes = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			parsedBody: makeInitializeBody(),
-			request: initReq,
-			sessionContextKey: "user-a:client-x",
-		});
-		const sid = initRes.headers.get("mcp-session-id");
-		if (!sid) {
-			throw new Error("Expected mcp-session-id header on initialize response");
-		}
-
-		const requestBody = { id: 2, jsonrpc: "2.0", method: "tools/list" };
-		const request = new Request("http://example.com/mcp", {
-			body: JSON.stringify(requestBody),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
-				"mcp-protocol-version": "1900-01-01",
-				"mcp-session-id": sid,
-			},
-			method: "POST",
+		);
+		const client = new Client({
+			name: "official-sdk-client",
+			version: "1.0.0",
 		});
 
+		await client.connect(transport);
+		await expect(client.listTools()).resolves.toMatchObject({
+			tools: [expect.objectContaining({ name: "ping" })],
+		});
+		await client.close();
+
+		expect(serverCount).toBeGreaterThanOrEqual(3);
+		expect(requests.some((request) => request.method === "GET")).toBe(true);
+		expect(requests.every((request) => request.sessionId === null)).toBe(true);
+	});
+
+	test("invalid protocol versions are rejected without session state", async () => {
+		const body = { id: 3, jsonrpc: "2.0", method: "tools/list" };
 		const response = await handleMcpHttpRequest({
-			createServer: () => new McpServer({ name: "test", version: "0.0.0" }),
-			parsedBody: requestBody,
-			request,
-			sessionContextKey: "user-a:client-x",
+			createServer: createTestServer,
+			parsedBody: body,
+			request: makePostRequest(body, {
+				"mcp-protocol-version": "1900-01-01",
+			}),
 		});
 
 		expect(response.status).toBe(400);
-		const json = (await response.json()) as {
-			error?: { message?: string };
-		};
-		expect(json.error?.message).toContain("Unsupported protocol version");
-	});
-
-	test("supported and missing MCP protocol versions follow SDK compatibility behavior", async () => {
-		const initReq = new Request("http://example.com/mcp", {
-			body: JSON.stringify(makeInitializeBody()),
-			headers: {
-				accept: "application/json, text/event-stream",
-				"content-type": "application/json",
+		await expect(response.json()).resolves.toMatchObject({
+			error: {
+				message: expect.stringContaining("Unsupported protocol version"),
 			},
-			method: "POST",
 		});
-		const server = new McpServer({ name: "test", version: "0.0.0" });
-		const initRes = await handleMcpHttpRequest({
-			createServer: () => server,
-			parsedBody: makeInitializeBody(),
-			request: initReq,
-			sessionContextKey: "user-c:client-x",
-		});
-		const sid = initRes.headers.get("mcp-session-id");
-		if (!sid) {
-			throw new Error("Expected mcp-session-id header on initialize response");
-		}
-
-		const supportedRequestBody = {
-			id: 3,
-			jsonrpc: "2.0",
-			method: "tools/list",
-		};
-		const supportedHeaders = new Headers({
-			accept: "application/json, text/event-stream",
-			"content-type": "application/json",
-			"mcp-protocol-version": SUPPORTED_PROTOCOL_VERSIONS[0],
-			"mcp-session-id": sid,
-		});
-		const supportedResponse = await handleMcpHttpRequest({
-			createServer: () => server,
-			parsedBody: supportedRequestBody,
-			request: new Request("http://example.com/mcp", {
-				body: JSON.stringify(supportedRequestBody),
-				headers: supportedHeaders,
-				method: "POST",
-			}),
-			sessionContextKey: "user-c:client-x",
-		});
-		expect(supportedResponse.status).not.toBe(400);
-
-		const missingRequestBody = {
-			id: 4,
-			jsonrpc: "2.0",
-			method: "tools/list",
-		};
-		const missingResponse = await handleMcpHttpRequest({
-			createServer: () => server,
-			parsedBody: missingRequestBody,
-			request: new Request("http://example.com/mcp", {
-				body: JSON.stringify(missingRequestBody),
-				headers: {
-					accept: "application/json, text/event-stream",
-					"content-type": "application/json",
-					"mcp-session-id": sid,
-				},
-				method: "POST",
-			}),
-			sessionContextKey: "user-c:client-x",
-		});
-		expect(missingResponse.status).not.toBe(400);
 	});
 });

@@ -120,8 +120,9 @@ const server = createDynamoiMcpServer({
 });
 ```
 
-`handleMcpHttpRequest` provides Streamable HTTP request handling with session
-binding, so an MCP session cannot drift across authenticated users.
+`handleMcpHttpRequest` provides stateless Streamable HTTP request handling for
+serverless deployments. Authentication and authorization remain the host
+application's responsibility on every request.
 
 ### What Ships In This Package
 
@@ -130,7 +131,7 @@ binding, so an MCP session cannot drift across authenticated users.
 | Tool schemas | The public MCP contract exposed by Dynamoi. |
 | Prompts and resources | Guidance for Dynamoi-specific agent workflows. |
 | Protected-resource metadata | OAuth discovery metadata for compatible clients. |
-| HTTP transport helpers | Streamable HTTP handling with session binding. |
+| HTTP transport helpers | Stateless Streamable HTTP handling for serverless hosts. |
 | TypeScript types | Integration-safe contracts for hosted server code. |
 
 ## 🛡️ Safety Model

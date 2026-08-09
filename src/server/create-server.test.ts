@@ -369,7 +369,6 @@ describe("createDynamoiMcpServer", () => {
 					}),
 					toolProfile: "chatgpt-app",
 				}),
-			enableSessions: false,
 			parsedBody: requestBody,
 			request: new Request("http://example.com/mcp", {
 				body: JSON.stringify(requestBody),
@@ -379,7 +378,6 @@ describe("createDynamoiMcpServer", () => {
 				},
 				method: "POST",
 			}),
-			sessionContextKey: "legacy-smart-link-include",
 		});
 
 		expect(response.status).toBe(200);
