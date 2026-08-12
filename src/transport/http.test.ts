@@ -5,7 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { LATEST_PROTOCOL_VERSION } from "@modelcontextprotocol/sdk/types.js";
 import { handleMcpHttpRequest } from "./http";
 
-function makeInitializeBody() {
+function makeInitializeBody(protocolVersion = LATEST_PROTOCOL_VERSION) {
 	return {
 		id: 1,
 		jsonrpc: "2.0",
@@ -13,7 +13,7 @@ function makeInitializeBody() {
 		params: {
 			capabilities: {},
 			clientInfo: { name: "test-client", version: "0.0.0" },
-			protocolVersion: LATEST_PROTOCOL_VERSION,
+			protocolVersion,
 		},
 	};
 }
@@ -55,17 +55,23 @@ describe("mcp/transport stateless HTTP", () => {
 		expect(response.headers.get("allow")).toBe("POST");
 	});
 
-	test("initialize does not advertise a reusable session", async () => {
-		const body = makeInitializeBody();
-		const response = await handleMcpHttpRequest({
-			createServer: createTestServer,
-			parsedBody: body,
-			request: makePostRequest(body),
-		});
+	test.each(["2024-11-05", "2025-06-18", LATEST_PROTOCOL_VERSION])(
+		"initialize negotiates %s without advertising a reusable session",
+		async (protocolVersion) => {
+			const body = makeInitializeBody(protocolVersion);
+			const response = await handleMcpHttpRequest({
+				createServer: createTestServer,
+				parsedBody: body,
+				request: makePostRequest(body),
+			});
 
-		expect(response.status).toBe(200);
-		expect(response.headers.get("mcp-session-id")).toBeNull();
-	});
+			expect(response.status).toBe(200);
+			expect(response.headers.get("mcp-session-id")).toBeNull();
+			expect(await response.text()).toContain(
+				`"protocolVersion":"${protocolVersion}"`,
+			);
+		},
+	);
 
 	test("independent requests do not depend on process-local session state", async () => {
 		const body = { id: 2, jsonrpc: "2.0", method: "tools/list" };

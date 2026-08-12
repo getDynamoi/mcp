@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import * as z from "zod/v4";
@@ -432,6 +432,44 @@ describe("createDynamoiMcpServer", () => {
 				},
 				status: "success",
 			});
+		} finally {
+			await client.close();
+		}
+	});
+
+	test("observes each registered tool call once with its canonical name", async () => {
+		const onToolCall = mock(async () => undefined);
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				search: async () => ({
+					data: { results: [], summary: "No results.", totalCount: 0 },
+					status: "success",
+				}),
+			}),
+			onToolCall,
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			await client.callTool({
+				arguments: { query: "92 Keys", type: "artist" },
+				name: "dynamoi_search",
+			});
+
+			expect(onToolCall).toHaveBeenCalledTimes(1);
+			expect(onToolCall).toHaveBeenCalledWith(
+				expect.objectContaining({
+					result: expect.objectContaining({ status: "success" }),
+					toolName: "dynamoi_search",
+				}),
+			);
 		} finally {
 			await client.close();
 		}

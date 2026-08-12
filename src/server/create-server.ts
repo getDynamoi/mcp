@@ -477,6 +477,12 @@ export function asValidatedTextResult(options: {
 
 export function createDynamoiMcpServer(options: {
 	adapter: Phase3Adapter;
+	onToolCall?: (input: {
+		durationMs: number;
+		error?: unknown;
+		result?: unknown;
+		toolName: string;
+	}) => Promise<void> | void;
 	oauthScopes?: readonly string[];
 	toolProfile?: DynamoiMcpToolProfile;
 	websiteUrl?: string;
@@ -535,12 +541,37 @@ export function createDynamoiMcpServer(options: {
 				}),
 				title,
 			},
-			async (input: unknown) =>
-				asValidatedTextResult({
-					envelope: await dispatcher(options.adapter, input),
-					outputSchema: def.outputSchema,
-					toolName: def.name,
-				}),
+			async (input: unknown) => {
+				const startedAt = Date.now();
+				try {
+					const envelope = await dispatcher(options.adapter, input);
+					try {
+						await options.onToolCall?.({
+							durationMs: Date.now() - startedAt,
+							result: envelope,
+							toolName: def.name,
+						});
+					} catch {
+						// Observability must never change a tool result.
+					}
+					return asValidatedTextResult({
+						envelope,
+						outputSchema: def.outputSchema,
+						toolName: def.name,
+					});
+				} catch (error) {
+					try {
+						await options.onToolCall?.({
+							durationMs: Date.now() - startedAt,
+							error,
+							toolName: def.name,
+						});
+					} catch {
+						// Preserve the dispatcher failure when observability also fails.
+					}
+					throw error;
+				}
+			},
 		);
 	}
 
