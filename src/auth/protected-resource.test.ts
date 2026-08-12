@@ -42,4 +42,14 @@ describe("protected resource metadata", () => {
 			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="dynamoi:campaign.write", error="insufficient_scope", error_description="Additional Dynamoi permissions are required."',
 		);
 	});
+
+	test("rejects header control characters", () => {
+		expect(() =>
+			buildWwwAuthenticateHeader({
+				errorDescription: "Sign in\r\nX-Injected: true",
+				resourceMetadataUrl:
+					"https://dynamoi.com/.well-known/oauth-protected-resource",
+			}),
+		).toThrow("cannot contain control characters");
+	});
 });

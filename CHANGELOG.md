@@ -5,13 +5,27 @@ All notable changes to `@dynamoi/mcp` will be documented in this file.
 This project follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.5] - 2026-08-12
 
 ### Added
 
 - Added `dynamoi_preview_smart_link_themes` with a ChatGPT Apps SDK UI resource
   so reviewers can see the four Smart Link themes without creating or updating
   a Smart Link.
+
+### Changed
+
+- Automated official MCP Registry publication after npm releases with GitHub
+  OIDC authentication, pinned tooling, propagation retries, and exact metadata
+  readback.
+- Pinned public release and validation workflow actions to immutable commits.
+
+### Fixed
+
+- Replaced dynamic HTML construction in the Smart Link theme preview with safe
+  DOM and text APIs.
+- Rejected control characters in generated OAuth challenge headers and blocked
+  redirects during registry metadata verification.
 
 ## [0.6.4] - 2026-05-30
 

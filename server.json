@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.getDynamoi/dynamoi",
   "title": "Dynamoi",
-  "description": "Create free Smart Links from Spotify, check artist and campaign readiness, view analytics, and help music teams get releases ready to promote.",
-  "version": "0.6.4",
+  "description": "Create Smart Links, check music campaign readiness, and view analytics for artists and labels.",
+  "version": "0.6.5",
   "websiteUrl": "https://dynamoi.com",
   "repository": {
     "url": "https://github.com/getDynamoi/mcp",
@@ -14,7 +14,7 @@
     {
       "registryType": "npm",
       "identifier": "@dynamoi/mcp",
-      "version": "0.6.4",
+      "version": "0.6.5",
       "transport": {
         "type": "streamable-http",
         "url": "https://dynamoi.com/mcp"

@@ -51,6 +51,7 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	fetch: ["dynamoi:read"],
 	search: ["dynamoi:read"],
 } as const satisfies Record<string, readonly string[]>;
+
 export function buildProtectedResourceMetadata(options: {
 	resource: string;
 	authorizationServers: string[];
@@ -94,5 +95,14 @@ export function buildWwwAuthenticateHeader(options: {
 }
 
 function escapeHeaderValue(value: string): string {
+	const containsControlCharacter = Array.from(value).some((character) => {
+		const codePoint = character.codePointAt(0) ?? 0;
+		return codePoint <= 31 || codePoint === 127;
+	});
+	if (containsControlCharacter) {
+		throw new Error(
+			"WWW-Authenticate values cannot contain control characters.",
+		);
+	}
 	return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }

@@ -312,7 +312,9 @@ describe("createDynamoiMcpServer", () => {
 				mimeType: "text/html;profile=mcp-app",
 				uri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
 			});
-			expect(resource.contents[0]?.text).toContain("Smart Link themes");
+			const widgetHtml = resource.contents[0]?.text;
+			expect(widgetHtml).toContain("Smart Link themes");
+			expect(widgetHtml).not.toContain(".innerHTML");
 
 			const result = await client.callTool({
 				arguments: {

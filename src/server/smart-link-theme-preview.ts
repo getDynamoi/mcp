@@ -128,14 +128,36 @@ function render(output) {
 	const data = normalize(output);
 	document.getElementById("title").textContent = data.releaseTitle ?? fallback.releaseTitle;
 	document.getElementById("artist").textContent = data.artistName ?? fallback.artistName;
-	document.getElementById("themes").innerHTML = data.themes.map((theme) => {
-		const style = "background:" + theme.backgroundColor + ";color:" + theme.textColor + ";";
-		return '<article class="theme theme-' + theme.id + '" style="' + style + '">' +
-			'<div class="cover" style="background:' + theme.accentColor + '"><span></span></div>' +
-			'<div class="theme-copy"><h2>' + theme.name + '</h2><p>' + theme.description + '</p></div>' +
-			'<span class="preview-cta" style="border-color:' + theme.accentColor + ';color:' + theme.textColor + '">Listen on Spotify</span>' +
-		'</article>';
-	}).join("");
+	const themes = Array.isArray(data.themes) ? data.themes : fallback.themes;
+	const allowedThemeIds = new Set(["classic", "brutalist", "aurora", "cinematic"]);
+	document.getElementById("themes").replaceChildren(...themes.map((theme) => {
+		const article = document.createElement("article");
+		article.className = "theme";
+		if (allowedThemeIds.has(theme.id)) article.classList.add("theme-" + theme.id);
+		article.style.backgroundColor = theme.backgroundColor;
+		article.style.color = theme.textColor;
+
+		const cover = document.createElement("div");
+		cover.className = "cover";
+		cover.style.backgroundColor = theme.accentColor;
+		cover.append(document.createElement("span"));
+
+		const copy = document.createElement("div");
+		copy.className = "theme-copy";
+		const name = document.createElement("h2");
+		name.textContent = theme.name;
+		const description = document.createElement("p");
+		description.textContent = theme.description;
+		copy.append(name, description);
+
+		const cta = document.createElement("span");
+		cta.className = "preview-cta";
+		cta.style.borderColor = theme.accentColor;
+		cta.style.color = theme.textColor;
+		cta.textContent = "Listen on Spotify";
+		article.append(cover, copy, cta);
+		return article;
+	}));
 }
 render(window.openai?.toolOutput);
 window.addEventListener("openai:set_globals", (event) => {
