@@ -1,4 +1,4 @@
-// This identifier is replaced at build time by tsup (see tsup.config.ts).
+// This identifier is replaced at build time by the package build script.
 // The source fallback keeps dashboard runtime imports from leaking a placeholder.
 declare const __DYNAMOI_MCP_VERSION__: string | undefined;
 
