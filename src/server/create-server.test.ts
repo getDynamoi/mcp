@@ -11,6 +11,7 @@ import {
 	createDynamoiMcpServer,
 	type Phase3Adapter,
 } from "./create-server";
+import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
 import {
 	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
@@ -29,6 +30,7 @@ const REGISTERED_TOOL_DEFINITIONS = [
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
+	...DISTRIBUTION_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ];
@@ -184,6 +186,18 @@ describe("createDynamoiMcpServer", () => {
 					type: "oauth2",
 				},
 			]);
+			expect(scopesFor("dynamoi_get_distribution_application")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:distribution.read"],
+					type: "oauth2",
+				},
+			]);
+			expect(scopesFor("dynamoi_apply_for_distribution")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:distribution.apply"],
+					type: "oauth2",
+				},
+			]);
 		} finally {
 			await client.close();
 		}
@@ -207,12 +221,14 @@ describe("createDynamoiMcpServer", () => {
 			const result = await client.listTools();
 			const toolNames = result.tools.map((tool) => tool.name);
 
-			expect(toolNames).toHaveLength(15);
+			expect(toolNames).toHaveLength(17);
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
 			expect(toolNames).toContain(
 				"dynamoi_create_smart_links_from_spotify_artist",
 			);
 			expect(toolNames).toContain("dynamoi_get_campaign");
+			expect(toolNames).toContain("dynamoi_get_distribution_application");
+			expect(toolNames).toContain("dynamoi_apply_for_distribution");
 			expect(toolNames).toContain("dynamoi_preview_smart_link_themes");
 			expect(toolNames).not.toContain("dynamoi_get_billing");
 			expect(toolNames).not.toContain("dynamoi_get_campaign_readiness");

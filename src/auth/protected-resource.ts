@@ -11,6 +11,8 @@ export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:billing.read",
 	"dynamoi:campaign.launch",
 	"dynamoi:campaign.write",
+	"dynamoi:distribution.apply",
+	"dynamoi:distribution.read",
 	"dynamoi:platform.read",
 	"dynamoi:platform.write",
 	"dynamoi:smart_links.write",
@@ -31,9 +33,17 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	dynamoi_get_billing: ["dynamoi:read", "dynamoi:billing.read"],
 	dynamoi_get_campaign: ["dynamoi:read"],
 	dynamoi_get_campaign_readiness: ["dynamoi:read"],
+	dynamoi_get_distribution_application: [
+		"dynamoi:read",
+		"dynamoi:distribution.read",
+	],
 	dynamoi_get_platform_status: ["dynamoi:read", "dynamoi:platform.read"],
 	dynamoi_get_smart_link: ["dynamoi:read"],
 	dynamoi_launch_campaign: ["dynamoi:read", "dynamoi:campaign.launch"],
+	dynamoi_apply_for_distribution: [
+		"dynamoi:read",
+		"dynamoi:distribution.apply",
+	],
 	dynamoi_list_artists: ["dynamoi:read"],
 	dynamoi_list_available_countries: ["dynamoi:read"],
 	dynamoi_list_campaigns: ["dynamoi:read"],
@@ -58,17 +68,18 @@ export function buildProtectedResourceMetadata(options: {
 	resourceDocumentation?: string;
 	scopesSupported?: string[];
 }): ProtectedResourceMetadata {
-	return {
+	const metadata: ProtectedResourceMetadata = {
 		authorization_servers: options.authorizationServers,
 		bearer_methods_supported: ["header"],
 		resource: options.resource,
-		...(options.resourceDocumentation
-			? { resource_documentation: options.resourceDocumentation }
-			: {}),
 		scopes_supported: options.scopesSupported ?? [
 			...DYNAMOI_BETTER_AUTH_MCP_SCOPES,
 		],
 	};
+	if (options.resourceDocumentation) {
+		metadata.resource_documentation = options.resourceDocumentation;
+	}
+	return metadata;
 }
 
 export function buildWwwAuthenticateHeader(options: {

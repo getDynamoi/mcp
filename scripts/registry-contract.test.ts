@@ -11,7 +11,7 @@ import {
 const packageJson = {
 	mcpName: "io.github.getDynamoi/dynamoi",
 	name: "@dynamoi/mcp",
-	version: "0.6.5",
+	version: "0.7.0",
 };
 
 const serverJson = {
@@ -27,7 +27,7 @@ const serverJson = {
 				type: "streamable-http",
 				url: "https://dynamoi.com/mcp",
 			},
-			version: "0.6.5",
+			version: "0.7.0",
 		},
 	],
 	remotes: [{ type: "streamable-http", url: "https://dynamoi.com/mcp" }],
@@ -36,7 +36,7 @@ const serverJson = {
 		url: "https://github.com/getDynamoi/mcp",
 	},
 	title: "Dynamoi",
-	version: "0.6.5",
+	version: "0.7.0",
 	websiteUrl: "https://dynamoi.com",
 };
 
@@ -76,7 +76,7 @@ describe("MCP Registry release contract", () => {
 				],
 			}),
 		).toThrow(
-			"MCP Registry does not expose io.github.getDynamoi/dynamoi@0.6.5",
+			"MCP Registry does not expose io.github.getDynamoi/dynamoi@0.7.0",
 		);
 	});
 

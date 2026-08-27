@@ -1,5 +1,10 @@
 // biome-ignore lint/performance/noBarrelFile: Public package entrypoint for `@dynamoi/mcp`.
 export {
+	DISTRIBUTION_TOOL_DEFINITIONS,
+	DynamoiApplyForDistributionInputSchema,
+	DynamoiGetDistributionApplicationInputSchema,
+} from "./server/distribution-tools";
+export {
 	buildProtectedResourceMetadata,
 	buildWwwAuthenticateHeader,
 	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
@@ -73,6 +78,9 @@ export type {
 	BillingStatus,
 	CampaignDisplayStatus,
 	CampaignType,
+	ApplyForDistributionData,
+	DistributionRequirementKey,
+	GetDistributionApplicationData,
 	CountryCatalogSource,
 	CreateSmartLinkFromSpotifyData,
 	CreateSmartLinksFromSpotifyArtistData,

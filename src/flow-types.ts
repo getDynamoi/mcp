@@ -64,15 +64,22 @@ export type GetPlatformStatusSummaryData = {
 export type StartYoutubeChannelLinkData = {
 	artistId: string;
 	artistName: string;
+	purpose: "advertising" | "distribution_identity";
 	onboardingAttemptId: string;
 	authorizationUrl: string;
 	expiresAt: string;
-	completionCheck: {
-		pollTools: string[];
-		onboardingFlow: "youtube";
-		connectedFlag: "platforms.youtube.connected";
-		readyValue: true;
-	};
+	completionCheck:
+		| {
+				pollTools: string[];
+				onboardingFlow: "youtube";
+				connectedFlag: "platforms.youtube.connected";
+				readyValue: true;
+		  }
+		| {
+				pollTools: string[];
+				requirementKey: "youtube_identity";
+				readyValue: true;
+		  };
 	nextActions: string[];
 	summary: string;
 	warnings?: string[];
@@ -82,6 +89,7 @@ export type StartYoutubeChannelLinkData = {
 export type StartMetaConnectionData = {
 	artistId: string;
 	artistName: string;
+	purpose: "advertising" | "distribution_identity";
 	onboardingAttemptId: string | null;
 	status:
 		| "authorization_url"
@@ -90,15 +98,21 @@ export type StartMetaConnectionData = {
 		| "billing_required";
 	authorizationUrl: string | null;
 	expiresAt: string | null;
-	completionCheck: {
-		pollTools: string[];
-		onboardingFlow: "meta";
-		connectedFlag: "platforms.meta.connected";
-		statusField: "platforms.meta.status";
-		readyStatuses: Array<
-			"oauth_complete" | "partnership_pending" | "partnership_active"
-		>;
-	};
+	completionCheck:
+		| {
+				pollTools: string[];
+				onboardingFlow: "meta";
+				connectedFlag: "platforms.meta.connected";
+				statusField: "platforms.meta.status";
+				readyStatuses: Array<
+					"oauth_complete" | "partnership_pending" | "partnership_active"
+				>;
+		  }
+		| {
+				pollTools: string[];
+				requirementKey: "meta_identity";
+				readyValue: true;
+		  };
 	nextActions: string[];
 	summary: string;
 	warnings?: string[];

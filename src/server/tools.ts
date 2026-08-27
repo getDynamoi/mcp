@@ -160,6 +160,7 @@ export const DynamoiStartYoutubeChannelLinkInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
+		purpose: z.enum(["advertising", "distribution_identity"]).optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();
@@ -168,6 +169,7 @@ export const DynamoiStartMetaConnectionInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
+		purpose: z.enum(["advertising", "distribution_identity"]).optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict();

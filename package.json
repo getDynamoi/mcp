@@ -1,12 +1,12 @@
 {
 	"$schema": "https://www.schemastore.org/package",
 	"name": "@dynamoi/mcp",
-	"version": "0.6.5",
+	"version": "0.7.0",
 	"packageManager": "bun@1.3.14",
 	"mcpName": "io.github.getDynamoi/dynamoi",
 	"type": "module",
 	"license": "MIT",
-	"description": "Remote MCP server for music promotion agents. Create free Smart Links, check artist and campaign readiness, and help musicians and labels get releases ready to promote.",
+	"description": "Remote MCP server for music promotion agents. Create campaigns and Smart Links, review analytics, and handle music distribution applications for artists and labels.",
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
@@ -21,6 +21,7 @@
 		"ad-automation",
 		"youtube-ads",
 		"music-advertising",
+		"music-distribution",
 		"spotify-streams",
 		"facebook-ads",
 		"instagram-ads"
@@ -36,6 +37,7 @@
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"files": [
+		"CAPABILITY_PARITY.md",
 		"dist",
 		"server.json",
 		"README.md",

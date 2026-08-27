@@ -5,6 +5,22 @@ All notable changes to `@dynamoi/mcp` will be documented in this file.
 This project follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-08-12
+
+### Added
+
+- Added customer-safe tools to check the five music-distribution application
+  requirements and submit an eligible application for manual review.
+- Added least-privilege Meta and YouTube distribution-identity connection modes
+  that remain separate from advertising billing and permissions.
+- Added dedicated distribution read/apply OAuth scopes and consent coverage.
+
+### Changed
+
+- Repositioned Dynamoi MCP around music-promotion campaigns, Smart Links,
+  analytics, and distribution applications, with explicit routing instructions
+  for agents.
+
 ## [0.6.5] - 2026-08-12
 
 ### Added

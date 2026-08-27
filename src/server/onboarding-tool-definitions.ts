@@ -12,7 +12,7 @@ export function createPhaseOnboardingToolDefinitions(
 	return [
 		{
 			description:
-				"Use this when the user is ready to link a YouTube channel to one Dynamoi artist from chat. This returns a Google OAuth URL bound to the signed-in user and artist. Google returns to a Dynamoi page that tells the user to come back to the AI assistant; after that, poll dynamoi_get_platform_status with the returned onboardingAttemptId and onboardingFlow=youtube until platforms.youtube.connected is true.",
+				"Use this when the user is ready to link a YouTube channel to one Dynamoi artist from chat. Set purpose=distribution_identity for the least-privilege identity connection required by a distribution application; that flow does not require advertising billing or Google Ads linking, and its result is checked with dynamoi_get_distribution_application. Use purpose=advertising (the default) for managed YouTube promotion, then poll dynamoi_get_platform_status until platforms.youtube.connected is true. The tool returns a Google OAuth URL bound to the signed-in user and artist.",
 			destructiveHint: false,
 			idempotentHint: true,
 			name: "dynamoi_start_youtube_channel_link",
@@ -24,7 +24,7 @@ export function createPhaseOnboardingToolDefinitions(
 		},
 		{
 			description:
-				"Use this when billing is active and the user is ready to connect Meta for Spotify Smart Campaigns from chat. This returns a signed Meta OAuth URL and may send the user through a Page/Instagram selection step before the chat-first return page. If billing is not active, it returns billing_required instead of an OAuth URL. If billing cannot be verified due to a transient snapshot/API issue, it returns billing_check_unavailable and should be retried shortly. After the user returns, poll dynamoi_get_platform_status with the returned onboardingAttemptId and onboardingFlow=meta until platforms.meta.status is oauth_complete, partnership_pending, or partnership_active.",
+				"Use this when the user is ready to connect a Facebook Page and Instagram professional account to one Dynamoi artist. Set purpose=distribution_identity for the least-privilege identity connection required by a distribution application; that flow does not require advertising billing, and its result is checked with dynamoi_get_distribution_application. Use purpose=advertising (the default) for Spotify Smart Campaigns; advertising requires active billing and is checked with dynamoi_get_platform_status until platforms.meta.status is oauth_complete, partnership_pending, or partnership_active. Advertising returns billing_required when inactive and billing_check_unavailable for a transient verification failure. This returns a signed Meta OAuth URL and may include a Page/Instagram selection step.",
 			destructiveHint: false,
 			idempotentHint: true,
 			name: "dynamoi_start_meta_connection",

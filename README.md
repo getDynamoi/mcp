@@ -1,6 +1,6 @@
 # Dynamoi MCP 🎧
 
-> Let any MCP-capable AI agent help artists and labels get releases ready to promote.
+> Let any MCP-capable AI agent run music-promotion workflows for artists and labels.
 
 [![npm version](https://img.shields.io/npm/v/@dynamoi/mcp?label=npm)](https://www.npmjs.com/package/@dynamoi/mcp)
 [![license](https://img.shields.io/npm/l/@dynamoi/mcp)](./LICENSE)
@@ -12,9 +12,9 @@ links, artist pages, campaign setup, ad account connections, billing checks,
 analytics, and launch notes.
 
 **Dynamoi MCP lets an AI agent help with that work directly.** A connected agent
-can create a free Smart Link, pull artist and campaign context, check what is
-blocking a launch, start YouTube or Meta connection flows, and keep the next
-promotion step clear.
+can create music-promotion campaigns and free Smart Links, pull artist and
+campaign context, review analytics, start platform connection flows, and handle
+music-distribution applications.
 
 It works with any MCP host that supports remote Streamable HTTP and OAuth:
 ChatGPT, Claude, Gemini, local agent runtimes, internal label tools, or custom
@@ -33,6 +33,7 @@ https://dynamoi.com/mcp
 | 📈 "What do we have live right now?" | Search artists, Smart Links, campaigns, analytics, and account status. |
 | 📺 "Connect our YouTube channel." | Start the correct connection flow from the conversation. |
 | 🚀 "Can we promote this?" | Keep the free-link workflow separate from managed advertising, then point to the next safe step. |
+| 💿 "Can we apply for distribution?" | Check the five eligibility requirements and submit a complete application for manual review. |
 
 ## 🎤 Who It Is For
 
@@ -70,6 +71,19 @@ helps agents answer the practical questions:
 | "Can this campaign launch?" | Readiness, billing state, supported countries, media assets, and deployment status. |
 | "What needs attention?" | Active campaigns, Smart Links, analytics, and next actions. |
 | "Are we connected?" | YouTube and Meta connection state, plus connection-start flows where available. |
+
+## 💿 Music Distribution Applications
+
+Dynamoi MCP checks the same five application requirements as the app: Spotify
+connected, at least 1,000 Spotify followers, at least 10,000 verified
+Soundcharts monthly listeners, connected Facebook Page plus Instagram
+professional identity, and connected YouTube identity. Eligible users can
+submit an application for manual review from an agent.
+
+Application submission does not approve distribution, accept an agreement,
+submit a release, transfer rights, configure splits or tax forms, or deliver
+music to stores. Those remain separate customer, legal, provider, and operator
+steps.
 
 ## 🧠 Built For Any MCP Agent
 
@@ -162,6 +176,8 @@ Try these from any connected MCP agent:
 
 > 🚀 Get this release ready to promote.
 
+> 💿 Check whether this artist can apply for music distribution.
+
 ## 🔗 Links
 
 | Resource | URL |
@@ -171,3 +187,4 @@ Try these from any connected MCP agent:
 | npm package | <https://www.npmjs.com/package/@dynamoi/mcp> |
 | Repository | <https://github.com/getDynamoi/mcp> |
 | Changelog | [CHANGELOG.md](./CHANGELOG.md) |
+| Capability parity map | [CAPABILITY_PARITY.md](./CAPABILITY_PARITY.md) |

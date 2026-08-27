@@ -10,6 +10,58 @@ export type ResultEnvelope<T> =
 			kind?: "validation" | "business" | "platform" | "unknown";
 	  };
 
+export type DistributionRequirementKey =
+	| "spotify_connection"
+	| "spotify_followers"
+	| "monthly_listeners"
+	| "meta_identity"
+	| "youtube_identity";
+
+export type GetDistributionApplicationData = {
+	artistId: string;
+	artistName: string;
+	application: {
+		status: string;
+		statusLabel: string;
+		submittedAt: string;
+		resubmittable: boolean;
+	} | null;
+	eligibility:
+		| "application_submitted"
+		| "below_threshold"
+		| "eligible"
+		| "metrics_unavailable";
+	requirements: Array<{
+		key: DistributionRequirementKey;
+		met: boolean;
+		currentValue?: number | null;
+		minimumValue?: number;
+		observedAt?: string | null;
+		description: string;
+		nextAction?: string;
+	}>;
+	metRequirementCount: number;
+	totalRequirementCount: 5;
+	allRequirementsMet: boolean;
+	supportedCountryCodes: string[];
+	additionalSubmissionFields: string[];
+	nextActions: string[];
+	summary: string;
+	warnings: string[];
+};
+
+export type ApplyForDistributionData = {
+	artistId: string;
+	artistName: string;
+	alreadySubmitted: boolean;
+	status: string;
+	submittedAt: string;
+	reviewCode: "manual_identity_review_required" | null;
+	summary: string;
+	nextActions: string[];
+	warnings: string[];
+};
+
 export type MoneyDisplay = {
 	formatted: string;
 	amountUsd: number;
