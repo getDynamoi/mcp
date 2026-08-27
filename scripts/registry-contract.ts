@@ -72,6 +72,7 @@ export function validateLocalContract(
 	const packageName = requiredString(packageJson, "name", "package.json");
 	const version = requiredString(packageJson, "version", "package.json");
 	const mcpName = requiredString(packageJson, "mcpName", "package.json");
+	const description = requiredString(server, "description", "server.json");
 
 	if (packageName !== EXPECTED_PACKAGE_NAME) {
 		throw new Error(
@@ -80,6 +81,12 @@ export function validateLocalContract(
 	}
 	assertEqual(server.name, mcpName, "server.json.name");
 	assertEqual(server.version, version, "server.json.version");
+	const descriptionLength = Array.from(description).length;
+	if (descriptionLength > 100) {
+		throw new Error(
+			`server.json.description must be at most 100 characters; received ${descriptionLength}.`,
+		);
+	}
 
 	const packages = server.packages;
 	if (!Array.isArray(packages) || packages.length !== 1) {

@@ -11,7 +11,7 @@ import {
 const packageJson = {
 	mcpName: "io.github.getDynamoi/dynamoi",
 	name: "@dynamoi/mcp",
-	version: "0.7.0",
+	version: "0.7.1",
 };
 
 const serverJson = {
@@ -27,7 +27,7 @@ const serverJson = {
 				type: "streamable-http",
 				url: "https://dynamoi.com/mcp",
 			},
-			version: "0.7.0",
+			version: "0.7.1",
 		},
 	],
 	remotes: [{ type: "streamable-http", url: "https://dynamoi.com/mcp" }],
@@ -36,7 +36,7 @@ const serverJson = {
 		url: "https://github.com/getDynamoi/mcp",
 	},
 	title: "Dynamoi",
-	version: "0.7.0",
+	version: "0.7.1",
 	websiteUrl: "https://dynamoi.com",
 };
 
@@ -63,6 +63,23 @@ describe("MCP Registry release contract", () => {
 		).toThrow("server.json.version does not match server.json");
 	});
 
+	test("rejects descriptions above the official registry limit", () => {
+		expect(() =>
+			validateLocalContract(packageJson, {
+				...serverJson,
+				description: "x".repeat(101),
+			}),
+		).toThrow(
+			"server.json.description must be at most 100 characters; received 101.",
+		);
+		expect(() =>
+			validateLocalContract(packageJson, {
+				...serverJson,
+				description: "🎵".repeat(51),
+			}),
+		).not.toThrow();
+	});
+
 	test("rejects a stale official registry version", () => {
 		expect(() =>
 			validateRegistryResponse(contract(), {
@@ -76,7 +93,7 @@ describe("MCP Registry release contract", () => {
 				],
 			}),
 		).toThrow(
-			"MCP Registry does not expose io.github.getDynamoi/dynamoi@0.7.0",
+			"MCP Registry does not expose io.github.getDynamoi/dynamoi@0.7.1",
 		);
 	});
 
