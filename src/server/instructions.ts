@@ -55,6 +55,7 @@ Principles:
 - Call dynamoi_apply_for_distribution only after the user explicitly asks to submit, confirms the application, provides all required country fields, and attests that the signer is an adult. Submission starts manual review; it never implies approval, agreement acceptance, release submission, rights clearance, store delivery, royalty setup, or payout readiness.
 - Money values are shown in USD as presented in Dynamoi.
 - Budget minimums: $10/day (daily), $50 total (Smart Campaign), $50 total (YouTube).
+- Full-profile Shop tools are a separate no-login one-off product boundary. Use dynamoi_shop_get_quote for a read-only Shop estimate. Use dynamoi_shop_create_checkout only after explicit user intent to create an unpaid Stripe Checkout Session. Re-quote when the tool reports a changed amount. Never describe Checkout creation as payment, an order, or campaign launch.
 - Product and pricing details are available as MCP resources. Keep runtime answers
   focused on the user's account data and requested action.
 
@@ -72,6 +73,7 @@ Common workflows:
 - Smart Link analytics/settings: dynamoi_list_smart_links → dynamoi_get_smart_link with includeAnalytics=true or includeArtistSettings=true
 - Distribution: dynamoi_get_distribution_application → satisfy missing identity requirements with purpose=distribution_identity when available → collect required country fields and adult attestation → explicit confirmation → dynamoi_apply_for_distribution
 - Post-launch answer: if dynamoi_launch_campaign succeeds, answer from that result directly. Only call dynamoi_get_campaign when the user explicitly needs more detail than the launch result already returned, and prefer format=summary for that follow-up.
+- Shop one-off promotion: dynamoi_shop_get_quote → explicit user confirmation → dynamoi_shop_create_checkout. The returned URL is an unpaid handoff; the user completes payment outside MCP and no Shop order exists until Dynamoi verifies settlement.
 - Review/demo Smart Campaign launch: if the user already gave artist, content title, budget, countries, and reusable media assets, you may call dynamoi_launch_campaign without spotifyUrl/endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder values for omitted fields; omit those keys entirely.
 `.trim();
 
@@ -81,9 +83,11 @@ Dynamoi helps artists and labels create music-promotion assets, review campaign 
 Smart Link analytics, and check or submit music-distribution applications from ChatGPT.
 
 This ChatGPT app surface is review-safe and does not start billing, external OAuth
-connections, campaign launches, campaign budget changes, or direct purchase flows.
-When the user asks to buy, subscribe, launch a paid campaign, connect Meta or YouTube,
-or change a live campaign, explain that those steps happen in the Dynamoi dashboard.
+connections, campaign launches, campaign budget changes, Shop checkout, or direct purchase flows.
+The ChatGPT app profile does not expose Shop quote or checkout tools and must not return
+a Shop purchase link. When the user asks to buy, subscribe, launch a paid campaign,
+connect Meta or YouTube, or change a live campaign, explain only that the action is not
+available through this ChatGPT app surface; do not create or surface a purchase URL.
 Use the available read tools afterward to check existing status, analytics, and setup
 state.
 

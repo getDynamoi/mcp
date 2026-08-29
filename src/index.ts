@@ -25,6 +25,21 @@ export {
 	type OpenAiSearchData,
 } from "./server/openai-tools";
 export {
+	DYNAMOI_SHOP_FULL_SCOPE,
+	DYNAMOI_SHOP_MAX_TARGET_COUNTRY_CODES,
+	DynamoiShopCheckoutDataSchema,
+	DynamoiShopCreateCheckoutInputSchema,
+	DynamoiShopGetQuoteInputSchema,
+	DynamoiShopQuoteDataSchema,
+	DynamoiShopSelectionInputSchema,
+	DynamoiShopTargetingInputSchema,
+	SHOP_TOOL_DEFINITIONS,
+	type DynamoiShopCheckoutData,
+	type DynamoiShopCreateCheckoutInput,
+	type DynamoiShopGetQuoteInput,
+	type DynamoiShopQuoteData,
+} from "./server/shop-tools";
+export {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
 	DynamoiGetSmartLinkAnalyticsInputSchema,

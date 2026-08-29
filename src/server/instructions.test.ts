@@ -36,6 +36,15 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		);
 	});
 
+	test("documents the full-profile Shop checkout boundary", () => {
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			"dynamoi_shop_get_quote → explicit user confirmation → dynamoi_shop_create_checkout",
+		);
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			"no Shop order exists until Dynamoi verifies settlement",
+		);
+	});
+
 	test("preserves the existing principles block after the routine", () => {
 		const routineEnd = DYNAMOI_MCP_INSTRUCTIONS.indexOf(
 			"=== End Session Start Routine ===",

@@ -8,6 +8,7 @@ type ProtectedResourceMetadata = {
 
 export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:read",
+	"dynamoi:mcp.full",
 	"dynamoi:billing.read",
 	"dynamoi:campaign.launch",
 	"dynamoi:campaign.write",
@@ -20,6 +21,8 @@ export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 /** @deprecated Use DYNAMOI_BETTER_AUTH_MCP_SCOPES. */
 export const DYNAMOI_MCP_SCOPES = DYNAMOI_BETTER_AUTH_MCP_SCOPES;
 export const DYNAMOI_MCP_TOOL_SCOPES = {
+	dynamoi_shop_create_checkout: ["dynamoi:read", "dynamoi:mcp.full"],
+	dynamoi_shop_get_quote: ["dynamoi:read", "dynamoi:mcp.full"],
 	dynamoi_create_smart_link_from_spotify: [
 		"dynamoi:read",
 		"dynamoi:smart_links.write",

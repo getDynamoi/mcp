@@ -73,6 +73,11 @@ import {
 } from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
 import {
+	type DynamoiShopCheckoutData,
+	type DynamoiShopQuoteData,
+	SHOP_TOOL_DEFINITIONS,
+} from "./shop-tools";
+import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
 	PHASE_ONBOARDING_TOOL_DEFINITIONS,
@@ -236,6 +241,7 @@ type DynamoiToolDefinition =
 	| (typeof PHASE_3_TOOL_DEFINITIONS)[number]
 	| (typeof PHASE_4_TOOL_DEFINITIONS)[number]
 	| (typeof DISTRIBUTION_TOOL_DEFINITIONS)[number]
+	| (typeof SHOP_TOOL_DEFINITIONS)[number]
 	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION;
 
 const DYNAMOI_TOOL_DEFINITIONS = [
@@ -244,11 +250,14 @@ const DYNAMOI_TOOL_DEFINITIONS = [
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
 	...DISTRIBUTION_TOOL_DEFINITIONS,
+	...SHOP_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ] as const satisfies readonly DynamoiToolDefinition[];
 
 const CHATGPT_APP_EXCLUDED_TOOL_NAMES = new Set<string>([
+	"dynamoi_shop_create_checkout",
+	"dynamoi_shop_get_quote",
 	"dynamoi_get_billing",
 	"dynamoi_get_campaign_readiness",
 	"dynamoi_launch_campaign",
@@ -390,6 +399,10 @@ export type Phase3Adapter = {
 	updateSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<UpdateSmartLinkArtistSettingsData>>;
+	shopGetQuote(input: unknown): Promise<ResultEnvelope<DynamoiShopQuoteData>>;
+	shopCreateCheckout(
+		input: unknown,
+	): Promise<ResultEnvelope<DynamoiShopCheckoutData>>;
 };
 
 type DynamoiToolName = (typeof DYNAMOI_TOOL_DEFINITIONS)[number]["name"];
@@ -399,6 +412,9 @@ type DynamoiToolDispatcher = (
 ) => Promise<ResultEnvelope<unknown>>;
 
 const DYNAMOI_TOOL_DISPATCHERS = {
+	dynamoi_shop_create_checkout: (adapter, input) =>
+		adapter.shopCreateCheckout(input),
+	dynamoi_shop_get_quote: (adapter, input) => adapter.shopGetQuote(input),
 	dynamoi_apply_for_distribution: (adapter, input) =>
 		adapter.applyForDistribution(input),
 	dynamoi_create_smart_link_from_spotify: (adapter, input) =>

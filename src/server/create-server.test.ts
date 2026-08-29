@@ -18,6 +18,7 @@ import {
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
+import { SHOP_TOOL_DEFINITIONS } from "./shop-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -31,6 +32,7 @@ const REGISTERED_TOOL_DEFINITIONS = [
 	...PHASE_2_TOOL_DEFINITIONS,
 	...PHASE_3_TOOL_DEFINITIONS,
 	...DISTRIBUTION_TOOL_DEFINITIONS,
+	...SHOP_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ];
@@ -174,6 +176,18 @@ describe("createDynamoiMcpServer", () => {
 			expect(scopesFor("search")).toEqual([
 				{ scopes: ["dynamoi:read"], type: "oauth2" },
 			]);
+			expect(scopesFor("dynamoi_shop_get_quote")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:mcp.full"],
+					type: "oauth2",
+				},
+			]);
+			expect(scopesFor("dynamoi_shop_create_checkout")).toEqual([
+				{
+					scopes: ["dynamoi:read", "dynamoi:mcp.full"],
+					type: "oauth2",
+				},
+			]);
 			expect(scopesFor("dynamoi_get_billing")).toEqual([
 				{
 					scopes: ["dynamoi:read", "dynamoi:billing.read"],
@@ -230,6 +244,8 @@ describe("createDynamoiMcpServer", () => {
 			expect(toolNames).toContain("dynamoi_get_distribution_application");
 			expect(toolNames).toContain("dynamoi_apply_for_distribution");
 			expect(toolNames).toContain("dynamoi_preview_smart_link_themes");
+			expect(toolNames).not.toContain("dynamoi_shop_get_quote");
+			expect(toolNames).not.toContain("dynamoi_shop_create_checkout");
 			expect(toolNames).not.toContain("dynamoi_get_billing");
 			expect(toolNames).not.toContain("dynamoi_get_campaign_readiness");
 			expect(toolNames).not.toContain("dynamoi_launch_campaign");
