@@ -12,13 +12,36 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function normalizeLegacyDynamoiToolCallArguments(parsedBody: unknown): unknown {
+type NormalizedMcpBody =
+	| string
+	| number
+	| boolean
+	| null
+	| undefined
+	| NormalizedMcpBody[]
+	| { [key: string]: unknown };
+
+function normalizeLegacyDynamoiToolCallArguments(
+	parsedBody: unknown,
+): NormalizedMcpBody {
 	if (Array.isArray(parsedBody)) {
 		return parsedBody.map((message) =>
 			normalizeLegacyDynamoiToolCallArguments(message),
 		);
 	}
-	if (!isRecord(parsedBody) || parsedBody.method !== "tools/call") {
+	if (!isRecord(parsedBody)) {
+		if (
+			parsedBody === null ||
+			parsedBody === undefined ||
+			typeof parsedBody === "string" ||
+			typeof parsedBody === "number" ||
+			typeof parsedBody === "boolean"
+		) {
+			return parsedBody;
+		}
+		return null;
+	}
+	if (parsedBody.method !== "tools/call") {
 		return parsedBody;
 	}
 	const params = parsedBody.params;

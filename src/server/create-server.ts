@@ -5,9 +5,9 @@ import {
 	DYNAMOI_MCP_TOOL_SCOPES,
 } from "../auth/protected-resource";
 import type {
+	ApplyForDistributionData,
 	CreateSmartLinkFromSpotifyData,
 	CreateSmartLinksFromSpotifyArtistData,
-	ApplyForDistributionData,
 	GetArtistAnalyticsJsonData,
 	GetArtistAnalyticsSummaryData,
 	GetArtistData,
@@ -57,14 +57,19 @@ import type {
 	UpdateSmartLinkData,
 } from "../types";
 import { DYNAMOI_MCP_VERSION } from "../version";
+import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import {
 	DYNAMOI_CHATGPT_APP_INSTRUCTIONS,
 	DYNAMOI_MCP_INSTRUCTIONS,
 } from "./instructions";
-import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
+import {
+	type DynamoiShopCheckoutData,
+	type DynamoiShopQuoteData,
+	SHOP_TOOL_DEFINITIONS,
+} from "./shop-tools";
 import {
 	previewSmartLinkThemes,
 	registerSmartLinkThemePreviewResource,
@@ -72,11 +77,6 @@ import {
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
-import {
-	type DynamoiShopCheckoutData,
-	type DynamoiShopQuoteData,
-	SHOP_TOOL_DEFINITIONS,
-} from "./shop-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -87,6 +87,19 @@ import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 function buildDynamoiToolSecuritySchemes(scopes: readonly string[]) {
 	return [{ scopes: [...scopes], type: "oauth2" as const }];
 }
+
+type DynamoiToolMetadata = {
+	securitySchemes: ReturnType<typeof buildDynamoiToolSecuritySchemes>;
+	ui?: { resourceUri: string };
+	"openai/outputTemplate"?: string;
+};
+
+type DynamoiToolAnnotations = {
+	destructiveHint: boolean;
+	idempotentHint?: boolean;
+	openWorldHint: boolean;
+	readOnlyHint: boolean;
+};
 
 const DescriptiveEntitySchema = z
 	.object({
@@ -412,9 +425,6 @@ type DynamoiToolDispatcher = (
 ) => Promise<ResultEnvelope<unknown>>;
 
 const DYNAMOI_TOOL_DISPATCHERS = {
-	dynamoi_shop_create_checkout: (adapter, input) =>
-		adapter.shopCreateCheckout(input),
-	dynamoi_shop_get_quote: (adapter, input) => adapter.shopGetQuote(input),
 	dynamoi_apply_for_distribution: (adapter, input) =>
 		adapter.applyForDistribution(input),
 	dynamoi_create_smart_link_from_spotify: (adapter, input) =>
@@ -444,6 +454,9 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_preview_smart_link_themes: (_adapter, input) =>
 		Promise.resolve(previewSmartLinkThemes(input)),
 	dynamoi_search: (adapter, input) => adapter.search(input),
+	dynamoi_shop_create_checkout: (adapter, input) =>
+		adapter.shopCreateCheckout(input),
+	dynamoi_shop_get_quote: (adapter, input) => adapter.shopGetQuote(input),
 	dynamoi_start_meta_connection: (adapter, input) =>
 		adapter.startMetaConnection(input),
 	dynamoi_start_youtube_channel_link: (adapter, input) =>
@@ -483,11 +496,13 @@ export function asTextResult(envelope: unknown) {
 		return JSON.stringify(envelope);
 	})();
 
-	const result: {
+	type McpToolCallResult = {
 		content: Array<{ text: string; type: "text" }>;
 		structuredContent: Record<string, unknown>;
 		isError?: boolean;
-	} = {
+	};
+
+	const result: McpToolCallResult = {
 		content: [{ text: plainText, type: "text" as const }],
 		structuredContent: envelope as Record<string, unknown>,
 	};
@@ -548,7 +563,7 @@ export function createDynamoiMcpServer(options: {
 			"idempotentHint" in def && typeof def.idempotentHint === "boolean"
 				? def.idempotentHint
 				: undefined;
-		const meta: Record<string, unknown> = {
+		const meta: DynamoiToolMetadata = {
 			securitySchemes: buildDynamoiToolSecuritySchemes(
 				getDynamoiToolOAuthScopes(
 					def.name,
@@ -558,15 +573,15 @@ export function createDynamoiMcpServer(options: {
 		};
 		if (def.name === "dynamoi_preview_smart_link_themes") {
 			meta["openai/outputTemplate"] = SMART_LINK_THEME_PREVIEW_RESOURCE_URI;
-			meta["ui"] = { resourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI };
+			meta.ui = { resourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI };
 		}
-		const annotations: Record<string, unknown> = {
+		const annotations: DynamoiToolAnnotations = {
 			destructiveHint: def.destructiveHint,
 			openWorldHint: def.openWorldHint,
 			readOnlyHint: def.readOnlyHint,
 		};
 		if (typeof idempotentHint === "boolean") {
-			annotations["idempotentHint"] = idempotentHint;
+			annotations.idempotentHint = idempotentHint;
 		}
 		server.registerTool(
 			def.name,
