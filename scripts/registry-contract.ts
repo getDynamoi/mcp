@@ -217,7 +217,6 @@ export async function waitForContract({
 			process.stderr.write(
 				`Contract check ${attempt}/${attempts} failed: ${error instanceof Error ? error.message : String(error)}. Retrying in ${boundedDelay}ms.\n`,
 			);
-			// biome-ignore lint/performance/noAwaitInLoops: retries must wait for provider propagation before the next check.
 			await sleep(boundedDelay);
 		}
 	}
@@ -235,7 +234,15 @@ async function readContract(packageRoot: string): Promise<RegistryContract> {
 	return validateLocalContract(JSON.parse(packageText), JSON.parse(serverText));
 }
 
-async function fetchJson(url: URL | string): Promise<unknown> {
+type RegistryJsonValue =
+	| boolean
+	| null
+	| number
+	| string
+	| RegistryJsonValue[]
+	| { [key: string]: RegistryJsonValue };
+
+async function fetchJson(url: URL | string): Promise<RegistryJsonValue> {
 	const response = await fetch(url, {
 		headers: { accept: "application/json" },
 		redirect: "error",
