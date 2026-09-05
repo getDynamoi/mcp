@@ -41,15 +41,17 @@ function normalizeLegacyDynamoiToolCallArguments(
 		}
 		return null;
 	}
-	if (parsedBody.method !== "tools/call") {
+	if (parsedBody["method"] !== "tools/call") {
 		return parsedBody;
 	}
-	const params = parsedBody.params;
-	if (!isRecord(params) || params.name !== "dynamoi_get_smart_link") {
+	const params = parsedBody["params"];
+	if (!isRecord(params) || params["name"] !== "dynamoi_get_smart_link") {
 		return parsedBody;
 	}
-	const normalizedArguments = normalizeLegacySmartLinkInclude(params.arguments);
-	if (normalizedArguments === params.arguments) {
+	const normalizedArguments = normalizeLegacySmartLinkInclude(
+		params["arguments"],
+	);
+	if (normalizedArguments === params["arguments"]) {
 		return parsedBody;
 	}
 	return {
