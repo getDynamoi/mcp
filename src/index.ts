@@ -141,6 +141,8 @@ export type {
 	PauseResumeCampaignData,
 	PauseResumePlatformResult,
 	ResultEnvelope,
+	ResultErrorCode,
+	ResultNextAction,
 	SearchData,
 	SearchResultType,
 	SearchSummaryData,

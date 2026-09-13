@@ -8,7 +8,32 @@ export type ResultEnvelope<T> =
 			status: "error";
 			message: string;
 			kind?: "validation" | "business" | "platform" | "unknown";
+			code?: ResultErrorCode;
+			retryable?: boolean;
+			retryAfterSeconds?: number;
+			field?: string;
+			prerequisite?: string;
+			nextAction?: ResultNextAction;
 	  };
+
+/** Stable, safe error identifiers that let clients choose bounded recovery. */
+export type ResultErrorCode =
+	| "ACCOUNT_READ_ONLY"
+	| "INVALID_SPOTIFY_SOURCE"
+	| "CAPABILITY_REQUIRED"
+	| "INSUFFICIENT_SCOPE"
+	| "STATE_CONFLICT"
+	| "QUOTE_CHANGED"
+	| "RATE_LIMITED"
+	| "OUTPUT_INVALID"
+	| "UNKNOWN_EFFECT";
+
+/** A server suggestion only; callers must still enforce permission and intent. */
+export type ResultNextAction = {
+	kind: "provide_input" | "read_status" | "reconnect" | "handoff";
+	field?: string;
+	reason?: string;
+};
 
 export type DistributionRequirementKey =
 	| "spotify_connection"
@@ -174,7 +199,6 @@ export type SmartLinkClaimStatus =
 	| "rejected";
 export type SmartLinkPublishState = "published" | "unpublished";
 export type SmartLinkTakedownStatus = "none" | "active" | "resolved";
-export type SmartLinkOdesliStatus = "pending" | "resolved" | "failed";
 export type SmartLinkRenderState =
 	| "queued"
 	| "rendering"
@@ -197,7 +221,6 @@ export type SmartLinkSummary = {
 	claimStatus: SmartLinkClaimStatus;
 	publishState: SmartLinkPublishState;
 	takedownStatus: SmartLinkTakedownStatus;
-	odesliStatus: SmartLinkOdesliStatus;
 	renderState: SmartLinkRenderState;
 	theme: SmartLinkTheme;
 	createdAt: string;

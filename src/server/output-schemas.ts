@@ -1,5 +1,80 @@
 import * as z from "zod/v4";
 
+const ResultErrorCodeSchema = z.enum([
+	"ACCOUNT_READ_ONLY",
+	"INVALID_SPOTIFY_SOURCE",
+	"CAPABILITY_REQUIRED",
+	"INSUFFICIENT_SCOPE",
+	"STATE_CONFLICT",
+	"QUOTE_CHANGED",
+	"RATE_LIMITED",
+	"OUTPUT_INVALID",
+	"UNKNOWN_EFFECT",
+]);
+
+const ResultNextActionSchema = z
+	.object({
+		field: z.string().trim().min(1).max(120).optional(),
+		kind: z.enum(["provide_input", "read_status", "reconnect", "handoff"]),
+		reason: z.string().trim().min(1).max(240).optional(),
+	})
+	.strict();
+
+/** Optional, additive recovery metadata for error envelopes. */
+export const ResultErrorRecoverySchema = z
+	.object({
+		code: ResultErrorCodeSchema.optional(),
+		field: z.string().trim().min(1).max(120).optional(),
+		nextAction: ResultNextActionSchema.optional(),
+		prerequisite: z.string().trim().min(1).max(240).optional(),
+		retryAfterSeconds: z.number().int().min(0).max(86_400).optional(),
+		retryable: z.boolean().optional(),
+	})
+	.strict();
+
+/**
+ * Retryable recovery is reserved for a bounded rate-limit wait. Producers are
+ * responsible for confirming that retrying their operation is safe to repeat.
+ */
+export function addRecoverySafetyIssues(
+	value: z.infer<typeof ResultErrorRecoverySchema>,
+	context: z.RefinementCtx,
+) {
+	if (value.retryAfterSeconds !== undefined && value.retryable !== true) {
+		context.addIssue({
+			code: "custom",
+			message: "Retry timing requires retryable=true.",
+			path: ["retryAfterSeconds"],
+		});
+	}
+	if (value.retryable !== true) {
+		return;
+	}
+	if (value.code !== "RATE_LIMITED") {
+		context.addIssue({
+			code: "custom",
+			message: "Only RATE_LIMITED results may be retryable.",
+			path: ["retryable"],
+		});
+	}
+	if (value.retryAfterSeconds === undefined || value.retryAfterSeconds <= 0) {
+		context.addIssue({
+			code: "custom",
+			message: "Retryable results require a positive retryAfterSeconds value.",
+			path: ["retryAfterSeconds"],
+		});
+	}
+}
+
+const RESULT_ERROR_RECOVERY_FIELDS = [
+	"code",
+	"field",
+	"nextAction",
+	"prerequisite",
+	"retryable",
+	"retryAfterSeconds",
+] as const;
+
 const MoneyDisplayOutputSchema = z
 	.object({
 		amountUsd: z.number(),
@@ -21,6 +96,7 @@ function createOutputEnvelopeSchema(
 				.enum(["validation", "business", "platform", "unknown"])
 				.optional(),
 			message: z.string().optional(),
+			...ResultErrorRecoverySchema.shape,
 			status: z.enum(statuses),
 		})
 		.strict()
@@ -39,6 +115,20 @@ function createOutputEnvelopeSchema(
 					path: ["data"],
 				});
 			}
+			const valueRecord = value as Record<string, unknown>;
+			if (value.status !== "error") {
+				for (const field of RESULT_ERROR_RECOVERY_FIELDS) {
+					if (valueRecord[field] !== undefined) {
+						context.addIssue({
+							code: "custom",
+							message: "Recovery metadata is only valid on error results.",
+							path: [field],
+						});
+					}
+				}
+				return;
+			}
+			addRecoverySafetyIssues(value, context);
 		});
 }
 
@@ -81,7 +171,6 @@ const SmartLinkStatusSchemas = {
 		"approved_by_ops",
 		"rejected",
 	]),
-	odesliStatus: z.enum(["pending", "resolved", "failed"]),
 	publishState: z.enum(["published", "unpublished"]),
 	renderState: z.enum(["queued", "rendering", "rendered", "failed"]),
 	takedownStatus: z.enum(["none", "active", "resolved"]),
@@ -98,7 +187,6 @@ const SmartLinkSummaryOutputSchema = z
 		id: z.string(),
 		isPublic: z.boolean(),
 		localizedPublicUrls: z.array(z.string()).optional(),
-		odesliStatus: SmartLinkStatusSchemas.odesliStatus,
 		publicUrl: z.string(),
 		publishState: SmartLinkStatusSchemas.publishState,
 		releaseSlug: z.string(),

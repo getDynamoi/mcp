@@ -280,7 +280,7 @@ export function registerDynamoiResources(
 					mimeType: "application/json",
 					text: JSON.stringify({
 						emptyStateRule:
-							"Always call dynamoi_get_account_overview first for routing. If list_artists, list_campaigns, list_smart_links, or search return empty for a brand-new user, do not respond 'no records found' as a terminal answer; consult dynamoi_get_account_overview.recommendedNextActions or dynamoi://playbooks/onboarding-tree.",
+							"If the request identifies an artist, campaign, or Smart Link, use the targeted read directly. For missing or ambiguous identity, use the relevant roster or search tool first, then read the resolved resource. For a known empty account, use dynamoi_get_account_overview.recommendedNextActions or dynamoi://playbooks/onboarding-tree to explain supported onboarding; do not treat empty lists as a terminal answer.",
 						genericAdvice:
 							"Answer generic music marketing questions directly unless the user asks about their Dynamoi account or asks Dynamoi to take an action.",
 						stopRule:

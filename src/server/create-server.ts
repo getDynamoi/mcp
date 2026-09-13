@@ -63,6 +63,7 @@ import {
 	DYNAMOI_MCP_INSTRUCTIONS,
 } from "./instructions";
 import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
+import { ResultErrorRecoverySchema } from "./output-schemas";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
 import {
@@ -221,6 +222,7 @@ function getAdvertisedToolOutputSchema(options: {
 			data: dataSchema.optional(),
 			kind: z.string().optional(),
 			message: z.string().optional(),
+			...ResultErrorRecoverySchema.shape,
 			status: z.enum(["success", "partial_success", "error"]),
 		})
 		.passthrough();
@@ -267,6 +269,12 @@ const DYNAMOI_TOOL_DEFINITIONS = [
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 ] as const satisfies readonly DynamoiToolDefinition[];
+
+const MUTATING_TOOL_NAMES = new Set<string>(
+	DYNAMOI_TOOL_DEFINITIONS.filter((definition) => !definition.readOnlyHint).map(
+		(definition) => definition.name,
+	),
+);
 
 const CHATGPT_APP_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_shop_create_checkout",
@@ -424,6 +432,235 @@ type DynamoiToolDispatcher = (
 	input: unknown,
 ) => Promise<ResultEnvelope<unknown>>;
 
+type ErrorRecoveryMetadata = Partial<
+	Omit<
+		Extract<ResultEnvelope<never>, { status: "error" }>,
+		"message" | "status"
+	>
+>;
+
+type NormalizedEnvelope = object | string | number | boolean | null | undefined;
+
+const RECOVERY_METADATA_FIELDS = [
+	"code",
+	"field",
+	"nextAction",
+	"prerequisite",
+	"retryable",
+	"retryAfterSeconds",
+] as const;
+
+const SPOTIFY_SOURCE_ERROR_MESSAGES = new Set([
+	"Paste a valid Spotify artist, album, or track URL.",
+	"Paste a Spotify artist, album, or track URL.",
+	"Open the Spotify artist profile, then copy the Spotify link.",
+	"Spotify URL is missing a valid Spotify ID.",
+	"Paste the public Spotify artist link, not the Spotify for Artists dashboard page.",
+	"Spotify link did not resolve to a Spotify artist, album, or track URL.",
+	"Spotify link redirected too many times.",
+	"Spotify link could not be opened. Paste the full Spotify URL instead.",
+]);
+
+const SPOTIFY_ARTIST_CATALOG_ERROR_MESSAGES = new Set([
+	"Use a Spotify artist URL for full-catalog Smart Link import. For album or track URLs, use dynamoi_create_smart_link_from_spotify.",
+]);
+
+const REVIEWER_WRITE_TOOL_NAMES = new Set([
+	"dynamoi_apply_for_distribution",
+	"dynamoi_create_smart_link_from_spotify",
+	"dynamoi_create_smart_links_from_spotify_artist",
+	"dynamoi_launch_campaign",
+	"dynamoi_start_meta_connection",
+	"dynamoi_start_youtube_channel_link",
+	"dynamoi_update_campaign",
+	"dynamoi_update_smart_link",
+]);
+
+const SHOP_RATE_LIMIT_RETRY_AFTER_SECONDS = {
+	checkout: 10 * 60,
+	quote: 60,
+} as const;
+
+const SHOP_RATE_LIMIT_ERROR_PATTERNS = {
+	checkout:
+		/^Too many Shop checkout requests\. Try again in ([1-9]\d*) seconds\.$/,
+	quote: /^Too many Shop quote requests\. Try again in ([1-9]\d*) seconds\.$/,
+} as const;
+
+function mapShopRateLimitRecovery(
+	toolName: string,
+	message: string,
+): ErrorRecoveryMetadata | undefined {
+	const kind =
+		toolName === "dynamoi_shop_get_quote"
+			? "quote"
+			: toolName === "dynamoi_shop_create_checkout"
+				? "checkout"
+				: undefined;
+	if (!kind) {
+		return undefined;
+	}
+
+	const match = SHOP_RATE_LIMIT_ERROR_PATTERNS[kind].exec(message);
+	if (!match || match[0] !== message) {
+		return undefined;
+	}
+	const retryAfterSeconds = Number(match[1]);
+	if (
+		!Number.isSafeInteger(retryAfterSeconds) ||
+		retryAfterSeconds < 1 ||
+		retryAfterSeconds > SHOP_RATE_LIMIT_RETRY_AFTER_SECONDS[kind]
+	) {
+		return undefined;
+	}
+	return {
+		code: "RATE_LIMITED",
+		retryAfterSeconds,
+		retryable: true,
+	};
+}
+
+function mapKnownErrorRecovery(
+	toolName: string,
+	kind: unknown,
+	message: string,
+): ErrorRecoveryMetadata | undefined {
+	if (kind === "unknown" && MUTATING_TOOL_NAMES.has(toolName)) {
+		return {
+			code: "UNKNOWN_EFFECT",
+			nextAction: {
+				kind: "read_status",
+				reason:
+					"Inspect the existing operation or resource identity before retrying.",
+			},
+			prerequisite:
+				"The existing operation or resource identity must be inspected before replaying.",
+			retryable: false,
+		};
+	}
+	if (kind !== "business") {
+		return undefined;
+	}
+	const shopRateLimitRecovery = mapShopRateLimitRecovery(toolName, message);
+	if (shopRateLimitRecovery) {
+		return shopRateLimitRecovery;
+	}
+	if (
+		REVIEWER_WRITE_TOOL_NAMES.has(toolName) &&
+		message === "Reviewer accounts are read-only in MCP."
+	) {
+		return {
+			code: "ACCOUNT_READ_ONLY",
+			nextAction: {
+				kind: "handoff",
+				reason: "Use an authorized non-reviewer account for this write.",
+			},
+			prerequisite: "A non-reviewer account with write access is required.",
+			retryable: false,
+		};
+	}
+
+	const isSingleReleaseSpotifyTool =
+		toolName === "dynamoi_create_smart_link_from_spotify";
+	const isArtistCatalogSpotifyTool =
+		toolName === "dynamoi_create_smart_links_from_spotify_artist";
+	if (
+		(isSingleReleaseSpotifyTool || isArtistCatalogSpotifyTool) &&
+		(SPOTIFY_SOURCE_ERROR_MESSAGES.has(message) ||
+			(isArtistCatalogSpotifyTool &&
+				SPOTIFY_ARTIST_CATALOG_ERROR_MESSAGES.has(message)))
+	) {
+		const field = isArtistCatalogSpotifyTool
+			? "spotifyArtistUrl"
+			: "spotifyUrl";
+		const expectedInput = isArtistCatalogSpotifyTool
+			? "Provide a public Spotify artist URL."
+			: "Provide a public Spotify artist, album, or track URL.";
+		return {
+			code: "INVALID_SPOTIFY_SOURCE",
+			field,
+			nextAction: {
+				field,
+				kind: "provide_input",
+				reason: expectedInput,
+			},
+			prerequisite: expectedInput,
+			retryable: false,
+		};
+	}
+
+	if (
+		toolName === "dynamoi_update_smart_link" &&
+		message ===
+			"Smart Link changed since it was last read. Read it again before updating."
+	) {
+		return {
+			code: "STATE_CONFLICT",
+			field: "expectedUpdatedAt",
+			nextAction: {
+				kind: "read_status",
+				reason:
+					"Read the existing Smart Link again, then resubmit only with its current state.",
+			},
+			prerequisite: "Read the Smart Link before updating it.",
+			retryable: false,
+		};
+	}
+
+	if (
+		toolName === "dynamoi_shop_create_checkout" &&
+		message ===
+			"The Shop quote changed. Get a new quote before creating checkout."
+	) {
+		return {
+			code: "QUOTE_CHANGED",
+			field: "expectedTotal",
+			nextAction: {
+				field: "expectedTotal",
+				kind: "provide_input",
+				reason:
+					"Get a fresh quote, ask the user to confirm its total, then submit with that total and the same requestId.",
+			},
+			prerequisite:
+				"Get a fresh Shop quote and obtain renewed user confirmation for its total before creating checkout.",
+			retryable: false,
+		};
+	}
+
+	return undefined;
+}
+
+function normalizeKnownErrorRecovery(
+	envelope: unknown,
+	toolName: string,
+): NormalizedEnvelope {
+	if (
+		envelope === null ||
+		envelope === undefined ||
+		typeof envelope === "string" ||
+		typeof envelope === "number" ||
+		typeof envelope === "boolean"
+	) {
+		return envelope;
+	}
+	if (typeof envelope !== "object" || Array.isArray(envelope)) {
+		return typeof envelope === "object" ? envelope : null;
+	}
+	const record = envelope as Record<string, unknown>;
+	if (record["status"] !== "error") {
+		return record;
+	}
+	const message = record["message"];
+	if (
+		RECOVERY_METADATA_FIELDS.some((field) => record[field] !== undefined) ||
+		typeof message !== "string"
+	) {
+		return record;
+	}
+	const recovery = mapKnownErrorRecovery(toolName, record["kind"], message);
+	return recovery ? { ...record, ...recovery } : envelope;
+}
+
 const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_apply_for_distribution: (adapter, input) =>
 		adapter.applyForDistribution(input),
@@ -466,6 +703,57 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	fetch: (adapter, input) => adapter.openAiFetch(input),
 	search: (adapter, input) => adapter.openAiSearch(input),
 } satisfies Record<DynamoiToolName, DynamoiToolDispatcher>;
+
+function snapshotForObserver(value: unknown) {
+	try {
+		return structuredClone(value);
+	} catch {
+		if (
+			value === null ||
+			(typeof value !== "object" && typeof value !== "function")
+		) {
+			return value;
+		}
+		try {
+			if (value instanceof Error) {
+				const snapshot = new Error(
+					"The thrown error could not be cloned for observation.",
+				);
+				try {
+					const name = value.name;
+					if (typeof name === "string") {
+						snapshot.name = name;
+					}
+				} catch {
+					// Keep the fallback snapshot isolated if a custom error accessor throws.
+				}
+				try {
+					const message = value.message;
+					if (typeof message === "string") {
+						snapshot.message = message;
+					}
+				} catch {
+					// Keep the fallback snapshot isolated if a custom error accessor throws.
+				}
+				try {
+					const stack = value.stack;
+					if (typeof stack === "string") {
+						snapshot.stack = stack;
+					}
+				} catch {
+					// Keep the fallback snapshot isolated if a custom error accessor throws.
+				}
+				return snapshot;
+			}
+		} catch {
+			// Fall through to a static object for arbitrary uncloneable values.
+		}
+		return {
+			kind: "unknown",
+			message: "The thrown value could not be cloned for observation.",
+		};
+	}
+}
 
 export function asTextResult(envelope: unknown) {
 	const isToolError =
@@ -518,15 +806,27 @@ export function asValidatedTextResult(options: {
 	outputSchema: z.ZodType;
 	toolName: string;
 }) {
-	const parsed = options.outputSchema.safeParse(options.envelope);
+	const envelope = normalizeKnownErrorRecovery(
+		options.envelope,
+		options.toolName,
+	);
+	const parsed = options.outputSchema.safeParse(envelope);
 	if (!parsed.success) {
 		return asTextResult({
+			code: "OUTPUT_INVALID",
 			kind: "validation",
 			message: `Tool ${options.toolName} returned an invalid result shape.`,
+			nextAction: {
+				kind: "read_status",
+				reason: "Inspect the existing operation identity before retrying.",
+			},
+			prerequisite:
+				"The existing operation or resource identity must be inspected before replaying.",
+			retryable: false,
 			status: "error",
 		} satisfies ResultEnvelope<never>);
 	}
-	return asTextResult(options.envelope);
+	return asTextResult(envelope);
 }
 
 export function createDynamoiMcpServer(options: {
@@ -601,25 +901,26 @@ export function createDynamoiMcpServer(options: {
 				const startedAt = Date.now();
 				try {
 					const envelope = await dispatcher(options.adapter, input);
+					const finalized = asValidatedTextResult({
+						envelope,
+						outputSchema: def.outputSchema,
+						toolName: def.name,
+					});
 					try {
 						await options.onToolCall?.({
 							durationMs: Date.now() - startedAt,
-							result: envelope,
+							result: snapshotForObserver(finalized.structuredContent),
 							toolName: def.name,
 						});
 					} catch {
 						// Observability must never change a tool result.
 					}
-					return asValidatedTextResult({
-						envelope,
-						outputSchema: def.outputSchema,
-						toolName: def.name,
-					});
+					return finalized;
 				} catch (error) {
 					try {
 						await options.onToolCall?.({
 							durationMs: Date.now() - startedAt,
-							error,
+							error: snapshotForObserver(error),
 							toolName: def.name,
 						});
 					} catch {

@@ -1,14 +1,23 @@
 import { describe, expect, test } from "bun:test";
-import { DYNAMOI_MCP_INSTRUCTIONS } from "./instructions";
+import {
+	DYNAMOI_CHATGPT_APP_INSTRUCTIONS,
+	DYNAMOI_MCP_INSTRUCTIONS,
+} from "./instructions";
 
 describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 	test("includes the session-start routing routine", () => {
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain("Session Start Routine");
 	});
 
-	test("instructs the agent to call dynamoi_get_account_overview first", () => {
+	test("uses account overview only when orientation is needed", () => {
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
-			"call dynamoi_get_account_overview first",
+			"Use dynamoi_get_account_overview for an explicit account overview, uncertain account context, or onboarding guidance.",
+		);
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			"When the request already identifies the relevant artist, campaign, or Smart Link, use the targeted tool directly.",
+		);
+		expect(DYNAMOI_MCP_INSTRUCTIONS).not.toContain(
+			"call dynamoi_get_account_overview first to learn the user's state",
 		);
 	});
 
@@ -24,9 +33,12 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		);
 	});
 
-	test("warns against calling list_artists or search as a first step for new users", () => {
+	test("preserves empty-account guidance without forcing an orientation detour", () => {
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
-			"Do NOT call dynamoi_list_artists or dynamoi_search as a first step for brand-new users",
+			"For a known empty account, use account overview to explain supported onboarding.",
+		);
+		expect(DYNAMOI_MCP_INSTRUCTIONS).not.toContain(
+			"Always go through dynamoi_get_account_overview first.",
 		);
 	});
 
@@ -53,5 +65,31 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		const tail = DYNAMOI_MCP_INSTRUCTIONS.slice(routineEnd);
 		expect(tail).toContain("Principles:");
 		expect(tail).toContain("Common workflows:");
+	});
+});
+
+describe("DYNAMOI_CHATGPT_APP_INSTRUCTIONS", () => {
+	test("uses targeted reads when the request already identifies a resource", () => {
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"If the request identifies the artist, campaign,",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"or Smart Link, use its targeted read directly;",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).not.toContain(
+			"For account questions, use dynamoi_get_account_overview first.",
+		);
+	});
+
+	test("keeps roster and search calls for identity resolution", () => {
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"resolve missing or ambiguous",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"identity with the relevant roster or search tool first.",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"dynamoi_list_campaigns to resolve a missing or ambiguous campaign",
+		);
 	});
 });

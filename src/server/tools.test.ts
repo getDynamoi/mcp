@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
-	DynamoiOpenAiFetchInputSchema,
-	DynamoiOpenAiSearchInputSchema,
-} from "./openai-tools";
-import {
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
 } from "../consent";
+import {
+	DynamoiOpenAiFetchInputSchema,
+	DynamoiOpenAiSearchInputSchema,
+} from "./openai-tools";
 import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
@@ -319,10 +319,10 @@ describe("mcp/tools phase 2 definitions", () => {
 
 	test("update budget schema accepts idempotency and expected-state guards", () => {
 		const parsed = DynamoiUpdateCampaignInputSchema.parse({
-			action: "update_budget",
 			acceptedConsentCopyHash:
-				"36efa2138175fe14ec7b104d6f240bdce89d21b86ffccbd9f968100c50123e15",
-			acceptedConsentVersion: "managed-ads-prospective-daily-v1",
+				"06bbd517d58f345a767be9aaeb59f4959d11c6db16e7d07cb889f3ce7950f805",
+			acceptedConsentVersion: "managed-ads-prospective-daily-v2",
+			action: "update_budget",
 			authorizeAutomaticDailyFunding: true,
 			budgetAmount: 250,
 			campaignId: "00000000-0000-0000-0000-000000000000",

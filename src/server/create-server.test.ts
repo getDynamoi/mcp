@@ -13,12 +13,12 @@ import {
 } from "./create-server";
 import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import { ListMediaAssetsOutputEnvelopeSchema } from "./output-schemas";
+import { SHOP_TOOL_DEFINITIONS } from "./shop-tools";
 import {
 	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
 import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
-import { SHOP_TOOL_DEFINITIONS } from "./shop-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -89,8 +89,16 @@ describe("asTextResult", () => {
 			},
 		]);
 		expect(result.structuredContent).toEqual({
+			code: "OUTPUT_INVALID",
 			kind: "validation",
 			message: "Tool dynamoi_test_tool returned an invalid result shape.",
+			nextAction: {
+				kind: "read_status",
+				reason: "Inspect the existing operation identity before retrying.",
+			},
+			prerequisite:
+				"The existing operation or resource identity must be inspected before replaying.",
+			retryable: false,
 			status: "error",
 		});
 	});
@@ -509,6 +517,205 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
+	test("isolates nested structured result from observer mutation", async () => {
+		const original = {
+			data: { artists: [], summary: "No fixture artists.", totalCount: 0 },
+			status: "success" as const,
+		};
+		let callbackCount = 0;
+		let observedResult: Record<string, unknown> | undefined;
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				listArtists: async () => structuredClone(original),
+			}),
+			onToolCall(observation) {
+				callbackCount += 1;
+				const snapshot = observation.result as Record<string, unknown>;
+				observedResult = snapshot;
+				const data = snapshot.data as Record<string, unknown>;
+				data.summary = "Observer changed this valid summary.";
+				throw new Error("Observer failure after nested mutation");
+			},
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.callTool({
+				arguments: {},
+				name: "dynamoi_list_artists",
+			});
+
+			expect(result.isError).toBeUndefined();
+			expect(result.content).toEqual([
+				{ text: "No fixture artists.", type: "text" },
+			]);
+			expect(result.structuredContent).toEqual(original);
+			expect(observedResult).toMatchObject({
+				data: { summary: "Observer changed this valid summary." },
+			});
+			expect(callbackCount).toBe(1);
+		} finally {
+			await client.close();
+			await server.close();
+		}
+	});
+
+	test("isolates top-level structured result deletion from observer mutation", async () => {
+		const original = {
+			data: { artists: [], summary: "No fixture artists.", totalCount: 0 },
+			status: "success" as const,
+		};
+		let callbackCount = 0;
+		let observedResult: Record<string, unknown> | undefined;
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				listArtists: async () => structuredClone(original),
+			}),
+			onToolCall(observation) {
+				callbackCount += 1;
+				const snapshot = observation.result as Record<string, unknown>;
+				observedResult = snapshot;
+				snapshot.status = "observer-mutated";
+				Reflect.deleteProperty(snapshot, "data");
+				throw new Error("Observer failure after top-level mutation");
+			},
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.callTool({
+				arguments: {},
+				name: "dynamoi_list_artists",
+			});
+
+			expect(result.isError).toBeUndefined();
+			expect(result.content).toEqual([
+				{ text: "No fixture artists.", type: "text" },
+			]);
+			expect(result.structuredContent).toEqual(original);
+			expect(observedResult).toEqual({ status: "observer-mutated" });
+			expect(callbackCount).toBe(1);
+		} finally {
+			await client.close();
+			await server.close();
+		}
+	});
+
+	test("preserves the original dispatcher Error when the observer mutates it", async () => {
+		const originalError = new Error("Original dispatcher failure");
+		let callbackCount = 0;
+		let observedError: Error | undefined;
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				listArtists: async () => {
+					throw originalError;
+				},
+			}),
+			onToolCall(observation) {
+				callbackCount += 1;
+				observedError = observation.error as Error;
+				observedError.message = "Observer-mutated dispatcher message";
+				throw new Error("Observer failure after error mutation");
+			},
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.callTool({
+				arguments: {},
+				name: "dynamoi_list_artists",
+			});
+
+			expect(result.isError).toBe(true);
+			expect(result.content).toEqual([
+				{
+					text: "Original dispatcher failure",
+					type: "text",
+				},
+			]);
+			expect(observedError?.message).toBe(
+				"Observer-mutated dispatcher message",
+			);
+			expect(originalError.message).toBe("Original dispatcher failure");
+			expect(callbackCount).toBe(1);
+		} finally {
+			await client.close();
+			await server.close();
+		}
+	});
+
+	type CircularFailure = {
+		marker: string;
+		self?: unknown;
+		callback?: () => undefined;
+	};
+
+	test("preserves an unknown dispatcher failure when its snapshot is uncloneable", async () => {
+		const circularFailure: CircularFailure = { marker: "original" };
+		circularFailure.self = circularFailure;
+		circularFailure.callback = () => undefined;
+		let callbackCount = 0;
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				listArtists: async () => {
+					throw circularFailure;
+				},
+			}),
+			onToolCall(observation) {
+				callbackCount += 1;
+				const snapshot = observation.error as Record<string, unknown>;
+				snapshot.marker = "observer-mutated";
+				throw new Error("Observer failure after unknown error mutation");
+			},
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+
+		try {
+			const result = await client.callTool({
+				arguments: {},
+				name: "dynamoi_list_artists",
+			});
+
+			expect(result.isError).toBe(true);
+			expect(result.content).toEqual([
+				{
+					text: String(circularFailure),
+					type: "text",
+				},
+			]);
+			expect(circularFailure.marker).toBe("original");
+			expect(circularFailure.self).toBe(circularFailure);
+			expect(callbackCount).toBe(1);
+		} finally {
+			await client.close();
+			await server.close();
+		}
+	});
+
 	test("uses Smart Link summaries as URL-first text while keeping IDs structured", () => {
 		const envelope = {
 			data: {
@@ -523,7 +730,6 @@ describe("createDynamoiMcpServer", () => {
 				isPublic: true,
 				localizedPublicUrls: [],
 				nextActions: [],
-				odesliStatus: "resolved",
 				originalSpotifyUrl: "https://open.spotify.com/track/abc",
 				publicUrl: "https://play.dynamoi.com/92-keys/song",
 				publishState: "published",

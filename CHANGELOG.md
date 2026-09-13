@@ -5,6 +5,12 @@ All notable changes to `@dynamoi/mcp` will be documented in this file.
 This project follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-09-12
+
+### Changed
+
+- Make campaign funding consent explicit about daily renewal, advance collection, and unused-fund reconciliation.
+
 ## [0.7.1] - 2026-08-27
 
 ### Fixed

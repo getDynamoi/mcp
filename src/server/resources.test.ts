@@ -83,6 +83,18 @@ describe("registerDynamoiResources persona playbooks", () => {
 	test("dynamoi://mcp/tool-answering-rules now includes the empty-state rule", async () => {
 		const result = await readResource("dynamoi://mcp/tool-answering-rules");
 		const parsed = JSON.parse(String(result.contents[0]?.text ?? ""));
+		expect(parsed.emptyStateRule).toContain(
+			"If the request identifies an artist, campaign, or Smart Link, use the targeted read directly.",
+		);
+		expect(parsed.emptyStateRule).toContain(
+			"For missing or ambiguous identity, use the relevant roster or search tool first",
+		);
+		expect(parsed.emptyStateRule).toContain(
+			"For a known empty account, use dynamoi_get_account_overview.recommendedNextActions or dynamoi://playbooks/onboarding-tree to explain supported onboarding",
+		);
+		expect(parsed.emptyStateRule).not.toContain(
+			"Always call dynamoi_get_account_overview first for routing",
+		);
 		expect(parsed.emptyStateRule).toContain("dynamoi_get_account_overview");
 		expect(parsed.emptyStateRule).toContain("playbooks/onboarding-tree");
 	});

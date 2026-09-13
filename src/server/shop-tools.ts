@@ -1,4 +1,8 @@
 import * as z from "zod/v4";
+import {
+	addRecoverySafetyIssues,
+	ResultErrorRecoverySchema,
+} from "./output-schemas";
 
 export const DYNAMOI_SHOP_FULL_SCOPE = "dynamoi:mcp.full" as const;
 export const DYNAMOI_SHOP_MAX_TARGET_COUNTRY_CODES = 50;
@@ -150,9 +154,13 @@ const ToolErrorEnvelopeSchema = z
 	.object({
 		kind: z.enum(["validation", "business", "platform", "unknown"]),
 		message: z.string().min(1),
+		...ResultErrorRecoverySchema.shape,
 		status: z.literal("error"),
 	})
-	.strict();
+	.strict()
+	.superRefine((value, context) => {
+		addRecoverySafetyIssues(value, context);
+	});
 
 const DynamoiShopQuoteOutputEnvelopeSchema = z.union([
 	z
