@@ -1,4 +1,3 @@
-// biome-ignore lint/performance/noBarrelFile: Public package entrypoint for `@dynamoi/mcp`.
 export {
 	DISTRIBUTION_TOOL_DEFINITIONS,
 	DynamoiApplyForDistributionInputSchema,

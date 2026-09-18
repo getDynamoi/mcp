@@ -32,7 +32,7 @@ export const DISTRIBUTION_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Submit an artist's application for Dynamoi music distribution after the user explicitly asks to apply and all five eligibility requirements are met. This records an application for manual review; it does not approve distribution, accept an agreement, submit a release, transfer rights, configure splits or tax forms, or deliver music to stores. All three two-letter country codes, an adult signer attestation, confirmApplicationSubmission=true, and a concise userIntentSummary are required. Repeated submission is idempotent for an active application.",
+			"Submit an artist's application for Dynamoi music distribution after the user explicitly asks to apply and all five eligibility requirements are met. This records an application for manual review; it does not approve distribution, accept an agreement, submit a release, transfer rights, configure splits or tax forms, or deliver music to stores. All three valid ISO 3166-1 alpha-2 country or territory codes, an adult signer attestation, confirmApplicationSubmission=true, and a concise userIntentSummary are required. Country, tax, payout, sanctions, and provider-delivery checks remain manual progression gates after intake; a valid code does not imply approval. Repeated submission is idempotent for an active application.",
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_apply_for_distribution",

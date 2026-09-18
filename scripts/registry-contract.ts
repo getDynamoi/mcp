@@ -205,7 +205,7 @@ export async function waitForContract({
 	let lastError: unknown;
 	for (let attempt = 1; attempt <= attempts; attempt += 1) {
 		try {
-			// biome-ignore lint/performance/noAwaitInLoops: propagation checks must remain ordered and bounded.
+			// propagation checks must remain ordered and bounded
 			await check();
 			return;
 		} catch (error) {
