@@ -73,6 +73,38 @@ describe("mcp/transport stateless HTTP", () => {
 		},
 	);
 
+	test("tools/list uses the SDK's JSON response mode", async () => {
+		const body = { id: 2, jsonrpc: "2.0", method: "tools/list" };
+		const response = await handleMcpHttpRequest({
+			createServer: createTestServer,
+			parsedBody: body,
+			request: makePostRequest(body),
+		});
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toContain("application/json");
+		await expect(response.json()).resolves.toMatchObject({
+			result: { tools: [expect.objectContaining({ name: "ping" })] },
+		});
+	});
+
+	test("JSON-only probes (e.g. OpenAI ChatGPT) succeed in JSON response mode", async () => {
+		const body = { id: 3, jsonrpc: "2.0", method: "tools/list" };
+		const response = await handleMcpHttpRequest({
+			createServer: createTestServer,
+			parsedBody: body,
+			request: makePostRequest(body, { accept: "application/json" }),
+		});
+
+		// Verifies the custom interop shim allows standard JSON clients (like OpenAI ChatGPT)
+		// to connect without being rejected by Anthropic's SDK with HTTP 406.
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toContain("application/json");
+		await expect(response.json()).resolves.toMatchObject({
+			result: { tools: [expect.objectContaining({ name: "ping" })] },
+		});
+	});
+
 	test("independent requests do not depend on process-local session state", async () => {
 		const body = { id: 2, jsonrpc: "2.0", method: "tools/list" };
 		const response = await handleMcpHttpRequest({
