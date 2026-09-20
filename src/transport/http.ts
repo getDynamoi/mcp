@@ -104,13 +104,17 @@ export async function handleMcpHttpRequest(
 	// JSON response mode for single-result tools. It should be removed once Anthropic's SDK relaxes its
 	// Accept validation or OpenAI's client probe advertises `text/event-stream`.
 	const accept = options.request.headers.get("accept");
+	const acceptsEventStream = accept?.includes("text/event-stream") ?? false;
+	const acceptsJson =
+		accept?.includes("application/json") || accept === "*/*" || !accept;
+	const enableJsonResponse = !acceptsEventStream && Boolean(acceptsJson);
+
 	let effectiveRequest = options.request;
 
-	const needsAcceptNormalization =
-		!accept ||
-		accept === "*/*" ||
-		(accept.includes("application/json") &&
-			!accept.includes("text/event-stream"));
+	const needsAcceptNormalization = !(
+		accept?.includes("application/json") &&
+		accept?.includes("text/event-stream")
+	);
 
 	if (needsAcceptNormalization) {
 		const headers = new Headers(options.request.headers);
@@ -133,10 +137,11 @@ export async function handleMcpHttpRequest(
 	// Each request owns its transport. MCP sessions are optional, and this helper
 	// deliberately does not advertise a reusable session that serverless routing
 	// cannot guarantee will reach the same process.
-	// These tools return one result and do not emit progress notifications.
-	// Prefer the SDK's JSON mode instead of buffering and rewriting SSE frames.
+	// When the caller explicitly accepts SSE (standard MCP clients), use the default
+	// streamable SSE mode. When the caller only accepts JSON (e.g. OpenAI ChatGPT discovery
+	// probes), use the SDK's JSON response mode.
 	const transport = new WebStandardStreamableHTTPServerTransport({
-		enableJsonResponse: true,
+		enableJsonResponse,
 	});
 
 	const server = options.createServer();

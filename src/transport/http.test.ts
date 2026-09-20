@@ -67,13 +67,16 @@ describe("mcp/transport stateless HTTP", () => {
 
 			expect(response.status).toBe(200);
 			expect(response.headers.get("mcp-session-id")).toBeNull();
+			expect(response.headers.get("content-type")).toContain(
+				"text/event-stream",
+			);
 			expect(await response.text()).toContain(
 				`"protocolVersion":"${protocolVersion}"`,
 			);
 		},
 	);
 
-	test("tools/list uses the SDK's JSON response mode", async () => {
+	test("tools/list responds with text/event-stream when client accepts event stream", async () => {
 		const body = { id: 2, jsonrpc: "2.0", method: "tools/list" };
 		const response = await handleMcpHttpRequest({
 			createServer: createTestServer,
@@ -82,10 +85,8 @@ describe("mcp/transport stateless HTTP", () => {
 		});
 
 		expect(response.status).toBe(200);
-		expect(response.headers.get("content-type")).toContain("application/json");
-		await expect(response.json()).resolves.toMatchObject({
-			result: { tools: [expect.objectContaining({ name: "ping" })] },
-		});
+		expect(response.headers.get("content-type")).toContain("text/event-stream");
+		expect(await response.text()).toContain('"name":"ping"');
 	});
 
 	test("JSON-only probes (e.g. OpenAI ChatGPT) succeed in JSON response mode", async () => {
@@ -98,6 +99,27 @@ describe("mcp/transport stateless HTTP", () => {
 
 		// Verifies the custom interop shim allows standard JSON clients (like OpenAI ChatGPT)
 		// to connect without being rejected by Anthropic's SDK with HTTP 406.
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toContain("application/json");
+		await expect(response.json()).resolves.toMatchObject({
+			result: { tools: [expect.objectContaining({ name: "ping" })] },
+		});
+	});
+
+	test("wildcard or omitted Accept header defaults to JSON response mode", async () => {
+		const body = { id: 4, jsonrpc: "2.0", method: "tools/list" };
+		const response = await handleMcpHttpRequest({
+			createServer: createTestServer,
+			parsedBody: body,
+			request: new Request("http://example.com/mcp", {
+				body: JSON.stringify(body),
+				headers: {
+					"content-type": "application/json",
+				},
+				method: "POST",
+			}),
+		});
+
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toContain("application/json");
 		await expect(response.json()).resolves.toMatchObject({
