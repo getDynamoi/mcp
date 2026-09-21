@@ -21,15 +21,25 @@ describe("protected resource metadata", () => {
 		).toEqual([...DYNAMOI_BETTER_AUTH_MCP_SCOPES]);
 	});
 
-	test("includes OAuth error details in WWW-Authenticate challenges", () => {
+	test("omits error information for the initial OAuth challenge", () => {
 		expect(
 			buildWwwAuthenticateHeader({
 				resourceMetadataUrl:
 					"https://dynamoi.com/.well-known/oauth-protected-resource",
 			}),
 		).toBe(
-			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="dynamoi:read", error="invalid_token", error_description="Sign in to Dynamoi to continue."',
+			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource", scope="dynamoi:read"',
 		);
+
+	});
+
+	test("only includes error information when a caller identifies a token failure", () => {
+		expect(
+			buildWwwAuthenticateHeader({
+				error: "invalid_token",
+				resourceMetadataUrl: "https://dynamoi.com/.well-known/oauth-protected-resource/mcp",
+			}),
+		).toContain('error="invalid_token"');
 
 		expect(
 			buildWwwAuthenticateHeader({
@@ -46,6 +56,7 @@ describe("protected resource metadata", () => {
 	test("rejects header control characters", () => {
 		expect(() =>
 			buildWwwAuthenticateHeader({
+				error: "invalid_token",
 				errorDescription: "Sign in\r\nX-Injected: true",
 				resourceMetadataUrl:
 					"https://dynamoi.com/.well-known/oauth-protected-resource",

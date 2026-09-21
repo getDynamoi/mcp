@@ -92,19 +92,23 @@ export function buildWwwAuthenticateHeader(options: {
 	scope?: string;
 }): string {
 	const scope = options.scope ?? "dynamoi:read";
-	const error = options.error ?? "invalid_token";
-	const errorDescription =
-		options.errorDescription ??
-		(error === "insufficient_scope"
-			? "Additional Dynamoi permissions are required."
-			: "Sign in to Dynamoi to continue.");
 	const params = [
 		`resource_metadata="${escapeHeaderValue(options.resourceMetadataUrl)}"`,
 		`scope="${escapeHeaderValue(scope)}"`,
-		`error="${escapeHeaderValue(error)}"`,
-		`error_description="${escapeHeaderValue(errorDescription)}"`,
 	];
-	// RFC 6750 style with resource metadata extension.
+	// RFC 6750 section 3.1: an initial challenge is not a rejected token.
+	// Callers must explicitly identify invalid tokens or insufficient scopes.
+	if (options.error) {
+		const errorDescription =
+			options.errorDescription ??
+			(options.error === "insufficient_scope"
+				? "Additional Dynamoi permissions are required."
+				: "Sign in to Dynamoi to continue.");
+		params.push(
+			`error="${escapeHeaderValue(options.error)}"`,
+			`error_description="${escapeHeaderValue(errorDescription)}"`,
+		);
+	}
 	return `Bearer ${params.join(", ")}`;
 }
 
