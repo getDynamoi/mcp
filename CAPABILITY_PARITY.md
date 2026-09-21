@@ -1,60 +1,48 @@
-# Dynamoi MCP Capability Parity
+# Dynamoi MCP capability parity
 
-This map keeps the public MCP promise aligned with customer-facing Dynamoi app
-behavior. Parity means an agent can complete an appropriate customer workflow
-or make a truthful handoff. It does not mean exposing operator, legal, provider,
-admin, or payment controls as agent tools.
+## Release truth
 
-## Public tool audit
+The September 21, 2026 source snapshot does **not** implement 100% dashboard,
+iOS, Android and MCP workflow parity. Universal client registration and full
+catalog access are authorization capabilities, not evidence of workflow parity.
+The canonical catalog owner is `getDynamoiToolDefinitions` in
+`src/server/create-server.ts`; do not maintain a second availability registry here.
 
-| Tool | App capability | MCP behavior | ChatGPT app |
-| --- | --- | --- | --- |
-| `dynamoi_get_account_overview` | Account and roster orientation | Returns accessible organizations, artists, connection state, and next actions | Available |
-| `dynamoi_list_artists` | Artist roster | Lists accessible artists or reads one artist's profile | Available |
-| `dynamoi_search` | Product search | Searches artists, campaigns, and Smart Links | Available |
-| `search` | OpenAI app search | Returns compact searchable Dynamoi records | Available |
-| `fetch` | OpenAI app record fetch | Fetches one search result by stable identifier | Available |
-| `dynamoi_list_campaigns` | Campaign management | Lists an artist's Smart Campaigns and YouTube campaigns | Available |
-| `dynamoi_get_campaign` | Campaign detail and reporting | Reads budget, targeting, status, deployment state, and optional analytics | Available |
-| `dynamoi_get_artist_analytics` | Promotion analytics | Returns artist-level campaign rollups and daily performance | Available |
-| `dynamoi_get_billing` | Managed-advertising billing state | Reads subscription, credits, and launch blockers without collecting payment | Full MCP only |
-| `dynamoi_get_platform_status` | Spotify, Meta, and YouTube connections | Reads platform connection and onboarding state | Available |
-| `dynamoi_list_available_countries` | Campaign targeting catalogs | Lists supported targeting countries by campaign type | Full MCP only |
-| `dynamoi_get_campaign_readiness` | Campaign creation validation | Checks launch inputs and blockers without creating a campaign | Full MCP only |
-| `dynamoi_start_youtube_channel_link` | YouTube connection | Starts either advertising OAuth or least-privilege distribution identity OAuth | Full MCP only |
-| `dynamoi_start_meta_connection` | Facebook/Instagram connection | Starts either advertising OAuth or least-privilege distribution identity OAuth | Full MCP only |
-| `dynamoi_update_campaign` | Campaign management | Pauses, resumes, or updates an eligible campaign after explicit intent | Full MCP only |
-| `dynamoi_list_media_assets` | Campaign creative library | Lists reusable launch media | Full MCP only |
-| `dynamoi_launch_campaign` | Smart Campaign and YouTube campaign creation | Creates an eligible managed campaign after readiness and intent checks | Full MCP only |
-| `dynamoi_create_smart_link_from_spotify` | Smart Link creation | Creates or returns a Smart Link for one Spotify track or album | Available |
-| `dynamoi_create_smart_links_from_spotify_artist` | Artist hub and catalog import | Creates an artist hub and starts catalog Smart Link import | Available |
-| `dynamoi_list_smart_links` | Smart Link library | Lists an artist's Smart Links | Available |
-| `dynamoi_get_smart_link` | Smart Link detail, settings, and analytics | Reads a link with optional analytics and artist settings | Available |
-| `dynamoi_update_smart_link` | Smart Link editing | Updates link content, theme, pixels, or publish state within validated fields | Available |
-| `dynamoi_preview_smart_link_themes` | Smart Link theme picker | Renders the four themes without changing a Smart Link | Available |
-| `dynamoi_get_distribution_application` | Distribution application page | Reads the exact five requirements, evidence, eligibility, and application status | Available |
-| `dynamoi_apply_for_distribution` | Distribution application submission | Rechecks server truth and submits an idempotent application for manual review | Available |
+The snapshot has 27 registered tools and 17 in the restricted profile. A verified
+client with user-granted `dynamoi:mcp.full` receives the full catalog irrespective
+of vendor or client-ID format. Each call still requires its domain scopes and
+resource RBAC. Anonymous discovery remains restricted and cannot execute tools.
 
-## Customer capability boundaries
+## Implemented boundaries and gaps
 
-| App capability family | Parity decision | Reason |
+| Family | Existing agent surface | Not equivalent or still missing |
 | --- | --- | --- |
-| Artist/account onboarding | Partial MCP plus handoff | Spotify-based artist and Smart Link onboarding is agent-callable; organization administration and team invites remain in the app. |
-| Smart Links | MCP appropriate | Creation, discovery, editing, settings, publication, themes, and analytics have bounded customer-safe contracts. |
-| Smart Campaigns and YouTube campaigns | Full MCP appropriate; ChatGPT read-only | Full MCP clients can validate, launch, and update campaigns. ChatGPT keeps paid launch and live campaign mutations in the dashboard review profile. |
-| Analytics and reporting | MCP appropriate | Artist, campaign, and Smart Link analytics are customer reads scoped by artist access. |
-| Billing and checkout | Read plus dashboard handoff | Agents can inspect billing state, but checkout and payment collection remain in the dashboard. |
-| Platform connections | Full MCP appropriate | Advertising connections are billing-gated; distribution identity connections use separate least-privilege permissions without billing. |
-| Distribution application | MCP appropriate | Eligibility and application submission now use the same server truth and access checks as the app. |
-| Distribution agreement | Dashboard handoff | Agreement acceptance is a separate legal act and is not implied by application submission. |
-| Distribution release intake and status | Future customer-safe MCP work | Release rights, splits, proofs, tax readiness, and delivery gates need a dedicated contract before agent mutation is safe. |
-| Distribution catalog, royalties, and earnings | Future read-only MCP work | Customer-safe reads are useful, but the current public MCP does not claim them. |
-| Takedowns | Dashboard and operator workflow | Takedowns carry rights and provider consequences and need a separately reviewed mutation contract. |
-| Team and organization management | Dashboard handoff | Membership and role changes are security-sensitive administration, not promotion execution. |
-| Shop purchases | Public shop/API handoff | The authenticated MCP does not expose direct checkout or agent payment tools. |
-| Publishing administration | Out of current MCP scope | Dynamoi MCP must not imply a publishing-administration workflow that the customer app does not provide. |
+| Account/artist orientation | Account overview, roster and single-artist reads | Organization invites/roles, full artist settings and account deletion |
+| Smart Links | Spotify ingestion, list/detail, description, artist theme/pixels, per-link analytics and theme previews | Full studio/availability controls, every field, aggregate analytics and promotion request workflow |
+| Campaigns | List/detail, provider analytics, readiness, existing-asset launch, pause/resume and eligible single-provider budgets | Draft state machines, source uploads, creative generation/selection/approval, screening, existing targeting edits and multi-provider budgets |
+| Analytics | Campaign-provider rollups and per-link analytics | Feature.fm audience, Soundcharts playlists, growth audit and artist-wide Smart Link aggregation |
+| Connections | Meta and YouTube browser OAuth handoffs and status reads | Headless provider login, owner selection or bypass of ownership verification |
+| Distribution | Five scored requirements, application state and explicit adult-attested application submission for manual review | Agreement execution, release intake/catalog, rights/splits, royalties, tax, payout and takedown workflows |
+| Billing and Shop | Managed billing observations; full-profile Shop quote and unpaid Stripe checkout creation | Managed subscription changes, invoice/funding workflows or agent payment settlement. Shop checkout is not a campaign launch or paid order. |
 
-The next meaningful parity expansion is distribution release intake and read-only
-distribution catalog/royalty status. It should ship only after the agreement,
-rights, splits, tax, payout, and provider-delivery boundaries have stable
-customer-safe domain contracts.
+A real campaign launch or budget edit first returns a signed, five-minute
+`confirmation_required` proposal with exact customer budget, USD currency and
+targeting. No financial mutation occurs at that stage. The host must obtain human
+approval and repeat unchanged inputs with the receipt. The receipt is not proof
+of a human click, not a payment/funding grant and not a durable idempotency store.
+Existing owners retain RBAC, spending authority and idempotency checks. Demo
+responses remain simulations with no provider, billing or campaign effects.
+
+The native parity manifest is itself incomplete: planned/partial entries must
+not be presented as completed mobile behavior. StoreKit, Play Billing, APNs and
+native session mechanics are client-specific implementations; removing them from
+an agent operation count does not make the underlying commerce journey complete.
+
+## Protocol boundary
+
+CIMD uses the `mcp-2026-07-28` metadata profile. That does not certify the server's
+entire 2026-07-28 wire protocol: the existing SDK/transport still uses initialize
+and the earlier request lifecycle. JSON and SSE POST negotiation, authentication
+challenges and discovery must be tested against the deployed edge and origin.
+Authenticated GET currently returns 405; it is not a standalone SSE subscription
+channel. Do not advertise universal host compatibility without host journey tests.

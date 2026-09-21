@@ -74,6 +74,12 @@ export async function verifyAccessToken(
 
 	const { payload } = await jwtVerify(options.token, jwks, verifyOptions);
 
+	// This transport does not validate DPoP/mTLS proofs. A proof-bound token
+	// must never be accepted as an ordinary bearer token.
+	if (payload["cnf"] !== undefined) {
+		throw new Error("Sender-constrained tokens require an unsupported proof transport");
+	}
+
 	const sub = typeof payload.sub === "string" ? payload.sub : null;
 	if (!sub) {
 		throw new Error("JWT missing sub");
@@ -94,7 +100,9 @@ export async function verifyAccessToken(
 		exp,
 		grantId: typeof payload["gid"] === "string" ? payload["gid"] : null,
 		iss,
-		jti: typeof payload.jti === "string" ? payload.jti : null,
+		jti: typeof payload["https://dynamoi.com/claims/token-id"] === "string"
+			? payload["https://dynamoi.com/claims/token-id"] as string
+			: typeof payload.jti === "string" ? payload.jti : null,
 		scopes: extractScopes(payload as Record<string, unknown>),
 		sessionId: typeof payload.sid === "string" ? payload.sid : null,
 		sub,

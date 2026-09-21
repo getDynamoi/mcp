@@ -340,8 +340,29 @@ export const ListMediaAssetsOutputEnvelopeSchema = createOutputEnvelopeSchema(
 	]),
 );
 
+const McpMutationConfirmationOutputSchema = z.object({
+	kind: z.literal("confirmation_required"),
+	confirmationToken: z.string().min(1).max(2048),
+	expiresAt: z.string().datetime(),
+	requiresHumanConfirmation: z.literal(true),
+	summary: z.string(),
+	proposal: z.object({
+		action: z.enum(["launch_campaign", "update_budget"]),
+		subjectId: z.string(),
+		contentTitle: z.string(),
+		budget: z.object({amountCents: z.number().int().positive(), currency: z.literal("USD"), type: z.enum(["DAILY", "TOTAL"])}).strict(),
+		endDate: z.string().nullable(),
+		targeting: z.discriminatedUnion("mode", [
+			z.object({mode: z.literal("GLOBAL")}).strict(),
+			z.object({mode: z.literal("COUNTRIES"), countries: z.array(z.object({code: z.string(), name: z.string()}).strict()).min(1)}).strict(),
+		]),
+		platforms: z.array(z.string()),
+		automaticDailyFundingAuthorized: z.boolean(),
+	}).strict(),
+}).strict();
+
 export const LaunchCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
-	LaunchCampaignDataOutputSchema,
+	z.union([LaunchCampaignDataOutputSchema, McpMutationConfirmationOutputSchema]),
 );
 
 export const ListAvailableCountriesOutputEnvelopeSchema =

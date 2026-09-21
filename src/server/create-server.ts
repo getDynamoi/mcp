@@ -34,6 +34,7 @@ import type {
 	GetSmartLinkData,
 	GetSmartLinkSummaryData,
 	LaunchCampaignData,
+	McpMutationConfirmationData,
 	ListArtistsData,
 	ListArtistsSummaryData,
 	ListAvailableCountriesData,
@@ -385,13 +386,13 @@ export type Phase3Adapter = {
 	resumeCampaign(
 		input: unknown,
 	): Promise<ResultEnvelope<PauseResumeCampaignData>>;
-	updateBudget(input: unknown): Promise<ResultEnvelope<UpdateBudgetData>>;
-	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData>>;
+	updateBudget(input: unknown): Promise<ResultEnvelope<UpdateBudgetData | McpMutationConfirmationData>>;
+	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData | McpMutationConfirmationData>>;
 
 	listMediaAssets(
 		input: unknown,
 	): Promise<ResultEnvelope<ListMediaAssetsData | ListMediaAssetsSummaryData>>;
-	launchCampaign(input: unknown): Promise<ResultEnvelope<LaunchCampaignData>>;
+	launchCampaign(input: unknown): Promise<ResultEnvelope<LaunchCampaignData | McpMutationConfirmationData>>;
 	createSmartLinkFromSpotify(
 		input: unknown,
 	): Promise<ResultEnvelope<CreateSmartLinkFromSpotifyData>>;

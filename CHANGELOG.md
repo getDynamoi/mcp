@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 — 2026-09-21 (candidate)
+
+- Authorize full MCP catalogs from verified user scopes, not client UUID allowlists.
+- Keep token-registry identity separate from Better Auth 1.7's provider-owned jti.
+- Require expiring, actor/client/input-bound previews before real launches or budget mutations.
+- Preserve per-tool scopes, RBAC, reviewer restrictions and existing funding authority.
+- This release does not assert MCP 2026-07-28 wire-protocol or complete platform parity.
+
+
 All notable changes to `@dynamoi/mcp` will be documented in this file.
 
 This project follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)

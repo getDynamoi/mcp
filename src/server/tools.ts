@@ -234,6 +234,9 @@ export const DynamoiResumeCampaignInputSchema = z
 
 export const DynamoiUpdateBudgetInputSchema = z
 	.object({
+		confirmationToken: z.string().min(1).max(2048).optional().describe(
+			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
+		),
 		acceptedConsentCopyHash: z
 			.literal(prospectiveFundingConsentCopyHash)
 			.optional(),
@@ -275,6 +278,9 @@ export const DynamoiUpdateBudgetInputSchema = z
 
 export const DynamoiUpdateCampaignInputSchema = z
 	.object({
+		confirmationToken: z.string().min(1).max(2048).optional().describe(
+			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
+		),
 		action: z.enum(["pause", "resume", "update_budget"]),
 		acceptedConsentCopyHash: z
 			.literal(prospectiveFundingConsentCopyHash)
@@ -354,6 +360,9 @@ export const DynamoiListMediaAssetsInputSchema = z
 
 export const DynamoiLaunchCampaignInputSchema = z
 	.object({
+		confirmationToken: z.string().min(1).max(2048).optional().describe(
+			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
+		),
 		// Creative
 		adCopy: z.string().trim().max(500).optional(),
 		appleMusicUrl: z.string().trim().min(1).max(500).optional(),
@@ -590,7 +599,7 @@ export const PHASE_ONBOARDING_TOOL_DEFINITIONS =
 export const PHASE_2_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.",
+			"Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Budget changes return a confirmation_required receipt first; obtain human approval before repeating with confirmationToken. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.",
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_campaign",

@@ -140,9 +140,9 @@ export type UpdateBudgetData = {
 	previousBudget: MoneyDisplay;
 	newBudget: MoneyDisplay;
 	budgetType: "DAILY" | "TOTAL";
-	endDate?: string;
-	warnings?: string[];
-	actionRequired?: string[];
+	endDate?: string | undefined;
+	warnings?: string[] | undefined;
+	actionRequired?: string[] | undefined;
 };
 
 export type UpdateCampaignData = PauseResumeCampaignData | UpdateBudgetData;
@@ -183,4 +183,24 @@ export type LaunchCampaignData = {
 	isLive: boolean;
 	nextSteps: string[];
 	warnings?: string[];
+};
+
+export type McpMutationProposal = {
+	action: "launch_campaign" | "update_budget";
+	subjectId: string;
+	contentTitle: string;
+	budget: { amountCents: number; currency: "USD"; type: "DAILY" | "TOTAL" };
+	endDate: string | null;
+	targeting: { mode: "GLOBAL" } | { mode: "COUNTRIES"; countries: Array<{ code: string; name: string }> };
+	platforms: string[];
+	automaticDailyFundingAuthorized: boolean;
+};
+
+export type McpMutationConfirmationData = {
+	kind: "confirmation_required";
+	confirmationToken: string;
+	expiresAt: string;
+	proposal: McpMutationProposal;
+	summary: string;
+	requiresHumanConfirmation: true;
 };

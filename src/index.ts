@@ -125,6 +125,8 @@ export type {
 	GetSmartLinkData,
 	GetSmartLinkSummaryData,
 	LaunchCampaignData,
+	McpMutationProposal,
+	McpMutationConfirmationData,
 	ListArtistsData,
 	ListArtistsSummaryData,
 	ListAvailableCountriesData,
