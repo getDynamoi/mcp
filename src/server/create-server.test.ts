@@ -376,11 +376,19 @@ describe("createDynamoiMcpServer", () => {
 		expect(directory.data.markdown).not.toContain("Shop");
 		expect(directory.data.markdown).not.toContain("$10/day");
 		expect(directory.data.markdown).not.toContain("Net Receipts");
+		for (const text of [directory.data.markdown, directory.data.summary]) {
+			expect(text).not.toMatch(/\$\d/);
+			expect(text).not.toMatch(/Starter|\/month|launch campaign credit/i);
+			expect(text).not.toMatch(/pricing|Shop|checkout|subscription/i);
+		}
 		expect(directory.data.links.pricing).toBeUndefined();
 		expect(directory.data.links.signIn).toBe("https://dynamoi.com");
 		const full = getDynamoiAbout({ toolProfile: "full" });
 		expect(full.data.markdown).toContain("pricing");
 		expect(full.data.markdown).toContain("Shop");
+		expect(full.data.markdown).toContain(
+			"Starter is $25/month with a $50 launch campaign credit, and campaign budgets start at $10/day.",
+		);
 		expect(full.data.links.pricing).toBe("https://dynamoi.com/pricing");
 		// Missing profile fails closed to the directory variant.
 		expect(getDynamoiAbout().data.markdown).toBe(
@@ -393,10 +401,30 @@ describe("createDynamoiMcpServer", () => {
 			DYNAMOI_ABOUT_MARKDOWN,
 			DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
 		]) {
-			expect(markdown).toContain(
-				"operated by humans, assisted by AI",
-			);
+			expect(markdown).toContain("operated by humans, assisted by AI");
 			expect(markdown).not.toMatch(/operated by AI|run by AI|AI-operated/i);
+		}
+	});
+
+	test("About copy carries the canonical /about company facts in both variants", () => {
+		for (const toolProfile of ["full", "directory"] as const) {
+			const { data } = getDynamoiAbout({ toolProfile });
+			for (const fact of [
+				"music marketing platform founded in 2021 by Trevor Loucks",
+				"Sioux Falls, South Dakota",
+				"People make the decisions and are accountable for every campaign and support reply; AI assists with ad creative, campaign monitoring, reporting, and routine tasks.",
+				"support@dynamoi.com",
+				"replies within 24 hours",
+				"(distribution, campaigns, and royalties)",
+			]) {
+				expect(data.markdown).toContain(fact);
+			}
+			expect(data.summary).toContain("founded in 2021 by Trevor Loucks");
+			expect(data.summary).toContain("support@dynamoi.com");
+			expect(data.links.support).toBe("mailto:support@dynamoi.com");
+			expect(`${data.markdown}\n${data.summary}`).not.toMatch(
+				/\bmargins?\b|media[-\s]spend|pass[-\s]?through|mark[-\s]?ups?/i,
+			);
 		}
 	});
 

@@ -19,17 +19,6 @@ const serverJson = {
 		"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
 	description: "Dynamoi MCP",
 	name: "io.github.getDynamoi/dynamoi",
-	packages: [
-		{
-			identifier: "@dynamoi/mcp",
-			registryType: "npm",
-			transport: {
-				type: "streamable-http",
-				url: "https://dynamoi.com/mcp",
-			},
-			version: "0.7.1",
-		},
-	],
 	remotes: [{ type: "streamable-http", url: "https://dynamoi.com/mcp" }],
 	repository: {
 		source: "github",
@@ -55,6 +44,63 @@ describe("MCP Registry release contract", () => {
 		validateRegistryResponse(expected, {
 			servers: [{ server: serverJson }],
 		});
+	});
+
+	test("rejects a server.json that lists packages instead of remote-only", () => {
+		expect(() =>
+			validateLocalContract(packageJson, {
+				...serverJson,
+				packages: [
+					{
+						identifier: "@dynamoi/mcp",
+						registryType: "npm",
+						transport: {
+							type: "streamable-http",
+							url: "https://dynamoi.com/mcp",
+						},
+						version: "0.7.1",
+					},
+				],
+			}),
+		).toThrow("server.json must be remote-only; remove the packages array.");
+	});
+
+	test("rejects a registry entry that still lists packages", () => {
+		expect(() =>
+			validateRegistryResponse(contract(), {
+				servers: [
+					{
+						server: {
+							...serverJson,
+							packages: [{ identifier: "@dynamoi/mcp", registryType: "npm" }],
+						},
+					},
+				],
+			}),
+		).toThrow("MCP Registry entry must be remote-only (no packages).");
+		expect(() =>
+			validateRegistryResponse(contract(), {
+				servers: [{ server: { ...serverJson, packages: [] } }],
+			}),
+		).not.toThrow();
+	});
+
+	test("rejects a registry name other than io.github.getDynamoi/dynamoi", () => {
+		expect(() =>
+			validateLocalContract(
+				{ ...packageJson, mcpName: "io.github.someone/dynamoi" },
+				{ ...serverJson, name: "io.github.someone/dynamoi" },
+			),
+		).toThrow("package.json.mcpName must remain io.github.getDynamoi/dynamoi");
+	});
+
+	test("rejects a remote URL other than the hosted endpoint", () => {
+		expect(() =>
+			validateLocalContract(packageJson, {
+				...serverJson,
+				remotes: [{ type: "streamable-http", url: "https://example.com/mcp" }],
+			}),
+		).toThrow("server remotes does not match server.json");
 	});
 
 	test("rejects a package version that is not synchronized to server.json", () => {

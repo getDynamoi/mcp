@@ -23,12 +23,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js (npm auth)
+      # npm Trusted Publishing (OIDC) needs Node >= 22.14.0 and npm >= 11.5.1:
+      # https://docs.npmjs.com/trusted-publishers
+      - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
           scope: "@dynamoi"
+
+      - name: Install npm with Trusted Publishing support
+        run: |
+          npm install --global npm@11.19.1
+          npm --version
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -47,17 +54,12 @@ jobs:
       - name: Validate MCP Registry metadata
         run: bun run registry:validate
 
-      - name: Verify npm auth
-        run: npm whoami
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Publish (Changesets)
-        # `changeset publish` is a no-op unless package.json has a version
-        # higher than what's already on npm.
+        # `changeset publish` runs `npm publish` only for a package.json version
+        # that is not on npm yet. npm authenticates with this job's GitHub OIDC
+        # token (Trusted Publishing, no stored npm token) and attaches
+        # provenance automatically.
         run: bun run changeset:publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for npm readback
         run: bun run registry:wait:npm

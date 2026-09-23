@@ -2,19 +2,21 @@
 
 ## Release truth
 
-The September 21, 2026 source snapshot does **not** implement 100% dashboard,
+The 1.0.0 source (September 23, 2026) does **not** implement 100% dashboard,
 iOS, Android and MCP workflow parity. Universal client registration and full
 catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The snapshot has 28 registered tools and 18 in the directory profile — the
-review-safe catalog served to recognized agent-directory clients; every other
-authenticated client with user-granted `dynamoi:mcp.full` receives the full
-catalog irrespective of vendor or client-ID format. Each call still requires
-its domain scopes and resource RBAC. Unauthenticated requests reach only
-discovery methods plus the public `dynamoi_about` tool and `dynamoi://about`
-resource on a directory-profile server that refuses everything else.
+The package registers 28 tools. The directory profile serves 18 of them: the
+review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
+picks the profile from the verified OAuth client ID; `/mcp/directory` always
+serves the directory profile. Every other authenticated client on `/mcp`
+gets the full profile, whatever its vendor or client-ID format. Each call still
+requires its own scopes and resource RBAC; the Shop tools also require
+`dynamoi:mcp.full`. Unauthenticated requests get the directory profile, where
+only discovery methods, the public `dynamoi_about` tool and the
+`dynamoi://about` resource work. Everything else is refused.
 
 ## Implemented boundaries and gaps
 
@@ -45,9 +47,12 @@ an agent operation count does not make the underlying commerce journey complete.
 
 ## Protocol boundary
 
-CIMD uses the `mcp-2026-07-28` metadata profile. That does not certify the server's
-entire 2026-07-28 wire protocol: the existing SDK/transport still uses initialize
-and the earlier request lifecycle. JSON and SSE POST negotiation, authentication
-challenges and discovery must be tested against the deployed edge and origin.
-Authenticated GET currently returns 405; it is not a standalone SSE subscription
-channel. Do not advertise universal host compatibility without host journey tests.
+`handleMcpHttpRequest` uses MCP TypeScript SDK v2. It serves 2026-07-28
+requests (`server/discover`, per-request `_meta`) statelessly, and 2025-era
+`initialize`-based requests (2025-11-25 and earlier) through a stateless
+per-request transport. That transport answers in JSON when the client does not
+accept SSE. Only POST is served: GET and DELETE return 405. There is no
+standalone SSE subscription channel and no session resumption. CIMD uses the
+`mcp-2026-07-28` metadata profile. Authentication challenges, discovery and
+both protocol eras must still be tested against the deployed edge and origin.
+Do not advertise universal host compatibility without host journey tests.

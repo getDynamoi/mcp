@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+const EXPECTED_MCP_NAME = "io.github.getDynamoi/dynamoi";
 const EXPECTED_PACKAGE_NAME = "@dynamoi/mcp";
 const EXPECTED_REMOTE_URL = "https://dynamoi.com/mcp";
 const REGISTRY_API_URL = "https://registry.modelcontextprotocol.io/v0/servers";
@@ -79,6 +80,11 @@ export function validateLocalContract(
 			`package.json.name must remain ${EXPECTED_PACKAGE_NAME}; received ${packageName}.`,
 		);
 	}
+	if (mcpName !== EXPECTED_MCP_NAME) {
+		throw new Error(
+			`package.json.mcpName must remain ${EXPECTED_MCP_NAME}; received ${mcpName}.`,
+		);
+	}
 	assertEqual(server.name, mcpName, "server.json.name");
 	assertEqual(server.version, version, "server.json.version");
 	const descriptionLength = Array.from(description).length;
@@ -88,21 +94,14 @@ export function validateLocalContract(
 		);
 	}
 
-	const packages = server.packages;
-	if (!Array.isArray(packages) || packages.length !== 1) {
+	// Remote-only registry entry: the hosted endpoint is the product, and the
+	// npm package is a library, not an installable server. Registry npm
+	// ownership checks (`mcpName`) apply only to `packages` entries.
+	if (server.packages !== undefined) {
 		throw new Error(
-			"server.json.packages must contain exactly one npm package.",
+			"server.json must be remote-only; remove the packages array.",
 		);
 	}
-	const registryPackage = asObject(packages[0], "server.json.packages[0]");
-	assertEqual(registryPackage.registryType, "npm", "package registry type");
-	assertEqual(registryPackage.identifier, packageName, "package identifier");
-	assertEqual(registryPackage.version, version, "package version");
-	assertEqual(
-		registryPackage.transport,
-		{ type: "streamable-http", url: EXPECTED_REMOTE_URL },
-		"package transport",
-	);
 	assertEqual(
 		server.remotes,
 		[{ type: "streamable-http", url: EXPECTED_REMOTE_URL }],
@@ -161,10 +160,16 @@ function validateRegistryServer(
 		"version",
 		"websiteUrl",
 		"repository",
-		"packages",
 		"remotes",
 	] as const) {
 		assertEqual(server[key], contract.server[key], `MCP Registry ${key}`);
+	}
+	const packages = server.packages;
+	if (
+		packages !== undefined &&
+		!(Array.isArray(packages) && packages.length === 0)
+	) {
+		throw new Error("MCP Registry entry must be remote-only (no packages).");
 	}
 }
 

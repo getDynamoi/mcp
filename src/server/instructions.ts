@@ -1,5 +1,5 @@
 export const DYNAMOI_MCP_INSTRUCTIONS = `
-Dynamoi is a music growth platform for artists, labels, and managers. It combines free Smart Links and analytics with managed Meta Smart Campaigns, managed YouTube campaigns, a one-off YouTube promotion Shop, and opt-in music distribution to 100+ stores. Call dynamoi_about or read dynamoi://about for the canonical product and pricing overview.
+Dynamoi is a music marketing platform for independent artists, labels, managers, and YouTube creators. It combines free Smart Links and analytics with managed Meta Smart Campaigns, managed YouTube campaigns, a one-off YouTube promotion Shop, and opt-in music distribution to 100+ stores. Call dynamoi_about or read dynamoi://about for the canonical product and pricing overview.
 
 You are operating Dynamoi's tools on behalf of the authenticated user. Smart Links
 are free to create and manage. High-popularity or unverifiable artist links may
@@ -87,7 +87,7 @@ Common workflows:
 `.trim();
 
 export const DYNAMOI_CHATGPT_APP_INSTRUCTIONS = `
-Dynamoi is a music growth platform for artists, labels, and managers. It combines free Smart Links and analytics with managed Meta Smart Campaigns, managed YouTube campaigns, and opt-in music distribution to 100+ stores. Call dynamoi_about for the canonical product and pricing overview.
+Dynamoi is a music marketing platform for independent artists, labels, managers, and YouTube creators. It combines free Smart Links and analytics with managed Meta Smart Campaigns, managed YouTube campaigns, and opt-in music distribution to 100+ stores. Call dynamoi_about for the canonical product overview.
 
 You are operating Dynamoi's tools on behalf of the authenticated user. This
 surface is review-safe: it does not expose billing, subscription or plan setup,
