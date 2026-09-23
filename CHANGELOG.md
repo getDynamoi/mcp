@@ -7,6 +7,13 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-23
+
+### Changed
+
+- **Descriptions.** npm, the MCP Registry and the public server card now use one description from the new `messaging` module: "Music marketing for AI agents: free Smart Links, promotion campaigns, analytics, and distribution."
+- **README.** It is retitled "Dynamoi MCP Server" and adds install buttons for Cursor and VS Code. It also adds setup for Gemini CLI, Codex CLI and the Claude plugin, plus the ChatGPT directory link.
+
 ## [1.0.0] - 2026-09-23
 
 First stable release. The hosted server at `https://dynamoi.com/mcp` moves to

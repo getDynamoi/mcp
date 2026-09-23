@@ -1,12 +1,19 @@
-# Dynamoi MCP
+# Dynamoi MCP Server
+
+**Music marketing for AI agents.**
 
 [![npm version](https://img.shields.io/npm/v/@dynamoi/mcp?label=npm)](https://www.npmjs.com/package/@dynamoi/mcp)
 [![license](https://img.shields.io/npm/l/@dynamoi/mcp)](./LICENSE)
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-io.github.getDynamoi%2Fdynamoi-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.getDynamoi/dynamoi)
+[![Add to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=dynamoi&config=eyJ1cmwiOiJodHRwczovL2R5bmFtb2kuY29tL21jcCJ9)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=dynamoi&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fdynamoi.com%2Fmcp%22%7D)
 
-Connect an AI agent to [Dynamoi](https://dynamoi.com) to create free Smart
-Links, check campaign and platform status, read analytics, run managed ad
-campaigns and apply for music distribution. You can use the hosted MCP server,
-or use this package as a library.
+The Dynamoi MCP server connects ChatGPT, Claude, Cursor, and other AI agents
+to [Dynamoi](https://dynamoi.com), the music marketing platform for artists,
+labels, and managers. Agents can create free Spotify Smart Links, run managed
+YouTube and Meta promotion campaigns, read campaign and Smart Link analytics,
+check platform status, and apply for music distribution. Use the hosted MCP
+server, or use this package as a library.
 
 ```txt
 https://dynamoi.com/mcp
@@ -19,13 +26,13 @@ Dynamoi account.
 ## About Dynamoi
 
 Dynamoi is a music marketing platform founded in 2021 by Trevor Loucks. It
-runs managed Meta and YouTube ad campaigns, music distribution and royalty
-analytics for independent artists, labels, managers and YouTube creators,
+runs managed Meta and YouTube ad campaigns, music distribution, and royalty
+analytics for independent artists, labels, managers, and YouTube creators,
 alongside free Smart Links and analytics.
 
 - **Free Smart Links:** release pages and artist hubs built from Spotify
-  URLs, with link analytics, themes, validated pixel IDs and team seats.
-- **Managed Smart Campaigns:** Meta ads that promote Spotify tracks, albums
+  URLs, with link analytics, themes, validated pixel IDs, and team seats.
+- **Managed Smart Campaigns:** Meta ads that promote Spotify tracks, albums,
   and playlists.
 - **YouTube campaigns:** managed Google Ads campaigns for YouTube channel
   growth.
@@ -35,20 +42,36 @@ alongside free Smart Links and analytics.
   subscription.
 
 Campaigns run on Dynamoi's own managed Meta and Google ad infrastructure. They
-reach real people through official ad networks, never bots, fake streams or
+reach real people through official ad networks, never bots, fake streams, or
 paid playlist placement. Results vary and are never guaranteed.
 
 Dynamoi is based in Sioux Falls, South Dakota, and is operated by humans,
 assisted by AI. People make the decisions and are accountable for every
 campaign and support reply. AI helps with ad creative, campaign monitoring,
-reporting and routine tasks. Smart Links are free. Starter is $25/month with a
-$50 launch campaign credit, and campaign budgets start at $10/day. See
+reporting, and routine tasks.
+
+Smart Links are free. Starter is $25/month with a $50 launch campaign credit,
+and campaign budgets start at $10/day. See
 [pricing](https://dynamoi.com/pricing).
 
 Agents can read the same overview before sign-in through the `dynamoi_about`
 tool or the `dynamoi://about` resource.
 
 ## Connect
+
+Each client opens the Dynamoi sign-in page on first use.
+
+### ChatGPT
+
+Open the [Dynamoi app in the ChatGPT directory](https://chatgpt.com/plugins/plugin_asdk_app_69ceb0e849788191aa3fd4d416204a9d).
+In developer mode you can instead add a custom app with the MCP server URL
+`https://dynamoi.com/mcp` and OAuth authentication. ChatGPT gets the
+[directory catalog](#which-tools-a-client-sees).
+
+### Claude (web and desktop)
+
+Open **Settings → Connectors**, choose **Add custom connector**, and enter
+`https://dynamoi.com/mcp`.
 
 ### Claude Code
 
@@ -58,21 +81,20 @@ claude mcp add --transport http dynamoi https://dynamoi.com/mcp
 
 Then run `/mcp` in Claude Code to sign in.
 
-### Claude (web and desktop)
+The Dynamoi plugin from the
+[agent plugins repository](https://github.com/getDynamoi/agent-plugins)
+bundles Dynamoi skills with the directory catalog on
+`https://dynamoi.com/mcp/directory`:
 
-Open **Settings → Connectors**, choose **Add custom connector**, and enter
-`https://dynamoi.com/mcp`. Claude opens the Dynamoi sign-in page when you
-connect.
-
-### ChatGPT
-
-In developer mode, add a custom app with the MCP server URL
-`https://dynamoi.com/mcp` and OAuth authentication. ChatGPT gets the
-[directory catalog](#which-tools-a-client-sees).
+```txt
+/plugin marketplace add getDynamoi/agent-plugins
+/plugin install dynamoi@dynamoi
+```
 
 ### Cursor
 
-Add Dynamoi to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
+Use the **Add to Cursor** badge above, or add Dynamoi to `~/.cursor/mcp.json`
+(or `.cursor/mcp.json` in a project):
 
 ```json
 {
@@ -86,7 +108,8 @@ Add Dynamoi to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
 
 ### VS Code
 
-Add Dynamoi to `.vscode/mcp.json`:
+Use the **Install in VS Code** badge above, or add Dynamoi to
+`.vscode/mcp.json`:
 
 ```json
 {
@@ -97,6 +120,29 @@ Add Dynamoi to `.vscode/mcp.json`:
     }
   }
 }
+```
+
+### Gemini CLI
+
+Install the Dynamoi extension from the
+[agent plugins repository](https://github.com/getDynamoi/agent-plugins):
+
+```bash
+gemini extensions install https://github.com/getDynamoi/agent-plugins
+```
+
+### Codex CLI
+
+```bash
+codex mcp add dynamoi --url https://dynamoi.com/mcp
+codex mcp login dynamoi
+```
+
+Or add the server to `~/.codex/config.toml` and run `codex mcp login dynamoi`:
+
+```toml
+[mcp_servers.dynamoi]
+url = "https://dynamoi.com/mcp"
 ```
 
 ### Other MCP clients
@@ -112,11 +158,11 @@ signed in, not from anything the client claims about itself.
 
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
-| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 18 review-safe tools: reads, Smart Links, distribution and About. No billing, campaign launch or campaign changes, platform connection starters or Shop checkout. |
-| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code and custom agents | All 28 tools, plus the Dynamoi prompts and reference resources |
+| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 18 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
+| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 28 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
-OAuth scopes, and the user's role must allow access to the artist, campaign
+OAuth scopes, and the user's role must allow access to the artist, campaign,
 or Smart Link.
 
 ## Tools
@@ -129,12 +175,12 @@ start an action with an outside provider.
 | `dynamoi_about` | What Dynamoi is and how to start. Works before sign-in. | Reads | Both |
 | `dynamoi_get_account_overview` | Signed-in account, access counts and suggested next steps | Reads | Both |
 | `dynamoi_list_artists` | Artist roster, or one artist's profile and readiness | Reads | Both |
-| `dynamoi_search` | Find artists, campaigns and Smart Links by name | Reads | Both |
+| `dynamoi_search` | Find artists, campaigns, and Smart Links by name | Reads | Both |
 | `search` / `fetch` | ChatGPT deep research search and fetch | Reads | Both |
 | `dynamoi_list_campaigns` | An artist's campaigns, with type and status filters | Reads | Both |
-| `dynamoi_get_campaign` | One campaign, with optional analytics, delivery status and countries | Reads | Both |
+| `dynamoi_get_campaign` | One campaign, with optional analytics, delivery status, and countries | Reads | Both |
 | `dynamoi_get_artist_analytics` | Artist-level analytics across campaigns | Reads | Both |
-| `dynamoi_get_platform_status` | Spotify, Meta and YouTube connection status and setup blockers | Reads | Both |
+| `dynamoi_get_platform_status` | Spotify, Meta, and YouTube connection status and setup blockers | Reads | Both |
 | `dynamoi_get_distribution_application` | The five distribution requirements and application status | Reads | Both |
 | `dynamoi_apply_for_distribution` | Submit a distribution application for manual review | Changes data | Both |
 | `dynamoi_preview_smart_link_themes` | Visual preview of the Smart Link themes | Reads | Both |
@@ -143,7 +189,7 @@ start an action with an outside provider.
 | `dynamoi_list_smart_links` | An artist's Smart Links and public URLs | Reads | Both |
 | `dynamoi_get_smart_link` | One Smart Link, with optional analytics and artist settings | Reads | Both |
 | `dynamoi_update_smart_link` | Update a link description or the artist's theme and pixel settings | Changes data | Both |
-| `dynamoi_get_billing` | Billing status, credit balance and promo limits | Reads | Full |
+| `dynamoi_get_billing` | Billing status, credit balance, and promo limits | Reads | Full |
 | `dynamoi_list_available_countries` | Countries a Smart Campaign or YouTube campaign can target | Reads | Full |
 | `dynamoi_get_campaign_readiness` | Check launch inputs before creating anything | Reads | Full |
 | `dynamoi_list_media_assets` | Uploaded images and videos that a launch can reuse | Reads | Full |
@@ -162,7 +208,7 @@ Full tool descriptions and input schemas come from `tools/list`, or from
 - **Smart Links are free.** Creating or updating them never charges anyone.
 - **Launches and budget changes are real.** `dynamoi_launch_campaign` and
   `dynamoi_update_campaign` go through the same backend checks as the Dynamoi
-  web and mobile apps: permissions, promo limits and repeat-request
+  web and mobile apps: permissions, promo limits, and repeat-request
   protection. Whether a person approves each call is up to the MCP client's
   tool-approval settings, so keep approval on for tools that change data.
 - **Daily budgets need the user's funding consent.** A `DAILY` budget is
@@ -175,7 +221,7 @@ Full tool descriptions and input schemas come from `tools/list`, or from
   consent the request is refused. The consent values are exported from
   `@dynamoi/mcp/consent`.
 - **Total budgets use existing credit** and need no funding consent.
-- **Agents never handle payment credentials.** Subscriptions, plans and
+- **Agents never handle payment credentials.** Subscriptions, plans, and
   billing setup happen only in the [Dynamoi dashboard](https://dynamoi.com/dashboard),
   where subscriptions start through hosted Stripe Checkout. No tool starts a
   subscription.
@@ -183,9 +229,9 @@ Full tool descriptions and input schemas come from `tools/list`, or from
   unpaid Stripe Checkout Session. The user pays on Stripe, and no order exists
   until the payment is verified.
 - **Distribution applications start a manual review.** Submitting one does not
-  approve distribution, accept an agreement or deliver music to stores.
+  approve distribution, accept an agreement, or deliver music to stores.
 - **The directory catalog** exposes no tools that spend money, start a
-  subscription or create a checkout.
+  subscription, or create a checkout.
 
 ## Authentication
 
@@ -208,15 +254,15 @@ scopes is asked once for the rest.
 
 | Scope | Allows |
 | --- | --- |
-| `dynamoi:read` | Reading the account, artists, campaigns, analytics and Smart Links. Every signed-in tool needs it. |
-| `dynamoi:platform.read` | Checking Spotify, Meta and YouTube connection status |
+| `dynamoi:read` | Reading the account, artists, campaigns, analytics, and Smart Links. Every signed-in tool needs it. |
+| `dynamoi:platform.read` | Checking Spotify, Meta, and YouTube connection status |
 | `dynamoi:platform.write` | Starting Meta and YouTube connection flows |
 | `dynamoi:smart_links.write` | Creating and updating free Smart Links |
 | `dynamoi:distribution.read` | Checking distribution requirements and application status |
 | `dynamoi:distribution.apply` | Submitting a distribution application |
-| `dynamoi:billing.read` | Reading billing status, credit balance and promo limits |
+| `dynamoi:billing.read` | Reading billing status, credit balance, and promo limits |
 | `dynamoi:campaign.launch` | Launching new campaigns |
-| `dynamoi:campaign.write` | Pausing, resuming and changing campaign budgets |
+| `dynamoi:campaign.write` | Pausing, resuming, and changing campaign budgets |
 | `dynamoi:mcp.full` | Using the Shop quote and checkout tools |
 
 ## Protocol support
@@ -233,7 +279,7 @@ scopes is asked once for the rest.
 
 Most people should connect to the hosted server. Install the package if you
 are building against the Dynamoi MCP contract: tool definitions, Zod schemas,
-result types, OAuth scope maps or the stateless HTTP handler.
+result types, OAuth scope maps, or the stateless HTTP handler.
 
 ```bash
 npm install @dynamoi/mcp
@@ -277,7 +323,7 @@ export async function handleMcp(
 
 `createDynamoiMcpServer` also accepts `authorizeToolCall` (answer a call
 before it runs, for example with a step-up challenge), `onToolCall` (a
-telemetry hook) and `oauthScopes`.
+telemetry hook), and `oauthScopes`.
 
 Every request builds a new server. `handleMcpHttpRequest` sends 2026-07-28
 requests to the SDK's stateless handler and 2025-era requests to a stateless
@@ -288,6 +334,9 @@ per-request transport.
 | Resource | URL |
 | --- | --- |
 | MCP server docs | <https://dynamoi.com/docs/mcp-server> |
+| ChatGPT app | <https://chatgpt.com/plugins/plugin_asdk_app_69ceb0e849788191aa3fd4d416204a9d> |
+| Agent plugins (Claude Code, Gemini CLI) | <https://github.com/getDynamoi/agent-plugins> |
+| MCP Registry | <https://registry.modelcontextprotocol.io/v0/servers?search=io.github.getDynamoi/dynamoi> |
 | Agent overview (`llms.txt`) | <https://dynamoi.com/llms.txt> |
 | Support | <https://dynamoi.com/support> or support@dynamoi.com (replies within 24 hours) |
 | Pricing | <https://dynamoi.com/pricing> |

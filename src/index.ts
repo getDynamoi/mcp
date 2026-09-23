@@ -27,6 +27,13 @@ export {
 	DynamoiGetDistributionApplicationInputSchema,
 } from "./server/distribution-tools";
 export {
+	DYNAMOI_MCP_REGISTRY_DESCRIPTION_MAX_LENGTH,
+	DYNAMOI_MCP_SERVER_NAME,
+	DYNAMOI_MCP_SHORT_DESCRIPTION,
+	DYNAMOI_MCP_STANDARD_DESCRIPTION,
+	DYNAMOI_MCP_TAGLINE,
+} from "./server/messaging";
+export {
 	DynamoiOpenAiFetchInputSchema,
 	DynamoiOpenAiSearchInputSchema,
 	type OpenAiFetchData,

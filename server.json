@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.getDynamoi/dynamoi",
   "title": "Dynamoi",
-  "description": "Create music promotion campaigns, Smart Links, analytics, and music distribution applications.",
-  "version": "1.0.0",
+  "description": "Music marketing for AI agents: free Smart Links, promotion campaigns, analytics, and distribution.",
+  "version": "1.0.1",
   "websiteUrl": "https://dynamoi.com",
   "repository": {
     "url": "https://github.com/getDynamoi/mcp",

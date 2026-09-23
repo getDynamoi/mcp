@@ -1,12 +1,12 @@
 {
 	"$schema": "https://www.schemastore.org/package",
 	"name": "@dynamoi/mcp",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"packageManager": "bun@1.4.2",
 	"mcpName": "io.github.getDynamoi/dynamoi",
 	"type": "module",
 	"license": "MIT",
-	"description": "Remote MCP server for music promotion agents. Create campaigns and Smart Links, review analytics, and handle music distribution applications for artists and labels.",
+	"description": "Music marketing for AI agents: free Smart Links, promotion campaigns, analytics, and distribution.",
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
