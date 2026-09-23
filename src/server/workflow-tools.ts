@@ -1,4 +1,9 @@
 import {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+} from "../consent";
+import {
 	LaunchCampaignOutputEnvelopeSchema,
 	ListMediaAssetsOutputEnvelopeSchema,
 } from "./output-schemas";
@@ -21,7 +26,7 @@ export const PHASE_3_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user explicitly wants to create a new Smart Campaign or YouTube Campaign and start the launch workflow with provided details. Ads are not necessarily live until the returned delivery state is ACTIVE. For review or demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may omit spotifyUrl and endDate because Dynamoi can infer reviewer-safe defaults. Do not invent placeholder spotifyUrl or endDate values for those review/demo launches; omit them and let Dynamoi infer them. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more. For real campaigns, the first call returns confirmation_required without creating anything. Show its complete budget, currency, targeting and expiry to the user; obtain human approval, then repeat unchanged inputs with confirmationToken. Never approve automatically. Demo simulations have no real spend.",
+			`Use this when the user explicitly wants to create a new Smart Campaign or YouTube Campaign and start the launch workflow with provided details. Ads are not necessarily live until the returned delivery state is ACTIVE. DAILY budgets require authorizeAutomaticDailyFunding=true plus the exact acceptedConsentVersion ("${PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION}") and acceptedConsentCopyHash ("${PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH}"); first show the user this exact consent copy: "${PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY}". TOTAL budgets use existing credit and need no consent. YOUTUBE campaigns require youtubeVideoId and youtubeStrategy, plus youtubePlaylistId unless the strategy is CHEAPEST_VIEWS. After a successful launch, answer from the returned campaign details directly instead of chaining more tools unless the user explicitly asked for more.`,
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_launch_campaign",

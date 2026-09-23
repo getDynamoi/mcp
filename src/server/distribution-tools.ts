@@ -21,7 +21,7 @@ export const DynamoiApplyForDistributionInputSchema = z
 export const DISTRIBUTION_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user asks whether an artist qualifies for Dynamoi music distribution, wants the five application requirements, or wants the status of an existing distribution application. It checks Spotify connection, at least 1,000 Spotify followers, at least 10,000 verified Soundcharts monthly listeners, connected Facebook Page plus Instagram professional identity, and a connected YouTube channel. Meeting all five requirements permits an application but never guarantees approval. When the connection tools are available, use purpose=distribution_identity for missing Meta or YouTube identity; otherwise send the user to the distribution application in Dynamoi. Identity connections do not require advertising billing.",
+			"Use this when the user asks whether an artist qualifies for Dynamoi music distribution, wants the five application requirements, or wants the status of an existing distribution application. It checks Spotify connection, at least 1,000 Spotify followers, at least 10,000 verified Soundcharts monthly listeners, connected Facebook Page plus Instagram professional identity, and a connected YouTube channel. Meeting all five requirements permits an application but never guarantees approval. When the connection tools are available, use purpose=distribution_identity for missing Meta or YouTube identity; otherwise tell the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.' Identity connections do not require advertising billing.",
 		destructiveHint: false,
 		name: "dynamoi_get_distribution_application",
 		openWorldHint: false,
@@ -36,7 +36,7 @@ export const DISTRIBUTION_TOOL_DEFINITIONS = [
 		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_apply_for_distribution",
-		openWorldHint: false,
+		openWorldHint: true,
 		outputSchema: AnyOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiApplyForDistributionInputSchema,

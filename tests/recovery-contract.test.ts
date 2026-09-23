@@ -38,7 +38,7 @@ const recoveryError = {
 
 const profiles = [
 	"full",
-	"chatgpt-app",
+	"directory",
 ] as const satisfies readonly DynamoiMcpToolProfile[];
 
 describe("typed recovery envelope contract", () => {

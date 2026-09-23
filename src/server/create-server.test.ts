@@ -1,14 +1,20 @@
 import { describe, expect, mock, test } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import * as z from "zod/v4";
 import { DYNAMOI_BETTER_AUTH_MCP_SCOPES } from "../auth/protected-resource";
 import { handleMcpHttpRequest } from "../transport/http";
 import { DYNAMOI_MCP_VERSION } from "../version";
 import {
+	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+	DYNAMOI_ABOUT_MARKDOWN,
+	DYNAMOI_ABOUT_TOOL_DEFINITION,
+	getDynamoiAbout,
+} from "./about";
+import {
 	asTextResult,
 	asValidatedTextResult,
 	createDynamoiMcpServer,
+	getDynamoiToolDefinitions,
 	type Phase3Adapter,
 } from "./create-server";
 import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
@@ -27,6 +33,7 @@ import {
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
 const REGISTERED_TOOL_DEFINITIONS = [
+	DYNAMOI_ABOUT_TOOL_DEFINITION,
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
@@ -134,7 +141,10 @@ describe("createDynamoiMcpServer", () => {
 		const expectedToolNames = REGISTERED_TOOL_DEFINITIONS.map(
 			(definition) => definition.name,
 		);
-		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter(),
+			toolProfile: "full",
+		});
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =
 			InMemoryTransport.createLinkedPair();
@@ -156,6 +166,266 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
+	test("advertises one final tool shape to both eras and response modes", async () => {
+		const createServer = () =>
+			createDynamoiMcpServer({
+				adapter: buildStubAdapter(),
+				toolProfile: "directory",
+			});
+		const modernMeta = {
+			"io.modelcontextprotocol/clientCapabilities": {},
+			"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+		};
+		const variants = [
+			{ accept: "application/json", modern: false },
+			{ accept: "application/json, text/event-stream", modern: false },
+			{ accept: "application/json", modern: true },
+		];
+		const lists: unknown[] = [];
+		for (const variant of variants) {
+			const body = {
+				id: 1,
+				jsonrpc: "2.0",
+				method: "tools/list",
+				...(variant.modern ? { params: { _meta: modernMeta } } : {}),
+			};
+			const response = await handleMcpHttpRequest({
+				createServer,
+				parsedBody: body,
+				request: new Request("http://example.com/mcp", {
+					body: JSON.stringify(body),
+					headers: {
+						accept: variant.accept,
+						"content-type": "application/json",
+						...(variant.modern
+							? {
+									"mcp-method": "tools/list",
+									"mcp-protocol-version": "2026-07-28",
+								}
+							: {}),
+					},
+					method: "POST",
+				}),
+			});
+			const text = await response.text();
+			const payload = text.startsWith("event:")
+				? text
+						.split("\n")
+						.find((line) => line.startsWith("data: "))
+						?.slice(6)
+				: text;
+			const result = (
+				JSON.parse(payload ?? "null") as {
+					result: {
+						cacheScope?: string;
+						tools: Record<string, unknown>[];
+						ttlMs?: number;
+					};
+				}
+			).result;
+			expect(response.status).toBe(200);
+			expect(JSON.stringify(result.tools)).not.toContain('"$schema"');
+			for (const tool of result.tools) {
+				expect(tool["securitySchemes"]).toEqual(
+					(tool["_meta"] as Record<string, unknown>)["securitySchemes"],
+				);
+			}
+			if (variant.modern) {
+				expect(result.cacheScope).toBe("private");
+				expect(result.ttlMs).toBeGreaterThan(0);
+			}
+			lists.push(result.tools);
+		}
+		expect(lists[1]).toEqual(lists[0]);
+		expect(lists[2]).toEqual(lists[0]);
+	});
+
+	test("does not advertise list changes from a per-request server", async () => {
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter(),
+			toolProfile: "full",
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+		try {
+			const capabilities = client.getServerCapabilities();
+			expect(capabilities?.tools?.listChanged).toBe(false);
+			expect(capabilities?.resources?.listChanged).toBe(false);
+			expect(capabilities?.prompts?.listChanged).toBe(false);
+		} finally {
+			await client.close();
+		}
+	});
+
+	test("answers a denied tool call with the host's step-up result through the SDK", async () => {
+		const listArtists = mock(async () => ({
+			data: { summary: "Should not run." },
+			status: "success" as const,
+		}));
+		const challenge =
+			'Bearer resource_metadata="https://dynamoi.com/.well-known/oauth-protected-resource/mcp", scope="dynamoi:read", error="insufficient_scope"';
+		const body = {
+			id: 9,
+			jsonrpc: "2.0",
+			method: "tools/call",
+			params: {
+				_meta: {
+					"io.modelcontextprotocol/clientCapabilities": {},
+					"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+				},
+				arguments: {},
+				name: "dynamoi_list_artists",
+			},
+		};
+		const response = await handleMcpHttpRequest({
+			createServer: () =>
+				createDynamoiMcpServer({
+					adapter: buildStubAdapter({ listArtists }),
+					authorizeToolCall: () => ({
+						_meta: { "mcp/www_authenticate": [challenge] },
+						content: [{ text: "Permission required.", type: "text" }],
+						isError: true,
+					}),
+				}),
+			parsedBody: body,
+			request: new Request("http://example.com/mcp", {
+				body: JSON.stringify(body),
+				headers: {
+					accept: "application/json",
+					"content-type": "application/json",
+					"mcp-method": "tools/call",
+					"mcp-name": "dynamoi_list_artists",
+					"mcp-protocol-version": "2026-07-28",
+				},
+				method: "POST",
+			}),
+		});
+
+		expect(response.status).toBe(200);
+		await expect(response.json()).resolves.toMatchObject({
+			id: 9,
+			result: {
+				_meta: {
+					"io.modelcontextprotocol/serverInfo": { name: "dynamoi" },
+					"mcp/www_authenticate": [challenge],
+				},
+				isError: true,
+				resultType: "complete",
+			},
+		});
+		expect(listArtists).not.toHaveBeenCalled();
+	});
+
+	test.each(["full", "directory"] as const)(
+		"serves About Dynamoi publicly in the %s profile",
+		async (toolProfile) => {
+			const expectedMarkdown =
+				toolProfile === "directory"
+					? DYNAMOI_ABOUT_DIRECTORY_MARKDOWN
+					: DYNAMOI_ABOUT_MARKDOWN;
+			const server = createDynamoiMcpServer({
+				adapter: buildStubAdapter(),
+				toolProfile,
+			});
+			const client = new Client({ name: "test-client", version: "1.0.0" });
+			const [clientTransport, serverTransport] =
+				InMemoryTransport.createLinkedPair();
+			await Promise.all([
+				client.connect(clientTransport),
+				server.connect(serverTransport),
+			]);
+			try {
+				const about = (await client.listTools()).tools.find(
+					(tool) => tool.name === "dynamoi_about",
+				);
+				expect(about?._meta?.["securitySchemes"]).toEqual([{ type: "noauth" }]);
+				expect(about?.annotations).toMatchObject({
+					destructiveHint: false,
+					readOnlyHint: true,
+				});
+				const result = await client.callTool({
+					arguments: {},
+					name: "dynamoi_about",
+				});
+				expect(result.isError).toBeUndefined();
+				expect(result.structuredContent).toMatchObject({
+					data: { markdown: expectedMarkdown },
+					status: "success",
+				});
+				const resource = await client.readResource({
+					uri: "dynamoi://about",
+				});
+				expect(resource.contents[0]).toMatchObject({
+					mimeType: "text/markdown",
+					text: expectedMarkdown,
+				});
+			} finally {
+				await client.close();
+			}
+		},
+	);
+
+	test("directory About variant omits pricing, plans, and Shop purchase surfaces", () => {
+		const directory = getDynamoiAbout({ toolProfile: "directory" });
+		expect(directory.data.markdown).not.toContain("pricing");
+		expect(directory.data.markdown).not.toContain("Shop");
+		expect(directory.data.markdown).not.toContain("$10/day");
+		expect(directory.data.markdown).not.toContain("Net Receipts");
+		expect(directory.data.links.pricing).toBeUndefined();
+		expect(directory.data.links.signIn).toBe("https://dynamoi.com");
+		const full = getDynamoiAbout({ toolProfile: "full" });
+		expect(full.data.markdown).toContain("pricing");
+		expect(full.data.markdown).toContain("Shop");
+		expect(full.data.links.pricing).toBe("https://dynamoi.com/pricing");
+		// Missing profile fails closed to the directory variant.
+		expect(getDynamoiAbout().data.markdown).toBe(
+			DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+		);
+	});
+
+	test("About copy uses the approved company framing", () => {
+		for (const markdown of [
+			DYNAMOI_ABOUT_MARKDOWN,
+			DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+		]) {
+			expect(markdown).toContain(
+				"operated by humans, assisted by AI",
+			);
+			expect(markdown).not.toMatch(/operated by AI|run by AI|AI-operated/i);
+		}
+	});
+
+	test("fails closed to the directory catalog when no profile is given", async () => {
+		expect(getDynamoiToolDefinitions().map((tool) => tool.name)).toEqual(
+			getDynamoiToolDefinitions({ toolProfile: "directory" }).map(
+				(tool) => tool.name,
+			),
+		);
+		const server = createDynamoiMcpServer({ adapter: buildStubAdapter() });
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+		try {
+			const toolNames = (await client.listTools()).tools.map(
+				(tool) => tool.name,
+			);
+			expect(toolNames).not.toContain("dynamoi_launch_campaign");
+			expect(toolNames).not.toContain("dynamoi_shop_create_checkout");
+			expect(client.getServerCapabilities()?.prompts).toBeUndefined();
+		} finally {
+			await client.close();
+		}
+	});
+
 	test("uses a concrete MCP server version in source and bundled builds", () => {
 		expect(DYNAMOI_MCP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
 		expect(DYNAMOI_MCP_VERSION).not.toContain("__");
@@ -165,6 +435,7 @@ describe("createDynamoiMcpServer", () => {
 		const server = createDynamoiMcpServer({
 			adapter: buildStubAdapter(),
 			oauthScopes: DYNAMOI_BETTER_AUTH_MCP_SCOPES,
+			toolProfile: "full",
 		});
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =
@@ -225,10 +496,10 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
-	test("chatgpt-app profile omits paid launch, billing, and connection-start tools", async () => {
+	test("directory profile omits paid launch, billing, and connection-start tools", async () => {
 		const server = createDynamoiMcpServer({
 			adapter: buildStubAdapter(),
-			toolProfile: "chatgpt-app",
+			toolProfile: "directory",
 		});
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =
@@ -243,7 +514,9 @@ describe("createDynamoiMcpServer", () => {
 			const result = await client.listTools();
 			const toolNames = result.tools.map((tool) => tool.name);
 
-			expect(toolNames).toHaveLength(17);
+			// The 17 review-safe tools plus the public About tool.
+			expect(toolNames).toHaveLength(18);
+			expect(toolNames).toContain("dynamoi_about");
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
 			expect(toolNames).toContain(
 				"dynamoi_create_smart_links_from_spotify_artist",
@@ -260,20 +533,20 @@ describe("createDynamoiMcpServer", () => {
 			expect(toolNames).not.toContain("dynamoi_start_meta_connection");
 			expect(toolNames).not.toContain("dynamoi_start_youtube_channel_link");
 			expect(toolNames).not.toContain("dynamoi_update_campaign");
-			const chatGptDescriptions = result.tools
+			const directoryDescriptions = result.tools
 				.map((tool) => tool.description ?? "")
 				.join("\n");
-			expect(chatGptDescriptions).not.toContain("dynamoi_get_billing");
-			expect(chatGptDescriptions).not.toContain(
+			expect(directoryDescriptions).not.toContain("dynamoi_get_billing");
+			expect(directoryDescriptions).not.toContain(
 				"dynamoi_get_campaign_readiness",
 			);
-			expect(chatGptDescriptions).not.toContain(
+			expect(directoryDescriptions).not.toContain(
 				"dynamoi_start_meta_connection",
 			);
-			expect(chatGptDescriptions).not.toContain(
+			expect(directoryDescriptions).not.toContain(
 				"dynamoi_start_youtube_channel_link",
 			);
-			expect(chatGptDescriptions).not.toContain("dynamoi://");
+			expect(directoryDescriptions).not.toContain("dynamoi://");
 			for (const tool of result.tools) {
 				const outputProperties = tool.outputSchema?.properties as
 					| Record<string, { anyOf?: unknown[]; properties?: unknown }>
@@ -306,10 +579,10 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
-	test("chatgpt-app profile advertises the Smart Link theme preview widget", async () => {
+	test("directory profile advertises the Smart Link theme preview widget", async () => {
 		const server = createDynamoiMcpServer({
 			adapter: buildStubAdapter(),
-			toolProfile: "chatgpt-app",
+			toolProfile: "directory",
 		});
 		const client = new Client({ name: "test-client", version: "1.0.0" });
 		const [clientTransport, serverTransport] =
@@ -382,7 +655,7 @@ describe("createDynamoiMcpServer", () => {
 		}
 	});
 
-	test("normalizes legacy Smart Link include arrays before HTTP tool validation", async () => {
+	test("rejects the retired Smart Link include array before dispatch", async () => {
 		let receivedInput: unknown;
 		const requestBody = {
 			id: 1,
@@ -409,7 +682,7 @@ describe("createDynamoiMcpServer", () => {
 							};
 						},
 					}),
-					toolProfile: "chatgpt-app",
+					toolProfile: "directory",
 				}),
 			parsedBody: requestBody,
 			request: new Request("http://example.com/mcp", {
@@ -423,11 +696,8 @@ describe("createDynamoiMcpServer", () => {
 		});
 
 		expect(response.status).toBe(200);
-		expect(await response.text()).toContain("Smart Link details loaded.");
-		expect(receivedInput).toEqual(
-			expect.objectContaining({ includeAnalytics: true }),
-		);
-		expect((receivedInput as Record<string, unknown>).include).toBeUndefined();
+		expect(await response.text()).toContain('Unrecognized key: \\"include\\"');
+		expect(receivedInput).toBeUndefined();
 	});
 
 	test("calls tools whose canonical output schemas are success/error unions", async () => {

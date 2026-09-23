@@ -33,42 +33,6 @@ const SmartLinkThemeSchema = z.enum([
 	"aurora",
 	"cinematic",
 ]);
-const LegacySmartLinkIncludeSchema = z.array(
-	z.enum(["analytics", "artist_settings"]),
-);
-
-export function normalizeLegacySmartLinkInclude(rawInput: unknown) {
-	if (!rawInput || typeof rawInput !== "object" || Array.isArray(rawInput)) {
-		return rawInput;
-	}
-	const input = rawInput as Record<string, unknown>;
-	if (!Object.hasOwn(input, "include")) {
-		return rawInput;
-	}
-
-	const legacyInclude = LegacySmartLinkIncludeSchema.safeParse(
-		input["include"],
-	);
-	if (!legacyInclude.success) {
-		return rawInput;
-	}
-
-	const { include: _include, ...normalized } = input;
-	if (
-		normalized["includeAnalytics"] === undefined &&
-		legacyInclude.data.includes("analytics")
-	) {
-		normalized["includeAnalytics"] = true;
-	}
-	if (
-		normalized["includeArtistSettings"] === undefined &&
-		legacyInclude.data.includes("artist_settings")
-	) {
-		normalized["includeArtistSettings"] = true;
-	}
-	return normalized;
-}
-
 export const DynamoiCreateSmartLinkFromSpotifyInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
@@ -154,9 +118,7 @@ export const DynamoiGetSmartLinkInputSchema =
 	StrictDynamoiGetSmartLinkInputSchema;
 
 export function parseDynamoiGetSmartLinkInput(rawInput: unknown) {
-	return StrictDynamoiGetSmartLinkInputSchema.parse(
-		normalizeLegacySmartLinkInclude(rawInput),
-	);
+	return StrictDynamoiGetSmartLinkInputSchema.parse(rawInput);
 }
 
 export const DynamoiGetSmartLinkAnalyticsInputSchema = z
@@ -292,7 +254,7 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
 			"Use this when the user gives a Spotify artist URL and wants Dynamoi to create, import, or refresh free Smart Links for the artist catalog and return the artist hub. If the signed-in user has no Dynamoi artist yet, omit artistId so Dynamoi can create the first artist from the Spotify artist profile. This starts the background catalog import so the user does not need to open the dashboard. Smart Links are free to create and manage. High-popularity or unverifiable artist catalog links may stay unpublished in verification hold until Dynamoi can verify the client relationship. This does not create a paid ad campaign. In the final answer, lead with the artist hub URL and current public Smart Link URLs; do not expose internal IDs unless asked.",
-		destructiveHint: true,
+		destructiveHint: false,
 		idempotentHint: true,
 		name: "dynamoi_create_smart_links_from_spotify_artist",
 		openWorldHint: true,

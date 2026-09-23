@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import {
 	createDynamoiMcpServer,
 	type DynamoiMcpToolProfile,
@@ -80,7 +79,7 @@ const denied = {
 	status: "error",
 };
 
-for (const profile of ["full", "chatgpt-app"] as const) {
+for (const profile of ["full", "directory"] as const) {
 	describe(`public outcome boundary: ${profile}`, () => {
 		test("discovery uses the registered inventory without dispatch", async () => {
 			await withFixture(

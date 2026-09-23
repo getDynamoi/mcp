@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
 } from "../consent";
@@ -85,13 +86,15 @@ describe("mcp/tools phase 1 definitions", () => {
 		expect(parsed.artistId).toBe("00000000-0000-0000-0000-000000000000");
 	});
 
-	test("current user schema requires explicit account intent", () => {
-		expect(() => DynamoiGetCurrentUserInputSchema.parse({})).toThrow();
+	test("current user schema defaults intent to account_overview", () => {
+		expect(DynamoiGetCurrentUserInputSchema.parse({}).intent).toBe(
+			"account_overview",
+		);
 
 		const parsed = DynamoiGetCurrentUserInputSchema.parse({
-			intent: "account_overview",
+			intent: "platform_connection_check",
 		});
-		expect(parsed.intent).toBe("account_overview");
+		expect(parsed.intent).toBe("platform_connection_check");
 	});
 
 	test("polling schemas accept onboarding attempt correlation", () => {
@@ -462,14 +465,48 @@ describe("mcp/tools phase 3 definitions", () => {
 		).toThrow();
 	});
 
-	test("launch campaign metadata documents reviewer-safe defaults", () => {
+	test("launch campaign metadata documents funding consent and budget requirements", () => {
 		const definition = getToolDefinition(
 			PHASE_3_TOOL_DEFINITIONS,
 			"dynamoi_launch_campaign",
 		);
-		expect(definition.description).toContain("omit spotifyUrl and endDate");
-		expect(definition.description).toContain("reviewer-safe defaults");
-		expect(definition.description).toContain("Do not invent placeholder");
+		expect(definition.description).toContain("authorizeAutomaticDailyFunding");
+		expect(definition.description).toContain("acceptedConsentVersion");
+		expect(definition.description).toContain("acceptedConsentCopyHash");
+		expect(definition.description).toContain(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+		);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+		);
+		expect(definition.description).toContain("TOTAL budgets use existing credit");
+		expect(definition.description).not.toContain("confirmation_required");
+		expect(definition.description).not.toContain("confirmationToken");
+	});
+
+	test("update campaign metadata documents resume funding consent and retry idempotency", () => {
+		const definition = getToolDefinition(
+			PHASE_2_TOOL_DEFINITIONS,
+			"dynamoi_update_campaign",
+		);
+		expect(definition.description).toContain("resume");
+		expect(definition.description).toContain("authorizeAutomaticDailyFunding");
+		expect(definition.description).toContain(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+		);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+		);
+		expect(definition.description).toContain(
+			"Review and accept the daily funding authorization to resume this campaign.",
+		);
+		expect(definition.description).toContain(
+			"reuse the same clientRequestId",
+		);
+		expect(definition.description).not.toContain("confirmation_required");
+		expect(definition.description).not.toContain("confirmationToken");
 	});
 
 	test("current user metadata discourages generic advice context fishing", () => {
@@ -478,14 +515,14 @@ describe("mcp/tools phase 3 definitions", () => {
 			"dynamoi_get_account_overview",
 		);
 		expect(definition.description).toContain("explicitly asks");
-		expect(definition.description).toContain("Always pass intent");
+		expect(definition.description).toContain("Pass intent");
 		expect(definition.description).toContain("use dynamoi_get_platform_status");
 		expect(definition.description).toContain("check context");
 		expect(definition.description).toContain("generic Instagram");
 		expect(definition.description).toContain("Never use");
 	});
 
-	test("launch campaign metadata tells ChatGPT to stop after a successful launch", () => {
+	test("launch campaign metadata tells the agent to stop after a successful launch", () => {
 		const definition = getToolDefinition(
 			PHASE_3_TOOL_DEFINITIONS,
 			"dynamoi_launch_campaign",
@@ -515,12 +552,21 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 			expect(def.outputSchema).toBeDefined();
 			expect(def.title.length).toBeGreaterThan(0);
 		}
+		// The single-link create can overwrite an existing link's public
+		// description via customDescription, so it stays destructiveHint=true;
+		// the artist-catalog create is additive only.
+		expect(
+			getToolDefinition(
+				PHASE_4_TOOL_DEFINITIONS,
+				"dynamoi_create_smart_link_from_spotify",
+			).destructiveHint,
+		).toBe(true);
 		expect(
 			getToolDefinition(
 				PHASE_4_TOOL_DEFINITIONS,
 				"dynamoi_create_smart_links_from_spotify_artist",
 			).destructiveHint,
-		).toBe(true);
+		).toBe(false);
 	});
 
 	test("smart link descriptions keep the free plan and paid campaign boundary clear", () => {

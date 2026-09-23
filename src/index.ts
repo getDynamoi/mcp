@@ -1,22 +1,31 @@
 export {
-	DISTRIBUTION_TOOL_DEFINITIONS,
-	DynamoiApplyForDistributionInputSchema,
-	DynamoiGetDistributionApplicationInputSchema,
-} from "./server/distribution-tools";
-export {
-	buildProtectedResourceMetadata,
 	buildWwwAuthenticateHeader,
 	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
-	DYNAMOI_MCP_SCOPES,
 	DYNAMOI_MCP_TOOL_SCOPES,
 } from "./auth/protected-resource";
-export { verifyAccessToken } from "./auth/verify-token";
+export {
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+} from "./consent";
+export {
+	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+	DYNAMOI_ABOUT_MARKDOWN,
+	DYNAMOI_ABOUT_RESOURCE,
+	DYNAMOI_ABOUT_TOOL_DEFINITION,
+	getDynamoiAbout,
+} from "./server/about";
 export type { Phase3Adapter } from "./server/create-server";
 export {
 	createDynamoiMcpServer,
 	type DynamoiMcpToolProfile,
 	getDynamoiToolDefinitions,
 } from "./server/create-server";
+export {
+	DISTRIBUTION_TOOL_DEFINITIONS,
+	DynamoiApplyForDistributionInputSchema,
+	DynamoiGetDistributionApplicationInputSchema,
+} from "./server/distribution-tools";
 export {
 	DynamoiOpenAiFetchInputSchema,
 	DynamoiOpenAiSearchInputSchema,
@@ -26,17 +35,17 @@ export {
 export {
 	DYNAMOI_SHOP_FULL_SCOPE,
 	DYNAMOI_SHOP_MAX_TARGET_COUNTRY_CODES,
+	type DynamoiShopCheckoutData,
 	DynamoiShopCheckoutDataSchema,
+	type DynamoiShopCreateCheckoutInput,
 	DynamoiShopCreateCheckoutInputSchema,
+	type DynamoiShopGetQuoteInput,
 	DynamoiShopGetQuoteInputSchema,
+	type DynamoiShopQuoteData,
 	DynamoiShopQuoteDataSchema,
 	DynamoiShopSelectionInputSchema,
 	DynamoiShopTargetingInputSchema,
 	SHOP_TOOL_DEFINITIONS,
-	type DynamoiShopCheckoutData,
-	type DynamoiShopCreateCheckoutInput,
-	type DynamoiShopGetQuoteInput,
-	type DynamoiShopQuoteData,
 } from "./server/shop-tools";
 export {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
@@ -79,25 +88,19 @@ export {
 	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	ToolFormatSchema,
 } from "./server/tools";
-export {
-	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
-	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
-	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
-} from "./consent";
 export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
 export { handleMcpHttpRequest } from "./transport/http";
 export type {
 	AccessRole,
+	ApplyForDistributionData,
 	ArtistTier,
 	BillingStatus,
 	CampaignDisplayStatus,
 	CampaignType,
-	ApplyForDistributionData,
-	DistributionRequirementKey,
-	GetDistributionApplicationData,
 	CountryCatalogSource,
 	CreateSmartLinkFromSpotifyData,
 	CreateSmartLinksFromSpotifyArtistData,
+	DistributionRequirementKey,
 	GetArtistAnalyticsJsonData,
 	GetArtistAnalyticsSummaryData,
 	GetArtistData,
@@ -116,6 +119,7 @@ export type {
 	GetCurrentUserData,
 	GetCurrentUserState,
 	GetCurrentUserSummaryData,
+	GetDistributionApplicationData,
 	GetOnboardingStatusData,
 	GetOnboardingStatusSummaryData,
 	GetPlatformStatusData,
@@ -125,8 +129,6 @@ export type {
 	GetSmartLinkData,
 	GetSmartLinkSummaryData,
 	LaunchCampaignData,
-	McpMutationProposal,
-	McpMutationConfirmationData,
 	ListArtistsData,
 	ListArtistsSummaryData,
 	ListAvailableCountriesData,

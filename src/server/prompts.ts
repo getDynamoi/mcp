@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 
 function asTextPrompt(text: string) {
@@ -16,10 +16,10 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_find_smart_link_url",
 		{
-			argsSchema: {
+			argsSchema: z.object({
 				artistId: z.string().uuid().optional(),
 				query: z.string().trim().optional(),
-			},
+			}),
 			description:
 				"Find a user's free Smart Link URL and answer with public URLs, titles, and statuses.",
 			title: "Find Smart Link URL",
@@ -44,7 +44,7 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_explain_free_smart_links",
 		{
-			argsSchema: {},
+			argsSchema: z.object({}),
 			description:
 				"Explain Dynamoi free Smart Links and how they differ from paid managed advertising.",
 			title: "Explain Free Smart Links",
@@ -63,10 +63,10 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_create_free_smart_link",
 		{
-			argsSchema: {
+			argsSchema: z.object({
 				artistId: z.string().uuid().optional(),
 				spotifyUrl: z.string().trim().optional(),
-			},
+			}),
 			description:
 				"Create free Smart Links from a Spotify artist, album, or track URL.",
 			title: "Create Free Smart Link",
@@ -91,9 +91,9 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_audit_campaigns",
 		{
-			argsSchema: {
+			argsSchema: z.object({
 				artistId: z.string().uuid().optional(),
-			},
+			}),
 			description:
 				"Audit an artist's campaigns and summarize what is working and what to fix next.",
 			title: "Audit Campaigns",
@@ -117,11 +117,11 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_release_launch_plan",
 		{
-			argsSchema: {
+			argsSchema: z.object({
 				artistId: z.string().uuid().optional(),
 				contentTitle: z.string().trim().optional(),
 				contentType: z.enum(["TRACK", "ALBUM", "PLAYLIST", "VIDEO"]).optional(),
-			},
+			}),
 			description:
 				"Create a pragmatic release launch plan and propose a Dynamoi campaign setup.",
 			title: "Release Launch Plan",
@@ -137,10 +137,8 @@ export function registerDynamoiPrompts(server: McpServer) {
 					args.contentTitle ? `Title: ${args.contentTitle}` : "",
 					"",
 					"Ask any missing questions first (links, creative, budget, countries, dates).",
-					"For review/demo Smart Campaign launches that already specify the artist, content title, budget, countries, and reusable media assets, you may proceed without asking for spotifyUrl or endDate.",
-					"When those review/demo fields are omitted, do not invent placeholder spotifyUrl or endDate values; omit them and let Dynamoi infer them.",
 					"Then propose the simplest campaign plan that fits today’s supported platforms:",
-					"- Smart Campaign (Meta) for Spotify/Apple Music releases",
+					"- Smart Campaign (Meta) for Spotify releases",
 					"- YouTube campaign for videos",
 					"",
 					"If we proceed to launch:",
@@ -155,9 +153,9 @@ export function registerDynamoiPrompts(server: McpServer) {
 	server.registerPrompt(
 		"dynamoi_why_campaign_blocked",
 		{
-			argsSchema: {
+			argsSchema: z.object({
 				campaignId: z.string().uuid(),
-			},
+			}),
 			description:
 				"Diagnose why a campaign is blocked/stuck and recommend the next fix.",
 			title: "Why Is My Campaign Blocked?",

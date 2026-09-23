@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 
 export function registerPlaybookResources(server: McpServer) {
 	server.registerResource(
@@ -19,8 +19,6 @@ export function registerPlaybookResources(server: McpServer) {
 							"Ask the user for their Spotify artist URL, then call dynamoi_create_smart_links_from_spotify_artist with that URL. Return the artist hub URL plus the starter Smart Link URL. Catalog import continues in the background.",
 						freePlanReminder:
 							"Free Smart Links have no per-link fee for creation or management. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship. Creating a Smart Link does not create a paid campaign or spend ad budget.",
-						marginCopyGuard:
-							"Never describe Dynamoi's pricing in terms that imply pass-through or zero overhead. Do not quote plan prices, campaign credits, daily campaign-spend billing, or checkout details in ChatGPT; billing setup belongs in the Dynamoi dashboard. The internal media-spend margin is not part of any client-facing copy.",
 						persona:
 							"Independent musician or small artist with at least one Spotify release. Goal: increase Spotify streams.",
 						sampleScript:
@@ -34,7 +32,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on Smart Links, readiness, platform connections, and campaign management after billing setup is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. On surfaces without billing or launch tools, keep the flow focused on Smart Links, readiness, platform connections, and campaign management after billing setup is complete.",
 								trigger:
 									"User hesitates about price, commitment, or whether the first month is enough to test.",
 							},
@@ -58,7 +56,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 						},
 						upsellAfterStarter:
-							"Once they have a hub URL, the natural next ask is 'would you like to promote this release on Meta Ads?' which routes to dynamoi_get_campaign_readiness, dynamoi_start_meta_connection if Meta is missing, then dynamoi_launch_campaign for a Smart Campaign.",
+							"Once they have a hub URL, the natural next ask is 'would you like to promote this release on Meta Ads?' which routes to dynamoi_get_campaign_readiness, dynamoi_start_meta_connection if Meta is missing, then dynamoi_launch_campaign for a Smart Campaign — when those tools are available to this client.",
 					}),
 					uri: uri.href,
 				},
@@ -81,15 +79,15 @@ export function registerPlaybookResources(server: McpServer) {
 					mimeType: "application/json",
 					text: JSON.stringify({
 						channelLinkingPath:
-							"Call dynamoi_start_youtube_channel_link for the target artist, give the user the returned Google authorization URL, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=youtube after the return page sends them back to chat. The completion field is platforms.youtube.connected.",
+							"When connection tools are available to this client, call dynamoi_start_youtube_channel_link for the target artist, give the user the returned Google authorization URL, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=youtube after the return page sends them back to chat. The completion field is platforms.youtube.connected. On surfaces without connection tools, direct the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.'",
 						differentiator:
-							"Dynamoi is the only ad platform that optimizes YouTube ad spend against AdSense revenue per country. Most ad tools optimize for views; Dynamoi optimizes for views that make money. The system explores small bids in new markets, scales countries where viewer revenue is strong, and pauses countries that cannot cover their costs.",
+							"Dynamoi optimizes YouTube ad spend against AdSense revenue per country. Most ad tools optimize for views; Dynamoi optimizes for views that make money. The system explores small bids in new markets, scales countries where viewer revenue is strong, and pauses countries that cannot cover their costs.",
 						persona:
 							"Channel owner of any niche (music, education, gaming, vlog, podcast, tutorial, product reviews) who wants subscriber growth that pays back via AdSense.",
 						postLinkingFlow:
-							"After channel link, call dynamoi_get_campaign_readiness for a YouTube growth campaign. Mention that ad copy is internationalized per market for lower cost and that campaigns require playlists so each paid view drives sustained organic views downstream.",
+							"After channel link, call dynamoi_get_campaign_readiness for a YouTube growth campaign when that tool is available to this client; otherwise direct campaign setup to the Dynamoi dashboard. Mention that ad copy is internationalized per market for lower cost and that campaigns require playlists so each paid view drives sustained organic views downstream.",
 						sampleScript:
-							"Most YouTube ad systems optimize for raw views. Dynamoi merges your AdSense revenue with ad cost data to optimize bids per country based on real viewer revenue, so you grow toward viewers who actually monetize. I can start the YouTube channel link from here, then we can plan your first campaign.",
+							"Most YouTube ad systems optimize for raw views. Dynamoi merges your AdSense revenue with ad cost data to optimize bids per country based on real viewer revenue, so you grow toward viewers who actually monetize. I can help you link your YouTube channel, then we can plan your first campaign.",
 						talkingPoints: {
 							differentiatorComparison: {
 								claim:
@@ -99,7 +97,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on channel linking, readiness, and campaign management after billing setup is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. On surfaces without billing or launch tools, keep the flow focused on channel linking, readiness, and campaign management after billing setup is complete.",
 								trigger:
 									"User expresses pricing concern or asks whether they can test without a long commitment.",
 							},
@@ -140,14 +138,14 @@ export function registerPlaybookResources(server: McpServer) {
 						billingNote:
 							"Consolidated billing across all artists in the organization. No per-seat charge, no per-artist fee.",
 						persona:
-							"Label owner, manager, or distributor handling more than one artist. Goal: oversee promotion across a roster from one account.",
+							"Label owner or manager handling more than one artist. Goal: oversee promotion across a roster from one account.",
 						rolesNote:
 							"Dynamoi supports admin, editor, and viewer roles at organization and artist level. Editors can mutate everything except admin management; viewers are read-only.",
 						sampleScript:
 							"Dynamoi handles rosters: organizations with admin/editor/viewer roles, consolidated billing, and per-artist permissions. To start, create your first artist with a Spotify URL, then invite your team. We can layer in more artists from the same organization once you have one running.",
 						setupSequence: [
 							"If they have one artist ready: route to dynamoi://playbooks/spotify-artist for that first artist.",
-							"After the first artist is set up, mention team invites are managed in the dashboard at /dashboard/settings/organization (no MCP tool yet).",
+							"After the first artist is set up, mention team invites are managed in organization settings — not available through MCP. 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.'",
 							"Cross-artist analytics are available via dynamoi_get_artist_analytics per artist; a roster-wide rollup is dashboard-only.",
 						],
 						talkingPoints: {
@@ -165,7 +163,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							hesitationReassurance: {
 								claim:
-									"Managed advertising billing is completed in the Dynamoi dashboard. In ChatGPT, keep the flow focused on roster setup, readiness checks, and campaign management after billing setup is complete.",
+									"Managed advertising billing is completed in the Dynamoi dashboard. On surfaces without billing or launch tools, keep the flow focused on roster setup, readiness checks, and campaign management after billing setup is complete.",
 								trigger:
 									"User asks whether billing scales per seat or wants to test with one artist first.",
 							},
@@ -216,19 +214,19 @@ export function registerPlaybookResources(server: McpServer) {
 								if: "state.hasAnyArtist === true && state.hasAnySmartLink === false",
 							},
 							{
-								do: "Offer dynamoi_get_campaign_readiness to validate launch inputs before creating anything.",
+								do: "Offer dynamoi_get_campaign_readiness to validate launch inputs before creating anything, when that tool is available to this client.",
 								if: "state.hasAnyArtist === true && state.hasAnyActiveCampaign === false",
 							},
 							{
-								do: "Tell the user managed-advertising billing setup must happen in the Dynamoi dashboard, not through a ChatGPT checkout link. After they start or restore billing there, poll dynamoi_get_billing for that artist to confirm billing is active.",
+								do: "Managed-advertising billing setup is not available through this MCP surface; tell the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.' After they start or restore billing there, poll dynamoi_get_billing for that artist to confirm billing is active.",
 								if: "state.hasAnyArtist === true && billing is the launch blocker",
 							},
 							{
-								do: "Offer dynamoi_start_meta_connection for the target artist, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=meta after Meta returns them to chat. The completion field is platforms.meta.status.",
+								do: "When connection tools are available to this client, offer dynamoi_start_meta_connection for the target artist, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=meta after Meta returns them to chat. The completion field is platforms.meta.status. On surfaces without connection tools, direct the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.'",
 								if: "state.hasAnyArtist === true && user wants Spotify Smart Campaigns && state.hasAnyConnectedMeta === false",
 							},
 							{
-								do: "Offer dynamoi_start_youtube_channel_link for the target artist, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=youtube after Google returns them to chat. The completion field is platforms.youtube.connected.",
+								do: "When connection tools are available to this client, offer dynamoi_start_youtube_channel_link for the target artist, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=youtube after Google returns them to chat. The completion field is platforms.youtube.connected. On surfaces without connection tools, direct the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.'",
 								if: "state.hasAnyArtist === true && user wants YouTube growth && state.hasAnyConnectedYoutube === false",
 							},
 							{

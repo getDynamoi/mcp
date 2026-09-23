@@ -1,4 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+	type CacheHint,
+	type CallToolResult,
+	McpServer,
+	type ServerOptions,
+	type Tool,
+} from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import {
 	DYNAMOI_BETTER_AUTH_MCP_SCOPES,
@@ -14,27 +20,18 @@ import type {
 	GetArtistSummaryData,
 	GetBillingData,
 	GetBillingSummaryData,
-	GetCampaignAnalyticsJsonData,
-	GetCampaignAnalyticsSummaryData,
 	GetCampaignData,
-	GetCampaignDeploymentStatusData,
-	GetCampaignDeploymentStatusSummaryData,
 	GetCampaignReadinessData,
 	GetCampaignReadinessSummaryData,
 	GetCampaignSummaryData,
 	GetCurrentUserData,
 	GetCurrentUserSummaryData,
 	GetDistributionApplicationData,
-	GetOnboardingStatusData,
-	GetOnboardingStatusSummaryData,
 	GetPlatformStatusData,
 	GetPlatformStatusSummaryData,
-	GetSmartLinkAnalyticsData,
-	GetSmartLinkAnalyticsSummaryData,
 	GetSmartLinkData,
 	GetSmartLinkSummaryData,
 	LaunchCampaignData,
-	McpMutationConfirmationData,
 	ListArtistsData,
 	ListArtistsSummaryData,
 	ListAvailableCountriesData,
@@ -45,19 +42,24 @@ import type {
 	ListMediaAssetsSummaryData,
 	ListSmartLinksData,
 	ListSmartLinksSummaryData,
-	PauseResumeCampaignData,
 	ResultEnvelope,
 	SearchData,
 	SearchSummaryData,
 	SmartLinkSettingsData,
 	StartMetaConnectionData,
 	StartYoutubeChannelLinkData,
-	UpdateBudgetData,
 	UpdateCampaignData,
 	UpdateSmartLinkArtistSettingsData,
 	UpdateSmartLinkData,
 } from "../types";
 import { DYNAMOI_MCP_VERSION } from "../version";
+import {
+	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+	DYNAMOI_ABOUT_MARKDOWN,
+	DYNAMOI_ABOUT_RESOURCE,
+	DYNAMOI_ABOUT_TOOL_DEFINITION,
+	getDynamoiAbout,
+} from "./about";
 import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import {
 	DYNAMOI_CHATGPT_APP_INSTRUCTIONS,
@@ -86,8 +88,17 @@ import {
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
-function buildDynamoiToolSecuritySchemes(scopes: readonly string[]) {
-	return [{ scopes: [...scopes], type: "oauth2" as const }];
+type DynamoiToolSecurityScheme =
+	| { scopes: string[]; type: "oauth2" }
+	| { type: "noauth" };
+
+/** A tool that needs no scopes is public and callable before sign-in. */
+function buildDynamoiToolSecuritySchemes(
+	scopes: readonly string[],
+): DynamoiToolSecurityScheme[] {
+	return scopes.length === 0
+		? [{ type: "noauth" }]
+		: [{ scopes: [...scopes], type: "oauth2" }];
 }
 
 type DynamoiToolMetadata = {
@@ -112,7 +123,7 @@ const DescriptiveEntitySchema = z
 	})
 	.passthrough();
 
-const CHATGPT_DESCRIPTIVE_DATA_SCHEMAS = {
+const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 	dynamoi_get_account_overview: z
 		.object({
 			artistCount: z.number().optional(),
@@ -208,12 +219,12 @@ function getAdvertisedToolOutputSchema(options: {
 	toolName: string;
 	toolProfile: DynamoiMcpToolProfile;
 }) {
-	if (options.toolProfile !== "chatgpt-app") {
+	if (options.toolProfile !== "directory") {
 		return options.canonical;
 	}
 	const dataSchema =
-		CHATGPT_DESCRIPTIVE_DATA_SCHEMAS[
-			options.toolName as keyof typeof CHATGPT_DESCRIPTIVE_DATA_SCHEMAS
+		DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS[
+			options.toolName as keyof typeof DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS
 		];
 	if (!dataSchema) {
 		return options.canonical;
@@ -234,9 +245,6 @@ function getDynamoiToolOAuthScopes(
 	providerScopes: readonly string[],
 ): readonly string[] {
 	const requiredScopes = DYNAMOI_MCP_TOOL_SCOPES[toolName];
-	if (!providerScopes.some((scope) => scope.startsWith("dynamoi:"))) {
-		return providerScopes;
-	}
 	const missingScopes = requiredScopes.filter(
 		(scope) => !providerScopes.includes(scope),
 	);
@@ -248,9 +256,15 @@ function getDynamoiToolOAuthScopes(
 	return requiredScopes;
 }
 
-export type DynamoiMcpToolProfile = "full" | "chatgpt-app";
+/**
+ * `directory` is the review-safe catalog for agent-directory clients;
+ * `full` is every tool. The host selects the profile from the verified
+ * OAuth client identity.
+ */
+export type DynamoiMcpToolProfile = "full" | "directory";
 
 type DynamoiToolDefinition =
+	| typeof DYNAMOI_ABOUT_TOOL_DEFINITION
 	| (typeof PHASE_1_TOOL_DEFINITIONS)[number]
 	| (typeof PHASE_ONBOARDING_TOOL_DEFINITIONS)[number]
 	| (typeof PHASE_2_TOOL_DEFINITIONS)[number]
@@ -261,6 +275,7 @@ type DynamoiToolDefinition =
 	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION;
 
 const DYNAMOI_TOOL_DEFINITIONS = [
+	DYNAMOI_ABOUT_TOOL_DEFINITION,
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
 	...PHASE_2_TOOL_DEFINITIONS,
@@ -277,7 +292,7 @@ const MUTATING_TOOL_NAMES = new Set<string>(
 	),
 );
 
-const CHATGPT_APP_EXCLUDED_TOOL_NAMES = new Set<string>([
+const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_shop_create_checkout",
 	"dynamoi_shop_get_quote",
 	"dynamoi_get_billing",
@@ -294,11 +309,12 @@ export function getDynamoiToolDefinitions(options?: {
 	toolProfile?: DynamoiMcpToolProfile;
 }): DynamoiToolDefinition[] {
 	const definitions = [...DYNAMOI_TOOL_DEFINITIONS];
-	if ((options?.toolProfile ?? "full") !== "chatgpt-app") {
+	// Fail closed: only an explicit full profile gets the whole catalog.
+	if (options?.toolProfile === "full") {
 		return definitions;
 	}
 	return definitions.filter(
-		(definition) => !CHATGPT_APP_EXCLUDED_TOOL_NAMES.has(definition.name),
+		(definition) => !DIRECTORY_EXCLUDED_TOOL_NAMES.has(definition.name),
 	);
 }
 
@@ -334,13 +350,6 @@ export type Phase3Adapter = {
 	getCampaign(
 		input: unknown,
 	): Promise<ResultEnvelope<GetCampaignData | GetCampaignSummaryData>>;
-	getCampaignAnalytics(
-		input: unknown,
-	): Promise<
-		ResultEnvelope<
-			GetCampaignAnalyticsJsonData | GetCampaignAnalyticsSummaryData
-		>
-	>;
 	getBilling(
 		input: unknown,
 	): Promise<ResultEnvelope<GetBillingData | GetBillingSummaryData>>;
@@ -362,37 +371,16 @@ export type Phase3Adapter = {
 			ListAvailableCountriesData | ListAvailableCountriesSummaryData
 		>
 	>;
-	getOnboardingStatus(
-		input: unknown,
-	): Promise<
-		ResultEnvelope<GetOnboardingStatusData | GetOnboardingStatusSummaryData>
-	>;
 	getCampaignReadiness(
 		input: unknown,
 	): Promise<
 		ResultEnvelope<GetCampaignReadinessData | GetCampaignReadinessSummaryData>
 	>;
-	getCampaignDeploymentStatus(
-		input: unknown,
-	): Promise<
-		ResultEnvelope<
-			GetCampaignDeploymentStatusData | GetCampaignDeploymentStatusSummaryData
-		>
-	>;
-
-	pauseCampaign(
-		input: unknown,
-	): Promise<ResultEnvelope<PauseResumeCampaignData>>;
-	resumeCampaign(
-		input: unknown,
-	): Promise<ResultEnvelope<PauseResumeCampaignData>>;
-	updateBudget(input: unknown): Promise<ResultEnvelope<UpdateBudgetData | McpMutationConfirmationData>>;
-	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData | McpMutationConfirmationData>>;
-
+	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData>>;
 	listMediaAssets(
 		input: unknown,
 	): Promise<ResultEnvelope<ListMediaAssetsData | ListMediaAssetsSummaryData>>;
-	launchCampaign(input: unknown): Promise<ResultEnvelope<LaunchCampaignData | McpMutationConfirmationData>>;
+	launchCampaign(input: unknown): Promise<ResultEnvelope<LaunchCampaignData>>;
 	createSmartLinkFromSpotify(
 		input: unknown,
 	): Promise<ResultEnvelope<CreateSmartLinkFromSpotifyData>>;
@@ -405,11 +393,6 @@ export type Phase3Adapter = {
 	getSmartLink(
 		input: unknown,
 	): Promise<ResultEnvelope<GetSmartLinkData | GetSmartLinkSummaryData>>;
-	getSmartLinkAnalytics(
-		input: unknown,
-	): Promise<
-		ResultEnvelope<GetSmartLinkAnalyticsData | GetSmartLinkAnalyticsSummaryData>
-	>;
 	getSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<SmartLinkSettingsData>>;
@@ -418,9 +401,6 @@ export type Phase3Adapter = {
 	): Promise<
 		ResultEnvelope<UpdateSmartLinkData | UpdateSmartLinkArtistSettingsData>
 	>;
-	updateSmartLinkArtistSettings(
-		input: unknown,
-	): Promise<ResultEnvelope<UpdateSmartLinkArtistSettingsData>>;
 	shopGetQuote(input: unknown): Promise<ResultEnvelope<DynamoiShopQuoteData>>;
 	shopCreateCheckout(
 		input: unknown,
@@ -431,6 +411,7 @@ type DynamoiToolName = (typeof DYNAMOI_TOOL_DEFINITIONS)[number]["name"];
 type DynamoiToolDispatcher = (
 	adapter: Phase3Adapter,
 	input: unknown,
+	toolProfile?: DynamoiMcpToolProfile,
 ) => Promise<ResultEnvelope<unknown>>;
 
 type ErrorRecoveryMetadata = Partial<
@@ -663,6 +644,8 @@ function normalizeKnownErrorRecovery(
 }
 
 const DYNAMOI_TOOL_DISPATCHERS = {
+	dynamoi_about: (_adapter, _input, toolProfile) =>
+		Promise.resolve(getDynamoiAbout({ toolProfile })),
 	dynamoi_apply_for_distribution: (adapter, input) =>
 		adapter.applyForDistribution(input),
 	dynamoi_create_smart_link_from_spotify: (adapter, input) =>
@@ -830,8 +813,79 @@ export function asValidatedTextResult(options: {
 	return asTextResult(envelope);
 }
 
+// Lists vary by the caller's authorization, so clients may reuse them briefly
+// but never share them across principals.
+const PRIVATE_LIST_CACHE_HINT: CacheHint = {
+	cacheScope: "private",
+	ttlMs: 60_000,
+};
+
+const DYNAMOI_CACHE_HINTS: NonNullable<ServerOptions["cacheHints"]> = {
+	"prompts/list": PRIVATE_LIST_CACHE_HINT,
+	"resources/list": PRIVATE_LIST_CACHE_HINT,
+	"resources/templates/list": PRIVATE_LIST_CACHE_HINT,
+	"server/discover": PRIVATE_LIST_CACHE_HINT,
+	"tools/list": PRIVATE_LIST_CACHE_HINT,
+};
+
+type JsonSchemaObject = Record<string, unknown>;
+
+function isObjectShapedJsonSchema(schema: JsonSchemaObject): boolean {
+	if (schema["type"] !== undefined) {
+		return schema["type"] === "object";
+	}
+	if (
+		[
+			"properties",
+			"patternProperties",
+			"additionalProperties",
+			"required",
+		].some((key) => key in schema)
+	) {
+		return true;
+	}
+	return ["oneOf", "anyOf", "allOf"].some((key) => {
+		const members = schema[key];
+		return (
+			Array.isArray(members) &&
+			members.length > 0 &&
+			members.every(
+				(member) =>
+					typeof member === "object" &&
+					member !== null &&
+					isObjectShapedJsonSchema(member as JsonSchemaObject),
+			)
+		);
+	});
+}
+
+/** The JSON Schema the SDK would advertise, without the `$schema` dialect key. */
+function toAdvertisedJsonSchema(
+	schema: z.ZodType,
+	io: "input" | "output",
+): JsonSchemaObject {
+	// Some MCP clients reject schemas that carry `$schema`; it is informational.
+	const { $schema: _dialect, ...jsonSchema } = z.toJSONSchema(schema, {
+		io,
+		target: "draft-2020-12",
+	}) as JsonSchemaObject;
+	return jsonSchema["type"] === undefined &&
+		(io === "input" || isObjectShapedJsonSchema(jsonSchema))
+		? { type: "object", ...jsonSchema }
+		: jsonSchema;
+}
+
+type AdvertisedTool = Tool & {
+	securitySchemes: DynamoiToolMetadata["securitySchemes"];
+};
+
 export function createDynamoiMcpServer(options: {
 	adapter: Phase3Adapter;
+	/**
+	 * Runs before a tool dispatches. A returned result answers the call
+	 * instead, for example an OAuth step-up challenge the host detected.
+	 */
+	authorizeToolCall?: (toolName: string) => CallToolResult | undefined;
 	onToolCall?: (input: {
 		durationMs: number;
 		error?: unknown;
@@ -842,7 +896,7 @@ export function createDynamoiMcpServer(options: {
 	toolProfile?: DynamoiMcpToolProfile;
 	websiteUrl?: string;
 }): McpServer {
-	const toolProfile = options.toolProfile ?? "full";
+	const toolProfile = options.toolProfile ?? "directory";
 	const server = new McpServer(
 		{
 			name: "dynamoi",
@@ -850,13 +904,21 @@ export function createDynamoiMcpServer(options: {
 			websiteUrl: options.websiteUrl ?? "https://dynamoi.com",
 		},
 		{
+			cacheHints: DYNAMOI_CACHE_HINTS,
+			// Every request builds a fresh server, so lists never change mid-connection.
+			capabilities: {
+				resources: { listChanged: false },
+				tools: { listChanged: false },
+				...(toolProfile === "full" ? { prompts: { listChanged: false } } : {}),
+			},
 			instructions:
-				toolProfile === "chatgpt-app"
+				toolProfile === "directory"
 					? DYNAMOI_CHATGPT_APP_INSTRUCTIONS
 					: DYNAMOI_MCP_INSTRUCTIONS,
 		},
 	);
 
+	const advertisedTools: AdvertisedTool[] = [];
 	for (const def of getDynamoiToolDefinitions({ toolProfile })) {
 		const title = def.title;
 		const dispatcher = DYNAMOI_TOOL_DISPATCHERS[def.name];
@@ -884,6 +946,27 @@ export function createDynamoiMcpServer(options: {
 		if (typeof idempotentHint === "boolean") {
 			annotations.idempotentHint = idempotentHint;
 		}
+		const outputSchema = getAdvertisedToolOutputSchema({
+			canonical: def.outputSchema,
+			toolName: def.name,
+			toolProfile,
+		});
+		advertisedTools.push({
+			_meta: meta,
+			annotations,
+			description: def.description,
+			inputSchema: toAdvertisedJsonSchema(
+				def.schema,
+				"input",
+			) as Tool["inputSchema"],
+			name: def.name,
+			outputSchema: toAdvertisedJsonSchema(
+				outputSchema,
+				"output",
+			) as Tool["outputSchema"],
+			securitySchemes: meta.securitySchemes,
+			title,
+		});
 		server.registerTool(
 			def.name,
 			{
@@ -891,17 +974,21 @@ export function createDynamoiMcpServer(options: {
 				annotations,
 				description: def.description,
 				inputSchema: def.schema,
-				outputSchema: getAdvertisedToolOutputSchema({
-					canonical: def.outputSchema,
-					toolName: def.name,
-					toolProfile,
-				}),
+				outputSchema,
 				title,
 			},
 			async (input: unknown) => {
+				const denied = options.authorizeToolCall?.(def.name);
+				if (denied) {
+					return denied;
+				}
 				const startedAt = Date.now();
 				try {
-					const envelope = await dispatcher(options.adapter, input);
+					const envelope = await dispatcher(
+						options.adapter,
+						input,
+						toolProfile,
+					);
 					const finalized = asValidatedTextResult({
 						envelope,
 						outputSchema: def.outputSchema,
@@ -933,6 +1020,36 @@ export function createDynamoiMcpServer(options: {
 		);
 	}
 
+	// OpenAI reads per-tool auth from a top-level `securitySchemes` field that
+	// the SDK's generated list omits, so this server advertises the final tool
+	// shape itself. Both eras and both response modes serve the same list.
+	server.server.removeRequestHandler("tools/list");
+	server.server.setRequestHandler("tools/list", () => ({
+		tools: advertisedTools,
+	}));
+
+	server.registerResource(
+		DYNAMOI_ABOUT_RESOURCE.name,
+		DYNAMOI_ABOUT_RESOURCE.uri,
+		{
+			cacheHint: { cacheScope: "public", ttlMs: 60 * 60 * 1000 },
+			description: DYNAMOI_ABOUT_RESOURCE.description,
+			mimeType: DYNAMOI_ABOUT_RESOURCE.mimeType,
+			title: DYNAMOI_ABOUT_RESOURCE.title,
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: DYNAMOI_ABOUT_RESOURCE.mimeType,
+					text:
+						toolProfile === "directory"
+							? DYNAMOI_ABOUT_DIRECTORY_MARKDOWN
+							: DYNAMOI_ABOUT_MARKDOWN,
+					uri: uri.href,
+				},
+			],
+		}),
+	);
 	registerSmartLinkThemePreviewResource(server);
 
 	if (toolProfile === "full") {

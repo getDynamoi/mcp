@@ -184,23 +184,3 @@ export type LaunchCampaignData = {
 	nextSteps: string[];
 	warnings?: string[];
 };
-
-export type McpMutationProposal = {
-	action: "launch_campaign" | "update_budget";
-	subjectId: string;
-	contentTitle: string;
-	budget: { amountCents: number; currency: "USD"; type: "DAILY" | "TOTAL" };
-	endDate: string | null;
-	targeting: { mode: "GLOBAL" } | { mode: "COUNTRIES"; countries: Array<{ code: string; name: string }> };
-	platforms: string[];
-	automaticDailyFundingAuthorized: boolean;
-};
-
-export type McpMutationConfirmationData = {
-	kind: "confirmation_required";
-	confirmationToken: string;
-	expiresAt: string;
-	proposal: McpMutationProposal;
-	summary: string;
-	requiresHumanConfirmation: true;
-};

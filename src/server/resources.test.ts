@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@modelcontextprotocol/client";
+import { InMemoryTransport, McpServer } from "@modelcontextprotocol/server";
 import type { Phase3Adapter } from "./create-server";
 import { registerDynamoiResources } from "./resources";
 
@@ -39,7 +38,7 @@ describe("registerDynamoiResources persona playbooks", () => {
 			"dynamoi_create_smart_links_from_spotify_artist",
 		);
 		expect(parsed.persona).toContain("Spotify");
-		expect(typeof parsed.marginCopyGuard).toBe("string");
+		expect(parsed.marginCopyGuard).toBeUndefined();
 	});
 
 	test("dynamoi://playbooks/youtube-creator highlights revenue-per-view differentiator", async () => {

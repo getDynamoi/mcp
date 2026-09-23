@@ -78,7 +78,11 @@ async function build({ packageVersion, typescriptCli }) {
 				path.join(sourceRoot, "auth/protected-resource.ts"),
 				path.join(sourceRoot, "consent.ts"),
 			],
-			external: ["@modelcontextprotocol/sdk", "jose", "zod"],
+			external: [
+				"@modelcontextprotocol/client",
+				"@modelcontextprotocol/server",
+				"zod",
+			],
 			format: "esm",
 			minify: false,
 			outdir: nextOutputRoot,

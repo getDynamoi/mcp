@@ -8,10 +8,13 @@ catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The snapshot has 27 registered tools and 17 in the restricted profile. A verified
-client with user-granted `dynamoi:mcp.full` receives the full catalog irrespective
-of vendor or client-ID format. Each call still requires its domain scopes and
-resource RBAC. Anonymous discovery remains restricted and cannot execute tools.
+The snapshot has 28 registered tools and 18 in the directory profile — the
+review-safe catalog served to recognized agent-directory clients; every other
+authenticated client with user-granted `dynamoi:mcp.full` receives the full
+catalog irrespective of vendor or client-ID format. Each call still requires
+its domain scopes and resource RBAC. Unauthenticated requests reach only
+discovery methods plus the public `dynamoi_about` tool and `dynamoi://about`
+resource on a directory-profile server that refuses everything else.
 
 ## Implemented boundaries and gaps
 
@@ -25,11 +28,13 @@ resource RBAC. Anonymous discovery remains restricted and cannot execute tools.
 | Distribution | Five scored requirements, application state and explicit adult-attested application submission for manual review | Agreement execution, release intake/catalog, rights/splits, royalties, tax, payout and takedown workflows |
 | Billing and Shop | Managed billing observations; full-profile Shop quote and unpaid Stripe checkout creation | Managed subscription changes, invoice/funding workflows or agent payment settlement. Shop checkout is not a campaign launch or paid order. |
 
-A real campaign launch or budget edit first returns a signed, five-minute
-`confirmation_required` proposal with exact customer budget, USD currency and
-targeting. No financial mutation occurs at that stage. The host must obtain human
-approval and repeat unchanged inputs with the receipt. The receipt is not proof
-of a human click, not a payment/funding grant and not a durable idempotency store.
+A real campaign launch, budget edit or pause/resume runs the same shared
+backend functions as web and mobile. Operations that need automatic daily card
+funding — daily-budget launches and budget updates, and resumes of campaigns
+that require card funding — must carry the funding-consent fields
+(`authorizeAutomaticDailyFunding` with the exact `acceptedConsentVersion` and
+`acceptedConsentCopyHash`, plus `clientRequestId`) after the user is shown the
+consent copy; without them the shared path refuses before any provider call.
 Existing owners retain RBAC, spending authority and idempotency checks. Demo
 responses remain simulations with no provider, billing or campaign effects.
 

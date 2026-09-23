@@ -1,7 +1,4 @@
-import {
-	type McpServer,
-	ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
+import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { Phase3Adapter } from "./create-server";
 import { registerPlaybookResources } from "./playbook-resources";
@@ -38,10 +35,10 @@ export function registerDynamoiResources(
 							},
 						},
 						includes:
-							"Free Smart Links, unlimited team seats, unlimited artists, white-glove support, and campaign landing-page support where available",
+							"Free Smart Links, Smart Link analytics, custom themes, validated pixel IDs, team seats, and campaign landing pages where available",
 						managedAdvertising: {
 							description:
-								"Managed advertising subscription and payment setup happen in the Dynamoi dashboard, outside ChatGPT. This MCP server can check billing readiness after setup, but does not create checkout links or collect payment.",
+								"Managed advertising subscription and payment setup happen in the Dynamoi dashboard. This MCP server can check billing readiness after setup; it does not start subscriptions or collect payment for managed advertising.",
 							paymentSetupLocation: "Dynamoi dashboard",
 						},
 						noContracts: true,
@@ -217,7 +214,7 @@ export function registerDynamoiResources(
 						managedAdvertising: {
 							paid: true,
 							pricing:
-								"Billing and payment setup happen in the Dynamoi dashboard, outside ChatGPT.",
+								"Billing and payment setup happen in the Dynamoi dashboard.",
 							useFor:
 								"Managed Meta and Google ad campaigns for Spotify promotion and YouTube channel growth.",
 						},

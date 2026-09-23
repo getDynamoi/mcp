@@ -1,0 +1,110 @@
+import * as z from "zod/v4";
+import type { ResultEnvelope } from "../types";
+import { AnyOutputEnvelopeSchema } from "./output-schemas";
+
+const DYNAMOI_ABOUT_INTRO = "Dynamoi is a music growth platform for artists, labels, and managers. It combines free Smart Links and analytics with managed advertising and opt-in music distribution, so an artist can go from a Spotify URL to a shareable release page, a running campaign, or a distribution application in one place. Dynamoi was founded by Trevor Loucks and is operated by humans, assisted by AI.";
+
+const DYNAMOI_ABOUT_SMART_LINKS_BULLET = "- **Free Smart Links** — create and manage Smart Links and artist hubs from Spotify artist, album, or track URLs at no cost. Link analytics, custom themes, validated pixel IDs, and team seats are included. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship.";
+
+const DYNAMOI_ABOUT_YOUTUBE_BULLET = "- **YouTube campaigns** — managed Google Ads campaigns for YouTube channel growth. Dynamoi optimizes ad spend against AdSense revenue per country, so delivery favors audiences that actually monetize.";
+
+const DYNAMOI_ABOUT_DISTRIBUTION_GATE =
+	"Dynamoi scores five requirements before an application can be submitted — including an established audience (at least 10,000 monthly Spotify listeners) and identity verification — and approval is not guaranteed.";
+
+const DYNAMOI_ABOUT_GETTING_STARTED = `## How to get started
+
+1. Sign in at https://dynamoi.com.
+2. Connect your Spotify artist profile.
+3. Create a free Smart Link for a release.`;
+
+export const DYNAMOI_ABOUT_MARKDOWN = `# About Dynamoi
+
+${DYNAMOI_ABOUT_INTRO}
+
+## What Dynamoi offers
+
+${DYNAMOI_ABOUT_SMART_LINKS_BULLET}
+- **Managed Smart Campaigns** — Dynamoi runs Meta ad campaigns that promote Spotify tracks, albums, and playlists. Campaign budgets start at $10/day.
+${DYNAMOI_ABOUT_YOUTUBE_BULLET}
+- **Music distribution** — an opt-in product that delivers releases to 100+ stores including Spotify, Apple Music, Amazon Music, YouTube Music, TikTok, Deezer, and Tidal. The artist keeps 90% of Net Receipts (Dynamoi keeps 10%), there are no upfront release fees, and Content ID is included. Optional publishing administration is available to distribution clients for 10% of Net Receipts. ${DYNAMOI_ABOUT_DISTRIBUTION_GATE}
+- **YouTube promotion Shop** — one-off YouTube promotion purchases without a subscription, for users who do not want managed advertising.
+
+${DYNAMOI_ABOUT_GETTING_STARTED}
+
+## Pricing
+
+Smart Links are free. Managed advertising and distribution are paid products — see current plans and pricing at https://dynamoi.com/pricing.`;
+
+// Directory-profile variant: no pricing, plans, or Shop purchase lines, so the
+// review-safe surface never advertises spend or checkout paths.
+export const DYNAMOI_ABOUT_DIRECTORY_MARKDOWN = `# About Dynamoi
+
+${DYNAMOI_ABOUT_INTRO}
+
+## What Dynamoi offers
+
+${DYNAMOI_ABOUT_SMART_LINKS_BULLET}
+- **Managed Smart Campaigns** — Dynamoi runs Meta ad campaigns that promote Spotify tracks, albums, and playlists.
+${DYNAMOI_ABOUT_YOUTUBE_BULLET}
+- **Music distribution** — an opt-in product that delivers releases to 100+ stores including Spotify, Apple Music, Amazon Music, YouTube Music, TikTok, Deezer, and Tidal. ${DYNAMOI_ABOUT_DISTRIBUTION_GATE}
+
+${DYNAMOI_ABOUT_GETTING_STARTED}`;
+
+const DYNAMOI_ABOUT_SUMMARY =
+	"Dynamoi is a music growth platform for artists, labels, and managers: free Smart Links and analytics, managed Meta Smart Campaigns and YouTube campaigns, a YouTube promotion Shop, and opt-in distribution to 100+ stores. Sign in at dynamoi.com, connect Spotify, and create a free Smart Link to start. Pricing: https://dynamoi.com/pricing.";
+
+const DYNAMOI_ABOUT_DIRECTORY_SUMMARY =
+	"Dynamoi is a music growth platform for artists, labels, and managers: free Smart Links and analytics, managed Meta Smart Campaigns and YouTube campaigns, and opt-in distribution to 100+ stores. Sign in at dynamoi.com, connect Spotify, and create a free Smart Link to start.";
+
+export const DYNAMOI_ABOUT_RESOURCE = {
+	description:
+		"Canonical About Dynamoi overview: what Dynamoi is, who it is for, free Smart Links, managed Smart Campaigns, YouTube campaigns, distribution, and how to get started.",
+	mimeType: "text/markdown",
+	name: "dynamoi_about",
+	title: "About Dynamoi",
+	uri: "dynamoi://about",
+} as const;
+
+export const DYNAMOI_ABOUT_TOOL_DEFINITION = {
+	description:
+		"Use this when the user asks what Dynamoi is, who it is for, or what it offers — including before sign-in or before choosing a tool. Returns the canonical About Dynamoi text plus a short structured summary covering free Smart Links, managed Smart Campaigns, YouTube campaigns, distribution, and getting started. This is read-only product information, not account data.",
+	destructiveHint: false,
+	idempotentHint: true,
+	name: "dynamoi_about",
+	openWorldHint: false,
+	outputSchema: AnyOutputEnvelopeSchema,
+	readOnlyHint: true,
+	schema: z.object({}).strict(),
+	title: "About Dynamoi",
+} as const;
+
+export function getDynamoiAbout(options?: {
+	toolProfile?: "full" | "directory" | undefined;
+}): ResultEnvelope<{
+	links: {
+		dashboard: string;
+		pricing?: string;
+		signIn: string;
+	};
+	markdown: string;
+	summary: string;
+}> {
+	// Fail closed: the pricing/Shop-bearing variant requires an explicit full profile.
+	const isFull = options?.toolProfile === "full";
+	return {
+		data: {
+			links: {
+				dashboard: "https://dynamoi.com/dashboard",
+				...(isFull ? { pricing: "https://dynamoi.com/pricing" } : {}),
+				signIn: "https://dynamoi.com",
+			},
+			markdown: isFull
+				? DYNAMOI_ABOUT_MARKDOWN
+				: DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
+			summary: isFull
+				? DYNAMOI_ABOUT_SUMMARY
+				: DYNAMOI_ABOUT_DIRECTORY_SUMMARY,
+		},
+		status: "success",
+	};
+}

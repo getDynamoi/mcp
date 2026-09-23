@@ -80,7 +80,7 @@ const DynamoiGetCurrentUserIntentSchema = z.enum([
 export const DynamoiGetCurrentUserInputSchema = z
 	.object({
 		format: ToolFormatSchema.optional(),
-		intent: DynamoiGetCurrentUserIntentSchema,
+		intent: DynamoiGetCurrentUserIntentSchema.default("account_overview"),
 	})
 	.strict();
 
@@ -225,18 +225,39 @@ export const DynamoiPauseCampaignInputSchema = z
 
 export const DynamoiResumeCampaignInputSchema = z
 	.object({
+		acceptedConsentCopyHash: z
+			.literal(prospectiveFundingConsentCopyHash)
+			.optional(),
+		acceptedConsentVersion: z
+			.literal(prospectiveFundingConsentVersion)
+			.optional(),
+		authorizeAutomaticDailyFunding: z.literal(true).optional(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
 		expectedCurrentStatus: ExpectedCampaignStatusSchema,
 		userIntentSummary: UserIntentSummarySchema,
 	})
-	.strict();
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.authorizeAutomaticDailyFunding &&
+			!(
+				data.acceptedConsentCopyHash &&
+				data.acceptedConsentVersion &&
+				data.clientRequestId
+			)
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"acceptedConsentCopyHash, acceptedConsentVersion, and clientRequestId are required with automatic daily funding authorization",
+				path: ["authorizeAutomaticDailyFunding"],
+			});
+		}
+	});
 
 export const DynamoiUpdateBudgetInputSchema = z
 	.object({
-		confirmationToken: z.string().min(1).max(2048).optional().describe(
-			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
-		),
 		acceptedConsentCopyHash: z
 			.literal(prospectiveFundingConsentCopyHash)
 			.optional(),
@@ -278,16 +299,13 @@ export const DynamoiUpdateBudgetInputSchema = z
 
 export const DynamoiUpdateCampaignInputSchema = z
 	.object({
-		confirmationToken: z.string().min(1).max(2048).optional().describe(
-			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
-		),
-		action: z.enum(["pause", "resume", "update_budget"]),
 		acceptedConsentCopyHash: z
 			.literal(prospectiveFundingConsentCopyHash)
 			.optional(),
 		acceptedConsentVersion: z
 			.literal(prospectiveFundingConsentVersion)
 			.optional(),
+		action: z.enum(["pause", "resume", "update_budget"]),
 		authorizeAutomaticDailyFunding: z
 			.literal(true)
 			.describe(
@@ -314,10 +332,7 @@ export const DynamoiUpdateCampaignInputSchema = z
 		}
 		if (data.action !== "update_budget") {
 			for (const field of [
-				"acceptedConsentCopyHash",
-				"acceptedConsentVersion",
 				"budgetAmount",
-				"authorizeAutomaticDailyFunding",
 				"endDate",
 				"expectedCurrentBudgetAmount",
 				"expectedCurrentEndDate",
@@ -326,6 +341,21 @@ export const DynamoiUpdateCampaignInputSchema = z
 					ctx.addIssue({
 						code: "custom",
 						message: `${field} is only valid when action is update_budget`,
+						path: [field],
+					});
+				}
+			}
+		}
+		if (data.action === "pause") {
+			for (const field of [
+				"acceptedConsentCopyHash",
+				"acceptedConsentVersion",
+				"authorizeAutomaticDailyFunding",
+			] as const) {
+				if (data[field] !== undefined) {
+					ctx.addIssue({
+						code: "custom",
+						message: `${field} is only valid when action is update_budget or resume`,
 						path: [field],
 					});
 				}
@@ -360,13 +390,22 @@ export const DynamoiListMediaAssetsInputSchema = z
 
 export const DynamoiLaunchCampaignInputSchema = z
 	.object({
-		confirmationToken: z.string().min(1).max(2048).optional().describe(
-			"Omit to get an exact, expiring proposal without mutation. Show the complete receipt and obtain human approval, then repeat unchanged inputs with this token. Never confirm automatically.",
-		),
+		acceptedConsentCopyHash: z
+			.literal(prospectiveFundingConsentCopyHash)
+			.optional(),
+		acceptedConsentVersion: z
+			.literal(prospectiveFundingConsentVersion)
+			.optional(),
 		// Creative
 		adCopy: z.string().trim().max(500).optional(),
 		appleMusicUrl: z.string().trim().min(1).max(500).optional(),
 		artistId: z.string().uuid(),
+		authorizeAutomaticDailyFunding: z
+			.literal(true)
+			.describe(
+				`Required for DAILY budgets. Set only after the client explicitly accepts: “${prospectiveFundingConsentCopy}”`,
+			)
+			.optional(),
 
 		// Budget
 		budgetAmount: z.number().finite().positive(),
@@ -393,10 +432,37 @@ export const DynamoiLaunchCampaignInputSchema = z
 		spotifyUrl: z.string().trim().min(1).max(500).optional(),
 		useAiGeneratedCopy: z.boolean().optional(),
 		userIntentSummary: UserIntentSummarySchema,
+		// YouTube content (same choices as the app's YouTube campaign setup)
+		youtubePlaylistId: z.string().trim().min(1).max(128).optional(),
+		youtubeStrategy: z
+			.enum([
+				"CHEAPEST_VIEWS",
+				"ORGANIC_VIEWS",
+				"SUBSCRIBERS",
+				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
+				"ADSENSE_ROI",
+			])
+			.optional(),
 		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
 	})
 	.strict()
 	.superRefine((data, ctx) => {
+		if (
+			data.budgetType === "DAILY" &&
+			!(
+				data.authorizeAutomaticDailyFunding &&
+				data.acceptedConsentCopyHash &&
+				data.acceptedConsentVersion
+			)
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"DAILY budgets require authorizeAutomaticDailyFunding with acceptedConsentCopyHash and acceptedConsentVersion",
+				path: ["authorizeAutomaticDailyFunding"],
+			});
+		}
+
 		const sum = Object.values(data.budgetSplits ?? {}).reduce(
 			(acc, v) => acc + (Number.isFinite(v) ? v : 0),
 			0,
@@ -451,6 +517,25 @@ export const DynamoiLaunchCampaignInputSchema = z
 					path: ["youtubeVideoId"],
 				});
 			}
+			if (!data.youtubeStrategy) {
+				ctx.addIssue({
+					code: "custom",
+					message: "youtubeStrategy is required for YOUTUBE",
+					path: ["youtubeStrategy"],
+				});
+			}
+			if (
+				data.youtubeStrategy &&
+				data.youtubeStrategy !== "CHEAPEST_VIEWS" &&
+				!data.youtubePlaylistId
+			) {
+				ctx.addIssue({
+					code: "custom",
+					message:
+						"youtubePlaylistId is required for YOUTUBE unless youtubeStrategy is CHEAPEST_VIEWS",
+					path: ["youtubePlaylistId"],
+				});
+			}
 			if (data.contentType !== "VIDEO") {
 				ctx.addIssue({
 					code: "custom",
@@ -479,7 +564,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 export const PHASE_1_TOOL_DEFINITIONS = [
 	{
 		description:
-			"Use this when the user explicitly asks about the signed-in Dynamoi account itself, such as who is logged in, how many organizations or artists it can access, or whether account-level platform connections exist. Always pass intent to match that explicit account question. Do not use this to confirm a specific Meta or YouTube onboarding attempt because this account-level state can span multiple artists; use dynamoi_get_platform_status for the target artist instead. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
+			"Use this when the user explicitly asks about the signed-in Dynamoi account itself, such as who is logged in, how many organizations or artists it can access, or whether account-level platform connections exist. Pass intent to match that explicit account question; it defaults to account_overview. Do not use this to confirm a specific Meta or YouTube onboarding attempt because this account-level state can span multiple artists; use dynamoi_get_platform_status for the target artist instead. Do not use this to enumerate artists one by one; use dynamoi_list_artists for that. Never use this to 'check context' before answering generic Instagram, lyrics, songwriting, or marketing-advice questions, even if Dynamoi is attached.",
 		destructiveHint: false,
 		name: "dynamoi_get_account_overview",
 		openWorldHint: false,
@@ -546,7 +631,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user asks about billing state, credit balance, promo limits, subscription status, or whether billing blocks launches for one artist. This is a read-only status check; it does not create checkout links or collect payment. If billing blocks a launch, direct the user to start or restore managed advertising in the Dynamoi dashboard, then call this tool again to confirm the status. Do not use this for campaign analytics or platform connection troubleshooting.",
+			"Use this when the user asks about billing state, credit balance, promo limits, subscription status, or whether billing blocks launches for one artist. This is a read-only status check; it does not create checkout links or collect payment. If billing blocks a launch, starting or restoring managed advertising is not available through this MCP surface; tell the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.' Then call this tool again to confirm the status. Do not use this for campaign analytics or platform connection troubleshooting.",
 		destructiveHint: false,
 		name: "dynamoi_get_billing",
 		openWorldHint: false,
@@ -598,8 +683,7 @@ export const PHASE_ONBOARDING_TOOL_DEFINITIONS =
 
 export const PHASE_2_TOOL_DEFINITIONS = [
 	{
-		description:
-			"Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Budget changes return a confirmation_required receipt first; obtain human approval before repeating with confirmationToken. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.",
+		description: `Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Pause takes effect immediately. For resume or update_budget on a campaign that needs automatic daily card funding, first show the user this exact consent copy: "${prospectiveFundingConsentCopy}" — then pass authorizeAutomaticDailyFunding=true with the exact acceptedConsentVersion ("${prospectiveFundingConsentVersion}") and acceptedConsentCopyHash ("${prospectiveFundingConsentCopyHash}") plus the request's clientRequestId. Without them, a resume that needs card funding is refused with: "Review and accept the daily funding authorization to resume this campaign." When retrying the same resume, reuse the same clientRequestId. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.`,
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_campaign",

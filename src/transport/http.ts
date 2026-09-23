@@ -1,6 +1,10 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { normalizeLegacySmartLinkInclude } from "../server/smart-link-tools";
+import {
+	createMcpHandler,
+	isLegacyRequest,
+	type McpHttpHandler,
+	type McpServer,
+	WebStandardStreamableHTTPServerTransport,
+} from "@modelcontextprotocol/server";
 
 type HandleOptions = {
 	createServer: () => McpServer;
@@ -8,101 +12,32 @@ type HandleOptions = {
 	parsedBody: unknown;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-type NormalizedMcpBody =
-	| string
-	| number
-	| boolean
-	| null
-	| undefined
-	| NormalizedMcpBody[]
-	| { [key: string]: unknown };
-
-function normalizeLegacyDynamoiToolCallArguments(
-	parsedBody: unknown,
-): NormalizedMcpBody {
-	if (Array.isArray(parsedBody)) {
-		return parsedBody.map((message) =>
-			normalizeLegacyDynamoiToolCallArguments(message),
-		);
-	}
-	if (!isRecord(parsedBody)) {
-		if (
-			parsedBody === null ||
-			parsedBody === undefined ||
-			typeof parsedBody === "string" ||
-			typeof parsedBody === "number" ||
-			typeof parsedBody === "boolean"
-		) {
-			return parsedBody;
-		}
-		return null;
-	}
-	if (parsedBody["method"] !== "tools/call") {
-		return parsedBody;
-	}
-	const params = parsedBody["params"];
-	if (!isRecord(params) || params["name"] !== "dynamoi_get_smart_link") {
-		return parsedBody;
-	}
-	const normalizedArguments = normalizeLegacySmartLinkInclude(
-		params["arguments"],
-	);
-	if (normalizedArguments === params["arguments"]) {
-		return parsedBody;
-	}
-	return {
-		...parsedBody,
-		params: {
-			...params,
-			arguments: normalizedArguments,
-		},
-	};
-}
-
-export async function handleMcpHttpRequest(
-	options: HandleOptions,
-): Promise<Response> {
-	if (options.request.method.toUpperCase() !== "POST") {
-		return new Response(
-			JSON.stringify({
-				error: { code: -32_000, message: "Method not allowed." },
-				id: null,
-				jsonrpc: "2.0",
-			}),
-			{
-				headers: {
-					Allow: "POST",
-					"content-type": "application/json",
-				},
-				status: 405,
+function methodNotAllowed(): Response {
+	return new Response(
+		JSON.stringify({
+			error: { code: -32_000, message: "Method not allowed." },
+			id: null,
+			jsonrpc: "2.0",
+		}),
+		{
+			headers: {
+				Allow: "POST",
+				"content-type": "application/json",
 			},
-		);
-	}
-
-	const parsedBody = normalizeLegacyDynamoiToolCallArguments(
-		options.parsedBody,
+			status: 405,
+		},
 	);
+}
 
-	// CUSTOM INTEROP SHIM (Anthropic MCP SDK vs OpenAI ChatGPT):
-	// Why custom code is required here:
-	// 1. OpenAI's ChatGPT client backend (Python/3.11 aiohttp) probes MCP discovery by sending `POST /mcp`
-	//    with JSON-RPC `{"method": "tools/list"}` and `Accept: application/json`.
-	// 2. Anthropic's official `@modelcontextprotocol/sdk` (`WebStandardStreamableHTTPServerTransport:468`)
-	//    strictly enforces the MCP transport specification by hardcoding a validation check:
-	//    `if (!acceptHeader?.includes('application/json') || !acceptHeader.includes('text/event-stream'))`
-	//    returning `HTTP 406 Not Acceptable: Client must accept both application/json and text/event-stream`.
-	// 3. Even with `enableJsonResponse: true`, Anthropic's SDK executes this Accept header check
-	//    BEFORE switching to JSON response mode.
-	// 4. Result: OpenAI's client probe gets rejected with 406 before any OAuth, Better Auth, or tool execution
-	//    can take place. OpenAI reviewers see the connection fail during setup and reject it as an "OAuth issue".
-	//
-	// This shim normalizes the `Accept` header to satisfy Anthropic's SDK validation while preserving
-	// JSON response mode for single-result tools. It should be removed once Anthropic's SDK relaxes its
-	// Accept validation or OpenAI's client probe advertises `text/event-stream`.
+// CUSTOM INTEROP SHIM (2025-era clients such as ChatGPT):
+// MCP SDK v2 serves 2026-07-28 requests through `createMcpHandler`, which does
+// not check Accept. Its 2025-era path (`WebStandardStreamableHTTPServerTransport`,
+// also behind the built-in `legacyStatelessFallback`) still answers 406 unless
+// Accept lists both `application/json` and `text/event-stream`, and the built-in
+// fallback always streams SSE. ChatGPT's 2025-era requests send
+// `Accept: application/json` only, so this path normalizes Accept for the SDK
+// check and keeps JSON response mode for clients that did not ask for SSE.
+async function handleLegacyRequest(options: HandleOptions): Promise<Response> {
 	const accept = options.request.headers.get("accept");
 	const acceptsEventStream = accept?.includes("text/event-stream") ?? false;
 	const acceptsJson =
@@ -110,44 +45,113 @@ export async function handleMcpHttpRequest(
 	const enableJsonResponse = !acceptsEventStream && Boolean(acceptsJson);
 
 	let effectiveRequest = options.request;
-
-	const needsAcceptNormalization = !(
-		accept?.includes("application/json") &&
-		accept?.includes("text/event-stream")
-	);
-
-	if (needsAcceptNormalization) {
+	if (
+		!(
+			accept?.includes("application/json") &&
+			accept.includes("text/event-stream")
+		)
+	) {
 		const headers = new Headers(options.request.headers);
 		headers.set("accept", "application/json, text/event-stream");
-		const init: RequestInit = {
+		// parsedBody is handed to the transport, so the request body is never read.
+		effectiveRequest = new Request(options.request.url, {
 			headers,
 			method: options.request.method,
-		};
-		// When parsedBody is provided to transport.handleRequest, avoid reading/locking request.body.
-		if (
-			options.parsedBody === undefined &&
-			!options.request.bodyUsed &&
-			options.request.body !== null
-		) {
-			init.body = options.request.body;
-		}
-		effectiveRequest = new Request(options.request.url, init);
+			signal: options.request.signal,
+		});
 	}
 
-	// Each request owns its transport. MCP sessions are optional, and this helper
-	// deliberately does not advertise a reusable session that serverless routing
-	// cannot guarantee will reach the same process.
-	// When the caller explicitly accepts SSE (standard MCP clients), use the default
-	// streamable SSE mode. When the caller only accepts JSON (e.g. OpenAI ChatGPT discovery
-	// probes), use the SDK's JSON response mode.
+	// Each request owns a stateless server and transport: serverless routing
+	// cannot guarantee a reusable session reaches the same process. Both close
+	// once the response is complete or the client disconnects.
+	const server = options.createServer();
 	const transport = new WebStandardStreamableHTTPServerTransport({
 		enableJsonResponse,
+		sessionIdGenerator: undefined,
 	});
+	let closed = false;
+	const close = () => {
+		if (!closed) {
+			closed = true;
+			options.request.signal.removeEventListener("abort", close);
+			void server.close().catch(() => undefined);
+		}
+	};
+	options.request.signal.addEventListener("abort", close, { once: true });
 
-	const server = options.createServer();
-	await server.connect(transport);
+	let response: Response;
+	try {
+		await server.connect(transport);
+		response = await transport.handleRequest(effectiveRequest, {
+			parsedBody: options.parsedBody,
+		});
+	} catch (error) {
+		close();
+		throw error;
+	}
+	if (!(response.body && isEventStream(response))) {
+		close();
+		return response;
+	}
+	return new Response(
+		response.body.pipeThrough(new TransformStream({ flush: close })),
+		{
+			headers: response.headers,
+			status: response.status,
+			statusText: response.statusText,
+		},
+	);
+}
 
-	return transport.handleRequest(effectiveRequest, {
-		parsedBody,
-	});
+function isEventStream(response: Response): boolean {
+	return (response.headers.get("content-type") ?? "").includes(
+		"text/event-stream",
+	);
+}
+
+// One SDK handler serves every modern request; each request supplies the
+// server factory for its own principal and tool profile.
+const modernServerFactories = new WeakMap<Request, () => McpServer>();
+let modernHandler: McpHttpHandler | undefined;
+
+function getModernHandler(): McpHttpHandler {
+	modernHandler ??= createMcpHandler(
+		({ requestInfo }) => {
+			const createServer =
+				requestInfo && modernServerFactories.get(requestInfo);
+			if (!createServer) {
+				throw new Error(
+					"No MCP server factory is registered for this request.",
+				);
+			}
+			return createServer();
+		},
+		{ legacy: "reject", responseMode: "json" },
+	);
+	return modernHandler;
+}
+
+/**
+ * Serves one stateless MCP POST. 2026-07-28 requests go through the SDK's
+ * per-request handler; 2025-era requests (including `initialize`) go through
+ * the legacy transport above. GET and DELETE have no stream or session to
+ * serve, so both eras answer them with 405.
+ */
+export async function handleMcpHttpRequest(
+	options: HandleOptions,
+): Promise<Response> {
+	if (options.request.method.toUpperCase() !== "POST") {
+		return methodNotAllowed();
+	}
+	if (await isLegacyRequest(options.request, options.parsedBody)) {
+		return handleLegacyRequest(options);
+	}
+	modernServerFactories.set(options.request, options.createServer);
+	try {
+		return await getModernHandler().fetch(options.request, {
+			parsedBody: options.parsedBody,
+		});
+	} finally {
+		modernServerFactories.delete(options.request);
+	}
 }

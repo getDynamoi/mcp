@@ -1,11 +1,3 @@
-type ProtectedResourceMetadata = {
-	authorization_servers: string[];
-	bearer_methods_supported: ["header"];
-	resource: string;
-	resource_documentation?: string;
-	scopes_supported: string[];
-};
-
 export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:read",
 	"dynamoi:mcp.full",
@@ -18,11 +10,13 @@ export const DYNAMOI_BETTER_AUTH_MCP_SCOPES = [
 	"dynamoi:platform.write",
 	"dynamoi:smart_links.write",
 ] as const;
-/** @deprecated Use DYNAMOI_BETTER_AUTH_MCP_SCOPES. */
-export const DYNAMOI_MCP_SCOPES = DYNAMOI_BETTER_AUTH_MCP_SCOPES;
 export const DYNAMOI_MCP_TOOL_SCOPES = {
-	dynamoi_shop_create_checkout: ["dynamoi:read", "dynamoi:mcp.full"],
-	dynamoi_shop_get_quote: ["dynamoi:read", "dynamoi:mcp.full"],
+	// Public product information; callable before sign-in.
+	dynamoi_about: [],
+	dynamoi_apply_for_distribution: [
+		"dynamoi:read",
+		"dynamoi:distribution.apply",
+	],
 	dynamoi_create_smart_link_from_spotify: [
 		"dynamoi:read",
 		"dynamoi:smart_links.write",
@@ -43,10 +37,6 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	dynamoi_get_platform_status: ["dynamoi:read", "dynamoi:platform.read"],
 	dynamoi_get_smart_link: ["dynamoi:read"],
 	dynamoi_launch_campaign: ["dynamoi:read", "dynamoi:campaign.launch"],
-	dynamoi_apply_for_distribution: [
-		"dynamoi:read",
-		"dynamoi:distribution.apply",
-	],
 	dynamoi_list_artists: ["dynamoi:read"],
 	dynamoi_list_available_countries: ["dynamoi:read"],
 	dynamoi_list_campaigns: ["dynamoi:read"],
@@ -54,6 +44,8 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	dynamoi_list_smart_links: ["dynamoi:read"],
 	dynamoi_preview_smart_link_themes: ["dynamoi:read"],
 	dynamoi_search: ["dynamoi:read"],
+	dynamoi_shop_create_checkout: ["dynamoi:read", "dynamoi:mcp.full"],
+	dynamoi_shop_get_quote: ["dynamoi:read", "dynamoi:mcp.full"],
 	dynamoi_start_meta_connection: ["dynamoi:read", "dynamoi:platform.write"],
 	dynamoi_start_youtube_channel_link: [
 		"dynamoi:read",
@@ -64,26 +56,6 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	fetch: ["dynamoi:read"],
 	search: ["dynamoi:read"],
 } as const satisfies Record<string, readonly string[]>;
-
-export function buildProtectedResourceMetadata(options: {
-	resource: string;
-	authorizationServers: string[];
-	resourceDocumentation?: string;
-	scopesSupported?: string[];
-}): ProtectedResourceMetadata {
-	const metadata: ProtectedResourceMetadata = {
-		authorization_servers: options.authorizationServers,
-		bearer_methods_supported: ["header"],
-		resource: options.resource,
-		scopes_supported: options.scopesSupported ?? [
-			...DYNAMOI_BETTER_AUTH_MCP_SCOPES,
-		],
-	};
-	if (options.resourceDocumentation) {
-		metadata.resource_documentation = options.resourceDocumentation;
-	}
-	return metadata;
-}
 
 export function buildWwwAuthenticateHeader(options: {
 	resourceMetadataUrl: string;

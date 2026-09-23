@@ -43,12 +43,12 @@ describe("mcp app review schemas", () => {
 		});
 		expect(parsed.includeAnalytics).toBe(true);
 		expect(parsed.includeArtistSettings).toBe(true);
-		const legacyParsed = parseDynamoiGetSmartLinkInput({
-			include: ["analytics", "artist_settings"],
-			playLinkId: "22222222-2222-4222-8222-222222222222",
-		});
-		expect(legacyParsed.includeAnalytics).toBe(true);
-		expect(legacyParsed.includeArtistSettings).toBe(true);
+		expect(() =>
+			parseDynamoiGetSmartLinkInput({
+				include: ["analytics", "artist_settings"],
+				playLinkId: "22222222-2222-4222-8222-222222222222",
+			}),
+		).toThrow();
 
 		const schema = z.toJSONSchema(DynamoiGetSmartLinkInputSchema) as {
 			additionalProperties?: unknown;

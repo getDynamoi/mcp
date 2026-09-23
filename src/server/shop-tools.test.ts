@@ -15,7 +15,9 @@ const promotion = {
 
 describe("Shop MCP tool contracts", () => {
 	test("keeps pricing and provider authority out of quote input", () => {
-		expect(DynamoiShopGetQuoteInputSchema.safeParse(promotion).success).toBe(true);
+		expect(DynamoiShopGetQuoteInputSchema.safeParse(promotion).success).toBe(
+			true,
+		);
 		expect(
 			DynamoiShopGetQuoteInputSchema.safeParse({
 				...promotion,
