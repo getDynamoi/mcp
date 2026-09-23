@@ -77,10 +77,31 @@ const RESULT_ERROR_RECOVERY_FIELDS = [
 
 const MoneyDisplayOutputSchema = z
 	.object({
-		amountUsd: z.number(),
+		amount: z.number(),
+		// Major-unit USD amount, present only when currency is "USD"; kept for
+		// backward compatibility — new consumers should use amount + currency.
+		amountUsd: z.number().optional(),
+		currency: z.string(),
 		formatted: z.string(),
 	})
-	.strict();
+	.strict()
+	.superRefine((value, context) => {
+		const hasUsdAmount = value.amountUsd !== undefined;
+		if (value.currency.toUpperCase() === "USD" ? !hasUsdAmount : hasUsdAmount) {
+			context.addIssue({
+				code: "custom",
+				message: "amountUsd is required for USD and forbidden otherwise.",
+				path: ["amountUsd"],
+			});
+		}
+		if (hasUsdAmount && value.amountUsd !== value.amount) {
+			context.addIssue({
+				code: "custom",
+				message: "amountUsd must equal amount for USD.",
+				path: ["amountUsd"],
+			});
+		}
+	});
 
 function createOutputEnvelopeSchema(
 	dataSchema: z.ZodType,

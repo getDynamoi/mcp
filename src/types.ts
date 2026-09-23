@@ -88,8 +88,19 @@ export type ApplyForDistributionData = {
 };
 
 export type MoneyDisplay = {
+	/**
+	 * Major-unit amount in `currency` (minor units divided by 10^minorDigits,
+	 * e.g. 1234 minor units → 12.34 for 2-digit currencies, 1234 for JPY).
+	 */
+	amount: number;
+	/**
+	 * Major-unit USD amount. Present only when `currency` is "USD"; kept for
+	 * backward compatibility — new consumers should use `amount` + `currency`.
+	 */
+	amountUsd?: number;
+	/** Account billing currency (ISO 4217, uppercase). */
+	currency: string;
 	formatted: string;
-	amountUsd: number;
 };
 
 export type AccessRole = "admin" | "editor" | "viewer";
