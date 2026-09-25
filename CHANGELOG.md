@@ -7,6 +7,10 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Channel results.** `dynamoi_get_campaign` `channelResults` gains a `pending` status for windows YouTube has not delivered yet, reporting the day loaded data runs through instead of zeros.
+
 ## [1.0.1] - 2026-09-23
 
 ### Changed

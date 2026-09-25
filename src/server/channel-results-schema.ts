@@ -20,6 +20,22 @@ export const ChannelResultsSchema = z.discriminatedUnion("status", [
 		.strict(),
 	z
 		.object({
+			coverage: z
+				.object({
+					latestCompleteDay: z.string(),
+					observedThroughDay: z.string().nullable(),
+					provenance: ProvenanceSchema,
+					videoMetricsThroughDay: z.string().nullable(),
+				})
+				.strict(),
+			dateRange: z.object({ end: z.string(), start: z.string() }).strict(),
+			provenance: ProvenanceSchema,
+			reason: z.string(),
+			status: z.literal("pending"),
+		})
+		.strict(),
+	z
+		.object({
 			channelMetrics: z
 				.object({
 					estimatedMinutesWatched: z.number(),
