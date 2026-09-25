@@ -8,8 +8,11 @@ import { createPhaseOnboardingToolDefinitions } from "./onboarding-tool-definiti
 import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 import {
 	AnyOutputEnvelopeSchema,
+	GetCampaignOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
+	ManageYoutubeDraftOutputEnvelopeSchema,
+	UpdateCampaignOutputEnvelopeSchema,
 } from "./output-schemas";
 import {
 	ClientRequestIdSchema,
@@ -109,6 +112,7 @@ export const DynamoiGetCampaignInputSchema = z
 		campaignId: z.string().uuid(),
 		format: ToolFormatSchema.optional(),
 		includeAnalytics: z.boolean().optional(),
+		includeChannelResults: z.boolean().optional(),
 		includeCountries: z.boolean().optional(),
 		includeDeploymentStatus: z.boolean().optional(),
 	})
@@ -191,8 +195,71 @@ export const DynamoiGetOnboardingStatusInputSchema = z
 	})
 	.strict();
 
+// Keep this standalone package's public limit in sync with web-shared's
+// MAX_PROMOTED_VIDEOS_PER_CAMPAIGN (10).
+const YouTubeEntriesSchema = z
+	.array(
+		z
+			.object({
+				playlistId: z.string().trim().min(1).max(128).optional(),
+				videoId: z.string().trim().min(1).max(128),
+			})
+			.strict(),
+	)
+	.min(1)
+	.max(10);
+
+function validateYouTubeEntries(
+	data: {
+		youtubeEntries?: z.infer<typeof YouTubeEntriesSchema> | undefined;
+		youtubeVideoId?: string | undefined;
+		youtubePlaylistId?: string | undefined;
+		youtubeStrategy?: string | undefined;
+	},
+	ctx: {
+		addIssue: (issue: {
+			code: "custom";
+			message: string;
+			path: (string | number)[];
+		}) => void;
+	},
+) {
+	if (data.youtubeEntries && (data.youtubeVideoId || data.youtubePlaylistId)) {
+		ctx.addIssue({
+			code: "custom",
+			message:
+				"Use youtubeEntries or youtubeVideoId/youtubePlaylistId, not both",
+			path: ["youtubeEntries"],
+		});
+	}
+	if (data.youtubeEntries && data.youtubeStrategy !== "CHEAPEST_VIEWS") {
+		data.youtubeEntries.forEach((entry, index) => {
+			if (!entry.playlistId) {
+				ctx.addIssue({
+					code: "custom",
+					message:
+						"playlistId is required unless youtubeStrategy is CHEAPEST_VIEWS",
+					path: ["youtubeEntries", index, "playlistId"],
+				});
+			}
+		});
+	}
+	if (
+		data.youtubeEntries &&
+		data.youtubeStrategy === "CHEAPEST_VIEWS" &&
+		data.youtubeEntries.length > 1
+	) {
+		ctx.addIssue({
+			code: "custom",
+			message: "Maximize Views campaigns support one promoted video.",
+			path: ["youtubeEntries"],
+		});
+	}
+}
+
 export const DynamoiGetCampaignReadinessInputSchema = z
 	.object({
+		adCopy: z.string().trim().max(500).optional(),
 		artistId: z.string().uuid(),
 		budgetAmount: z.number().finite().positive().optional(),
 		budgetType: z.enum(["DAILY", "TOTAL"]).optional(),
@@ -203,9 +270,55 @@ export const DynamoiGetCampaignReadinessInputSchema = z
 		locationTargets: z.array(LocationTargetSchema).optional(),
 		mediaAssetIds: z.array(z.string().uuid()).optional(),
 		spotifyUrl: z.string().trim().min(1).max(500).optional(),
+		useAiGeneratedCopy: z.boolean().optional(),
+		youtubeEntries: YouTubeEntriesSchema.optional(),
+		youtubePlaylistId: z.string().trim().min(1).max(128).optional(),
+		youtubeStrategy: z
+			.enum([
+				"CHEAPEST_VIEWS",
+				"ORGANIC_VIEWS",
+				"SUBSCRIBERS",
+				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
+				"ADSENSE_ROI",
+			])
+			.optional(),
 		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
 	})
-	.strict();
+	.strict()
+	.superRefine(validateYouTubeEntries);
+
+export const DynamoiManageYoutubeDraftInputSchema = z
+	.object({
+		action: z.enum(["inspect", "discard"]),
+		artistId: z.string().uuid(),
+		campaignId: z.string().uuid().optional(),
+		expectedUpdatedAt: z.string().datetime().optional(),
+		userIntentSummary: UserIntentSummarySchema.optional(),
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (data.action === "discard" && !data.campaignId) {
+			ctx.addIssue({
+				code: "custom",
+				message: "campaignId is required to discard a draft",
+				path: ["campaignId"],
+			});
+		}
+		if (data.action === "discard" && !data.expectedUpdatedAt) {
+			ctx.addIssue({
+				code: "custom",
+				message: "expectedUpdatedAt is required to discard a draft",
+				path: ["expectedUpdatedAt"],
+			});
+		}
+		if (data.action === "discard" && !data.userIntentSummary) {
+			ctx.addIssue({
+				code: "custom",
+				message: "userIntentSummary is required to discard a draft",
+				path: ["userIntentSummary"],
+			});
+		}
+	});
 
 export const DynamoiGetCampaignDeploymentStatusInputSchema = z
 	.object({
@@ -305,7 +418,16 @@ export const DynamoiUpdateCampaignInputSchema = z
 		acceptedConsentVersion: z
 			.literal(prospectiveFundingConsentVersion)
 			.optional(),
-		action: z.enum(["pause", "resume", "update_budget"]),
+		action: z.enum([
+			"pause",
+			"resume",
+			"update_budget",
+			"change_strategy",
+			"update_location",
+			"update_end_date",
+			"archive",
+			"update_goals",
+		]),
 		authorizeAutomaticDailyFunding: z
 			.literal(true)
 			.describe(
@@ -319,10 +441,51 @@ export const DynamoiUpdateCampaignInputSchema = z
 		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
 		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		expectedCurrentStatus: ExpectedCampaignStatusSchema,
+		locationTargets: z
+			.union([
+				z.object({ mode: z.literal("GLOBAL") }).strict(),
+				z
+					.object({
+						countries: z.array(z.string().length(2)).min(1),
+						mode: z.literal("COUNTRIES"),
+					})
+					.strict(),
+			])
+			.optional(),
+		monetizationQualificationMode: z
+			.enum(["STANDARD", "MONETIZATION_QUALIFICATION"])
+			.optional(),
+		optimizeForOrganicViews: z.boolean().optional(),
+		optimizeForSubscribers: z.boolean().optional(),
+		strategy: z
+			.enum([
+				"CHEAPEST_VIEWS",
+				"ORGANIC_VIEWS",
+				"SUBSCRIBERS",
+				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
+				"ADSENSE_ROI",
+			])
+			.optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict()
 	.superRefine((data, ctx) => {
+		if (
+			[
+				"change_strategy",
+				"update_location",
+				"update_end_date",
+				"archive",
+				"update_goals",
+			].includes(data.action) &&
+			!data.clientRequestId
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "clientRequestId is required for this action",
+				path: ["clientRequestId"],
+			});
+		}
 		if (data.action === "update_budget" && data.budgetAmount === undefined) {
 			ctx.addIssue({
 				code: "custom",
@@ -330,7 +493,44 @@ export const DynamoiUpdateCampaignInputSchema = z
 				path: ["budgetAmount"],
 			});
 		}
-		if (data.action !== "update_budget") {
+		if (data.action === "update_end_date" && data.endDate === undefined) {
+			ctx.addIssue({
+				code: "custom",
+				message: "endDate is required",
+				path: ["endDate"],
+			});
+		}
+		if (data.action === "change_strategy" && data.strategy === undefined) {
+			ctx.addIssue({
+				code: "custom",
+				message: "strategy is required",
+				path: ["strategy"],
+			});
+		}
+		if (
+			data.action === "update_location" &&
+			data.locationTargets === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "locationTargets is required",
+				path: ["locationTargets"],
+			});
+		}
+		if (
+			data.action === "update_goals" &&
+			data.optimizeForOrganicViews === undefined &&
+			data.optimizeForSubscribers === undefined &&
+			data.monetizationQualificationMode === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"At least one goal or monetizationQualificationMode is required",
+				path: ["action"],
+			});
+		}
+		if (data.action !== "update_budget" && data.action !== "update_end_date") {
 			for (const field of [
 				"budgetAmount",
 				"endDate",
@@ -346,7 +546,44 @@ export const DynamoiUpdateCampaignInputSchema = z
 				}
 			}
 		}
-		if (data.action === "pause") {
+		if (
+			data.action === "update_end_date" &&
+			data.expectedCurrentBudgetAmount !== undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"expectedCurrentBudgetAmount is not valid for an end-date-only edit",
+				path: ["expectedCurrentBudgetAmount"],
+			});
+		}
+		for (const [field, action] of [
+			["strategy", "change_strategy"],
+			["locationTargets", "update_location"],
+			["optimizeForOrganicViews", "update_goals"],
+			["optimizeForSubscribers", "update_goals"],
+			["monetizationQualificationMode", "update_goals"],
+		] as const) {
+			if (data[field] !== undefined && data.action !== action) {
+				ctx.addIssue({
+					code: "custom",
+					message: `${field} is only valid when action is ${action}`,
+					path: [field],
+				});
+			}
+		}
+		if (data.action === "update_end_date" && data.budgetAmount !== undefined) {
+			ctx.addIssue({
+				code: "custom",
+				message: "budgetAmount is not valid for an end-date-only edit",
+				path: ["budgetAmount"],
+			});
+		}
+		if (
+			data.action !== "update_budget" &&
+			data.action !== "update_end_date" &&
+			data.action !== "resume"
+		) {
 			for (const field of [
 				"acceptedConsentCopyHash",
 				"acceptedConsentVersion",
@@ -432,6 +669,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 		spotifyUrl: z.string().trim().min(1).max(500).optional(),
 		useAiGeneratedCopy: z.boolean().optional(),
 		userIntentSummary: UserIntentSummarySchema,
+		youtubeEntries: YouTubeEntriesSchema.optional(),
 		// YouTube content (same choices as the app's YouTube campaign setup)
 		youtubePlaylistId: z.string().trim().min(1).max(128).optional(),
 		youtubeStrategy: z
@@ -510,7 +748,8 @@ export const DynamoiLaunchCampaignInputSchema = z
 		}
 
 		if (data.campaignType === "YOUTUBE") {
-			if (!data.youtubeVideoId) {
+			validateYouTubeEntries(data, ctx);
+			if (!(data.youtubeVideoId || data.youtubeEntries)) {
 				ctx.addIssue({
 					code: "custom",
 					message: "youtubeVideoId is required for YOUTUBE",
@@ -527,7 +766,8 @@ export const DynamoiLaunchCampaignInputSchema = z
 			if (
 				data.youtubeStrategy &&
 				data.youtubeStrategy !== "CHEAPEST_VIEWS" &&
-				!data.youtubePlaylistId
+				!data.youtubePlaylistId &&
+				!data.youtubeEntries
 			) {
 				ctx.addIssue({
 					code: "custom",
@@ -609,11 +849,11 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Set includeAnalytics=true for one-campaign performance, includeDeploymentStatus=true for delivery/deployment blockers, and includeCountries=true only when the full country list is needed. Do not use this for a campaign list; use dynamoi_list_campaigns instead. After a successful launch or campaign mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
+			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Set includeAnalytics=true for paid delivery, includeChannelResults=true for observed YouTube organic channel results (never attributed to the campaign), includeDeploymentStatus=true for delivery/deployment blockers, and includeCountries=true only when the full country list is needed. Do not use this for a campaign list; use dynamoi_list_campaigns instead. After a successful launch or campaign mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,
-		outputSchema: AnyOutputEnvelopeSchema,
+		outputSchema: GetCampaignOutputEnvelopeSchema,
 		readOnlyHint: true,
 		schema: DynamoiGetCampaignInputSchema,
 		title: "Get Campaign",
@@ -683,12 +923,23 @@ export const PHASE_ONBOARDING_TOOL_DEFINITIONS =
 
 export const PHASE_2_TOOL_DEFINITIONS = [
 	{
-		description: `Use this when the user explicitly wants to pause, resume, or update the budget/end date for an existing campaign. Set action to pause, resume, or update_budget. Pause takes effect immediately. For resume or update_budget on a campaign that needs automatic daily card funding, first show the user this exact consent copy: "${prospectiveFundingConsentCopy}" — then pass authorizeAutomaticDailyFunding=true with the exact acceptedConsentVersion ("${prospectiveFundingConsentVersion}") and acceptedConsentCopyHash ("${prospectiveFundingConsentCopyHash}") plus the request's clientRequestId. Without them, a resume that needs card funding is refused with: "Review and accept the daily funding authorization to resume this campaign." When retrying the same resume, reuse the same clientRequestId. Do not use this for inspection-only questions; this changes live campaign workflow state or external campaign settings.`,
+		description:
+			"Inspect an artist's open YouTube draft with action=inspect after an interrupted launch. Returns completed steps, screening, failure stage, and updatedAt. Use action=discard only when the user explicitly asks to discard that draft, supplying its campaignId, expectedUpdatedAt from inspect, and userIntentSummary. Discard cannot be undone.",
+		destructiveHint: true,
+		name: "dynamoi_manage_youtube_draft",
+		openWorldHint: false,
+		outputSchema: ManageYoutubeDraftOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiManageYoutubeDraftInputSchema,
+		title: "Manage YouTube Draft",
+	},
+	{
+		description: `Use only when the user explicitly requests a campaign change. Actions: pause, resume, update_budget, update_end_date (DAILY or TOTAL budget; TOTAL end-date extensions may require the same funding consent fields as update_budget or resume), update_location (GLOBAL or catalog-valid countries), change_strategy (managed YouTube Demand Gen), update_goals (YouTube optimization toggles and monetization qualification mode), archive (never deletes). Inspect the campaign first and supply expectedCurrentStatus where possible. For resume, update_budget, or a TOTAL update_end_date that needs automatic daily card funding, first show the user this exact consent copy: "${prospectiveFundingConsentCopy}" — then pass authorizeAutomaticDailyFunding=true with the exact acceptedConsentVersion ("${prospectiveFundingConsentVersion}") and acceptedConsentCopyHash ("${prospectiveFundingConsentCopyHash}") plus the request's clientRequestId. Without them, a resume that needs card funding is refused with: "Review and accept the daily funding authorization to resume this campaign." When retrying the same action, reuse the same clientRequestId.`,
 		destructiveHint: true,
 		idempotentHint: true,
 		name: "dynamoi_update_campaign",
 		openWorldHint: true,
-		outputSchema: AnyOutputEnvelopeSchema,
+		outputSchema: UpdateCampaignOutputEnvelopeSchema,
 		readOnlyHint: false,
 		schema: DynamoiUpdateCampaignInputSchema,
 		title: "Update Campaign",

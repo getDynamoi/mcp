@@ -14,6 +14,9 @@ export type ResultEnvelope<T> =
 			field?: string;
 			prerequisite?: string;
 			nextAction?: ResultNextAction;
+			draftId?: string;
+			failureStage?: string;
+			screeningResult?: string;
 	  };
 
 /** Stable, safe error identifiers that let clients choose bounded recovery. */
@@ -408,6 +411,7 @@ export type ListCampaignsSummaryData = {
 };
 
 export type GetCampaignData = {
+	channelResults?: import("./server/channel-results-schema").ChannelResults;
 	summary: string;
 	id: string;
 	contentTitle: string;
@@ -454,7 +458,12 @@ export type GetCampaignAnalyticsJsonData = {
 	totals: {
 		impressions: number;
 		clicks: number;
-		spend: MoneyDisplay;
+		/**
+		 * Summed spend. Platform analytics are USD-only by contract; `null`
+		 * when a platform reported a different currency — a total is never
+		 * summed across currencies or relabeled into one.
+		 */
+		spend: MoneyDisplay | null;
 		cpc: MoneyDisplay | null;
 		cpm: MoneyDisplay | null;
 		ctr: number | null;
@@ -463,12 +472,14 @@ export type GetCampaignAnalyticsJsonData = {
 		platform: "META" | "GOOGLE";
 		impressions: number;
 		clicks: number;
-		spend: MoneyDisplay;
+		/** `null` when the platform reported a non-USD currency. */
+		spend: MoneyDisplay | null;
 		daily?: Array<{
 			date: string;
 			impressions: number;
 			clicks: number;
-			spend: MoneyDisplay;
+			/** `null` when the platform reported a non-USD currency. */
+			spend: MoneyDisplay | null;
 		}>;
 	}>;
 	daily?: Array<{

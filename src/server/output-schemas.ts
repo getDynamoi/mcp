@@ -1,4 +1,5 @@
 import * as z from "zod/v4";
+import { ChannelResultsSchema } from "./channel-results-schema";
 
 const ResultErrorCodeSchema = z.enum([
 	"ACCOUNT_READ_ONLY",
@@ -24,11 +25,14 @@ const ResultNextActionSchema = z
 export const ResultErrorRecoverySchema = z
 	.object({
 		code: ResultErrorCodeSchema.optional(),
+		draftId: z.string().uuid().optional(),
+		failureStage: z.string().trim().min(1).max(120).optional(),
 		field: z.string().trim().min(1).max(120).optional(),
 		nextAction: ResultNextActionSchema.optional(),
 		prerequisite: z.string().trim().min(1).max(240).optional(),
 		retryAfterSeconds: z.number().int().min(0).max(86_400).optional(),
 		retryable: z.boolean().optional(),
+		screeningResult: z.string().trim().min(1).max(120).optional(),
 	})
 	.strict();
 
@@ -67,6 +71,9 @@ export function addRecoverySafetyIssues(
 }
 
 const RESULT_ERROR_RECOVERY_FIELDS = [
+	"draftId",
+	"failureStage",
+	"screeningResult",
 	"code",
 	"field",
 	"nextAction",
@@ -304,6 +311,16 @@ const GetCampaignReadinessDataOutputSchema = z
 		normalizedTargeting: NormalizedTargetingOutputSchema,
 		recommendedNextAction: z.string(),
 		warnings: z.array(z.string()),
+		youtubeEntries: z
+			.array(
+				z
+					.object({
+						playlistId: z.string().nullable().optional(),
+						videoId: z.string(),
+					})
+					.strict(),
+			)
+			.optional(),
 	})
 	.strict();
 
@@ -346,11 +363,114 @@ const LaunchCampaignDataOutputSchema = z
 		status: z.string(),
 		summary: z.string(),
 		warnings: z.array(z.string()).optional(),
+		youtubeEntries: z
+			.array(
+				z
+					.object({
+						playlistId: z.string(),
+						selectionIndex: z.number(),
+						videoId: z.string(),
+					})
+					.strict(),
+			)
+			.optional(),
 	})
 	.strict();
 
 export const AnyOutputEnvelopeSchema = createOutputEnvelopeSchema(
 	AnyToolDataOutputSchema,
+	{ allowPartial: true },
+);
+
+export const GetCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	z
+		.object({
+			channelResults: ChannelResultsSchema.optional(),
+			summary: z.string(),
+		})
+		.passthrough(),
+	{ allowPartial: true },
+);
+
+export const UpdateCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	z.union([
+		z
+			.object({
+				actionRequired: z.array(z.string()).optional(),
+				contentTitle: z.string(),
+				id: z.string(),
+				newStatus: z.enum(["PAUSED", "ACTIVE"]),
+				platformResults: z.array(
+					z
+						.object({
+							message: z.string().optional(),
+							platform: z.enum(["META", "GOOGLE"]),
+							success: z.boolean(),
+						})
+						.strict(),
+				),
+				warnings: z.array(z.string()).optional(),
+			})
+			.strict(),
+		z
+			.object({
+				actionRequired: z.array(z.string()).optional(),
+				budgetType: z.enum(["DAILY", "TOTAL"]),
+				contentTitle: z.string(),
+				endDate: z.string().optional(),
+				id: z.string(),
+				newBudget: MoneyDisplayOutputSchema,
+				previousBudget: MoneyDisplayOutputSchema,
+				warnings: z.array(z.string()).optional(),
+			})
+			.strict(),
+		z
+			.object({
+				contentTitle: z.string(),
+				didChange: z.boolean(),
+				endDate: z.string().nullable(),
+				id: z.string(),
+				previousEndDate: z.string().nullable(),
+			})
+			.strict(),
+		z
+			.object({
+				campaignId: z.string(),
+				locationTargets: z.array(
+					z.object({ code: z.string(), name: z.string() }).strict(),
+				),
+				mode: z.enum(["GLOBAL", "COUNTRIES"]),
+			})
+			.strict(),
+		z
+			.object({
+				campaignId: z.string(),
+				contentTitle: z.string(),
+				id: z.string(),
+				inventoryConfig: z.string(),
+				strategy: z.string(),
+			})
+			.strict(),
+		z
+			.object({
+				contentTitle: z.string(),
+				id: z.string(),
+				newStatus: z.literal("ARCHIVED"),
+				warnings: z.array(z.string()),
+			})
+			.strict(),
+		z
+			.object({
+				campaignId: z.string(),
+				monetizationQualificationMode: z.enum([
+					"STANDARD",
+					"MONETIZATION_QUALIFICATION",
+				]),
+				optimizeForOrganicViews: z.boolean(),
+				optimizeForSubscribers: z.boolean(),
+			})
+			.strict(),
+	]),
 	{ allowPartial: true },
 );
 
@@ -364,6 +484,41 @@ export const ListMediaAssetsOutputEnvelopeSchema = createOutputEnvelopeSchema(
 export const LaunchCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
 	LaunchCampaignDataOutputSchema,
 );
+
+export const ManageYoutubeDraftOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(
+		z.union([
+			z
+				.object({
+					artistId: z.string().uuid(),
+					draft: z
+						.object({
+							campaignId: z.string().uuid(),
+							completedSteps: z.array(z.string()),
+							content: z
+								.object({
+									screening: z
+										.object({ status: z.string() })
+										.passthrough()
+										.nullable(),
+								})
+								.passthrough(),
+						})
+						.passthrough()
+						.nullable(),
+					failureStage: z.string().nullable(),
+					updatedAt: z.string().datetime().nullable(),
+				})
+				.strict(),
+			z
+				.object({
+					artistId: z.string().uuid(),
+					campaignId: z.string().uuid(),
+					discarded: z.literal(true),
+				})
+				.strict(),
+		]),
+	);
 
 export const ListAvailableCountriesOutputEnvelopeSchema =
 	createOutputEnvelopeSchema(

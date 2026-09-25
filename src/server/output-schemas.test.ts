@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { LaunchCampaignOutputEnvelopeSchema } from "./output-schemas";
+import {
+	GetCampaignReadinessOutputEnvelopeSchema,
+	LaunchCampaignOutputEnvelopeSchema,
+} from "./output-schemas";
 
 function launchData(budget: Record<string, unknown>) {
 	return {
@@ -72,5 +75,47 @@ describe("MoneyDisplayOutputSchema currency contract", () => {
 			});
 			expect(result.success).toBeFalse();
 		}
+	});
+});
+
+describe("YouTube entries in output envelopes", () => {
+	test("launch output accepts ordered youtubeEntries", () => {
+		const result = LaunchCampaignOutputEnvelopeSchema.safeParse({
+			data: {
+				...launchData({
+					amount: 20,
+					amountUsd: 20,
+					currency: "USD",
+					formatted: "$20.00",
+				}),
+				campaignType: "YOUTUBE",
+				platforms: ["GOOGLE"],
+				youtubeEntries: [
+					{ playlistId: "PL1", selectionIndex: 0, videoId: "v1" },
+					{ playlistId: "PL1", selectionIndex: 1, videoId: "v2" },
+				],
+			},
+			status: "success",
+		});
+		expect(result.success).toBeTrue();
+	});
+
+	test("readiness output accepts youtubeEntries with a missing playlist", () => {
+		const result = GetCampaignReadinessOutputEnvelopeSchema.safeParse({
+			data: {
+				artistId: "a",
+				artistName: "A",
+				blockingIssues: [],
+				campaignType: "YOUTUBE",
+				isReady: false,
+				missingInputs: [],
+				normalizedTargeting: { mode: "GLOBAL" },
+				recommendedNextAction: "Add a playlist.",
+				warnings: [],
+				youtubeEntries: [{ playlistId: null, videoId: "v1" }],
+			},
+			status: "success",
+		});
+		expect(result.success).toBeTrue();
 	});
 });

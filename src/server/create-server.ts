@@ -297,6 +297,7 @@ const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_shop_get_quote",
 	"dynamoi_get_billing",
 	"dynamoi_get_campaign_readiness",
+	"dynamoi_manage_youtube_draft",
 	"dynamoi_launch_campaign",
 	"dynamoi_list_available_countries",
 	"dynamoi_list_media_assets",
@@ -376,6 +377,7 @@ export type Phase3Adapter = {
 	): Promise<
 		ResultEnvelope<GetCampaignReadinessData | GetCampaignReadinessSummaryData>
 	>;
+	manageYoutubeDraft(input: unknown): Promise<ResultEnvelope<unknown>>;
 	updateCampaign(input: unknown): Promise<ResultEnvelope<UpdateCampaignData>>;
 	listMediaAssets(
 		input: unknown,
@@ -424,6 +426,9 @@ type ErrorRecoveryMetadata = Partial<
 type NormalizedEnvelope = object | string | number | boolean | null | undefined;
 
 const RECOVERY_METADATA_FIELDS = [
+	"draftId",
+	"failureStage",
+	"screeningResult",
 	"code",
 	"field",
 	"nextAction",
@@ -448,6 +453,7 @@ const SPOTIFY_ARTIST_CATALOG_ERROR_MESSAGES = new Set([
 ]);
 
 const REVIEWER_WRITE_TOOL_NAMES = new Set([
+	"dynamoi_manage_youtube_draft",
 	"dynamoi_apply_for_distribution",
 	"dynamoi_create_smart_link_from_spotify",
 	"dynamoi_create_smart_links_from_spotify_artist",
@@ -672,6 +678,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_list_campaigns: (adapter, input) => adapter.listCampaigns(input),
 	dynamoi_list_media_assets: (adapter, input) => adapter.listMediaAssets(input),
 	dynamoi_list_smart_links: (adapter, input) => adapter.listSmartLinks(input),
+	dynamoi_manage_youtube_draft: (adapter, input) =>
+		adapter.manageYoutubeDraft(input),
 	dynamoi_preview_smart_link_themes: (_adapter, input) =>
 		Promise.resolve(previewSmartLinkThemes(input)),
 	dynamoi_search: (adapter, input) => adapter.search(input),

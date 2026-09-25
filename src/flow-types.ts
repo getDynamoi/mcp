@@ -160,7 +160,40 @@ export type UpdateBudgetData = {
 	actionRequired?: string[] | undefined;
 };
 
-export type UpdateCampaignData = PauseResumeCampaignData | UpdateBudgetData;
+export type UpdateCampaignData =
+	| PauseResumeCampaignData
+	| UpdateBudgetData
+	| {
+			id: string;
+			contentTitle: string;
+			didChange: boolean;
+			endDate: string | null;
+			previousEndDate: string | null;
+	  }
+	| {
+			campaignId: string;
+			mode: "GLOBAL" | "COUNTRIES";
+			locationTargets: Array<{ code: string; name: string }>;
+	  }
+	| {
+			id: string;
+			contentTitle: string;
+			campaignId: string;
+			strategy: string;
+			inventoryConfig: string;
+	  }
+	| {
+			id: string;
+			contentTitle: string;
+			newStatus: "ARCHIVED";
+			warnings: string[];
+	  }
+	| {
+			campaignId: string;
+			optimizeForOrganicViews: boolean;
+			optimizeForSubscribers: boolean;
+			monetizationQualificationMode: "STANDARD" | "MONETIZATION_QUALIFICATION";
+	  };
 
 export type MediaAssetSummary = {
 	id: string;
@@ -186,6 +219,11 @@ export type ListMediaAssetsSummaryData = {
 };
 
 export type LaunchCampaignData = {
+	youtubeEntries?: Array<{
+		videoId: string;
+		playlistId: string;
+		selectionIndex: number;
+	}>;
 	summary: string;
 	id: string;
 	contentTitle: string;

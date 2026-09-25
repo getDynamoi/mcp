@@ -23,6 +23,7 @@ import {
 	DynamoiGetPlatformStatusInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
+	DynamoiManageYoutubeDraftInputSchema,
 	DynamoiUpdateBudgetInputSchema,
 	DynamoiUpdateCampaignInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
@@ -43,6 +44,18 @@ function getToolDefinition(
 }
 
 describe("mcp/tools phase 1 definitions", () => {
+	test("update campaign copy describes both end-date paths and funding consent", () => {
+		const description = getToolDefinition(
+			PHASE_2_TOOL_DEFINITIONS,
+			"dynamoi_update_campaign",
+		).description;
+		expect(description).toContain("update_end_date (DAILY or TOTAL budget");
+		expect(description).toContain(
+			"TOTAL end-date extensions may require the same funding consent fields",
+		);
+		expect(description).toContain(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY);
+	});
+
 	test("public connector surface stays compact", () => {
 		const publicTools = [
 			...PHASE_1_TOOL_DEFINITIONS,
@@ -66,16 +79,51 @@ describe("mcp/tools phase 1 definitions", () => {
 		}
 	});
 
+	test("manages YouTube draft through one action tool", () => {
+		const tools = [
+			...PHASE_1_TOOL_DEFINITIONS,
+			...PHASE_2_TOOL_DEFINITIONS,
+		].filter((tool) => tool.name.includes("youtube_draft"));
+		expect(tools.map((tool) => tool.name)).toEqual([
+			"dynamoi_manage_youtube_draft",
+		]);
+		expect(
+			DynamoiManageYoutubeDraftInputSchema.safeParse({
+				action: "inspect",
+				artistId: "11111111-1111-4111-8111-111111111111",
+			}).success,
+		).toBe(true);
+		expect(
+			DynamoiManageYoutubeDraftInputSchema.safeParse({
+				action: "discard",
+				artistId: "11111111-1111-4111-8111-111111111111",
+				campaignId: "22222222-2222-4222-8222-222222222222",
+				userIntentSummary: "Discard this draft",
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiManageYoutubeDraftInputSchema.safeParse({
+				action: "discard",
+				artistId: "11111111-1111-4111-8111-111111111111",
+				campaignId: "22222222-2222-4222-8222-222222222222",
+				expectedUpdatedAt: "2026-09-24T12:00:00.000Z",
+				userIntentSummary: "Discard this draft",
+			}).success,
+		).toBe(true);
+	});
+
 	test("get campaign schema supports consolidated include flags", () => {
 		const parsed = DynamoiGetCampaignInputSchema.parse({
 			analyticsGranularity: "DAILY",
 			campaignId: "00000000-0000-0000-0000-000000000000",
 			includeAnalytics: true,
+			includeChannelResults: true,
 			includeCountries: true,
 			includeDeploymentStatus: true,
 		});
 		expect(parsed.includeCountries).toBe(true);
 		expect(parsed.includeAnalytics).toBe(true);
+		expect(parsed.includeChannelResults).toBe(true);
 		expect(parsed.includeDeploymentStatus).toBe(true);
 	});
 
@@ -146,6 +194,63 @@ describe("mcp/tools phase 1 definitions", () => {
 		expect(parsed.campaignType).toBe("YOUTUBE");
 		expect(parsed.endDate).toBe("2026-06-01");
 		expect(parsed.locationTargets?.[0]?.code).toBe("US");
+	});
+
+	test("YouTube entry schemas enforce ordered-list limits, exclusive forms, and playlist rules", () => {
+		const base = {
+			artistId: "00000000-0000-0000-0000-000000000000",
+			campaignType: "YOUTUBE" as const,
+			youtubeStrategy: "ORGANIC_VIEWS" as const,
+		};
+		const entries = Array.from({ length: 10 }, (_, index) => ({
+			playlistId: `playlist-${index}`,
+			videoId: `video-${index}`,
+		}));
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.parse({
+				...base,
+				youtubeEntries: entries,
+			}).youtubeEntries,
+		).toEqual(entries);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: [],
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: [...entries, entries[0]],
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: entries,
+				youtubeVideoId: "legacy",
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: [{ videoId: "video" }],
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: [{ videoId: "video" }],
+				youtubeStrategy: "CHEAPEST_VIEWS",
+			}).success,
+		).toBe(true);
+		expect(
+			DynamoiGetCampaignReadinessInputSchema.safeParse({
+				...base,
+				youtubeEntries: [{ videoId: "a" }, { videoId: "b" }],
+				youtubeStrategy: "CHEAPEST_VIEWS",
+			}).success,
+		).toBe(false);
 	});
 
 	test("campaign readiness schema rejects impossible calendar end dates", () => {
@@ -251,8 +356,12 @@ describe("mcp/tools phase 2 definitions", () => {
 		for (const def of PHASE_2_TOOL_DEFINITIONS) {
 			expect(def.readOnlyHint).toBe(false);
 			expect(def.destructiveHint).toBe(true);
-			expect(def.idempotentHint).toBe(true);
-			expect(def.openWorldHint).toBe(true);
+			if (def.name === "dynamoi_update_campaign") {
+				expect(def.idempotentHint).toBe(true);
+				expect(def.openWorldHint).toBe(true);
+			} else {
+				expect(def.openWorldHint).toBe(false);
+			}
 			expect(def.outputSchema).toBeDefined();
 			expect(def.title.length).toBeGreaterThan(0);
 		}
@@ -276,6 +385,92 @@ describe("mcp/tools phase 2 definitions", () => {
 			userIntentSummary: "Resume after confirming billing is ready.",
 		});
 		expect(resume.expectedCurrentStatus).toBe("PAUSED");
+	});
+
+	test("post-launch actions require scoped inputs and an idempotency key", () => {
+		const base = {
+			campaignId: "00000000-0000-4000-8000-000000000000",
+			clientRequestId: "11111111-1111-4111-8111-111111111111",
+			userIntentSummary: "Artist requested this change.",
+		};
+		const actions = [
+			{ action: "change_strategy", strategy: "SUBSCRIBERS" },
+			{
+				action: "update_location",
+				locationTargets: { countries: ["US"], mode: "COUNTRIES" },
+			},
+			{ action: "update_end_date", endDate: "2026-12-31" },
+			{ action: "archive" },
+			{ action: "update_goals", optimizeForOrganicViews: true },
+		] as const;
+		for (const input of actions) {
+			expect(
+				DynamoiUpdateCampaignInputSchema.safeParse({ ...base, ...input })
+					.success,
+			).toBe(true);
+			expect(
+				DynamoiUpdateCampaignInputSchema.safeParse({
+					...base,
+					...input,
+					clientRequestId: undefined,
+				}).success,
+			).toBe(false);
+		}
+		expect(
+			DynamoiUpdateCampaignInputSchema.safeParse({
+				...base,
+				action: "update_end_date",
+				budgetAmount: 100,
+				endDate: "2026-12-31",
+			}).success,
+		).toBe(false);
+		expect(
+			DynamoiUpdateCampaignInputSchema.safeParse({
+				...base,
+				action: "update_goals",
+				optimizeForOrganicViews: false,
+				optimizeForSubscribers: false,
+			}).success,
+		).toBe(true);
+		expect(
+			DynamoiUpdateCampaignInputSchema.safeParse({
+				...base,
+				action: "archive",
+				strategy: "SUBSCRIBERS",
+			}).success,
+		).toBe(false);
+	});
+
+	test("update campaign output declares every new action field", () => {
+		const schema = PHASE_2_TOOL_DEFINITIONS.find(
+			(def) => def.name === "dynamoi_update_campaign",
+		)?.outputSchema;
+		expect(schema).toBeDefined();
+		for (const data of [
+			{ campaignId: "c", locationTargets: [], mode: "GLOBAL" },
+			{
+				campaignId: "c",
+				contentTitle: "Song",
+				id: "c",
+				inventoryConfig: "IN_FEED",
+				strategy: "SUBSCRIBERS",
+			},
+			{ contentTitle: "Song", id: "c", newStatus: "ARCHIVED", warnings: [] },
+			{
+				campaignId: "c",
+				monetizationQualificationMode: "STANDARD",
+				optimizeForOrganicViews: true,
+				optimizeForSubscribers: false,
+			},
+		]) {
+			expect(schema?.safeParse({ data, status: "success" }).success).toBe(true);
+			expect(
+				schema?.safeParse({
+					data: { ...data, undeclared: true },
+					status: "success",
+				}).success,
+			).toBe(false);
+		}
 	});
 
 	test("update campaign schema accepts campaign read status guards", () => {
@@ -473,14 +668,18 @@ describe("mcp/tools phase 3 definitions", () => {
 		expect(definition.description).toContain("authorizeAutomaticDailyFunding");
 		expect(definition.description).toContain("acceptedConsentVersion");
 		expect(definition.description).toContain("acceptedConsentCopyHash");
-		expect(definition.description).toContain(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
+		);
 		expect(definition.description).toContain(
 			PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
 		);
 		expect(definition.description).toContain(
 			PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 		);
-		expect(definition.description).toContain("TOTAL budgets use existing credit");
+		expect(definition.description).toContain(
+			"TOTAL budgets use existing credit",
+		);
 		expect(definition.description).not.toContain("confirmation_required");
 		expect(definition.description).not.toContain("confirmationToken");
 	});
@@ -492,7 +691,9 @@ describe("mcp/tools phase 3 definitions", () => {
 		);
 		expect(definition.description).toContain("resume");
 		expect(definition.description).toContain("authorizeAutomaticDailyFunding");
-		expect(definition.description).toContain(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY);
+		expect(definition.description).toContain(
+			PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
+		);
 		expect(definition.description).toContain(
 			PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
 		);
@@ -502,9 +703,7 @@ describe("mcp/tools phase 3 definitions", () => {
 		expect(definition.description).toContain(
 			"Review and accept the daily funding authorization to resume this campaign.",
 		);
-		expect(definition.description).toContain(
-			"reuse the same clientRequestId",
-		);
+		expect(definition.description).toContain("reuse the same clientRequestId");
 		expect(definition.description).not.toContain("confirmation_required");
 		expect(definition.description).not.toContain("confirmationToken");
 	});
