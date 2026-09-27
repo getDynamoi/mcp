@@ -383,11 +383,24 @@ export const DynamoiUpdateBudgetInputSchema = z
 				`Set only after the client explicitly accepts: “${prospectiveFundingConsentCopy}”`,
 			)
 			.optional(),
-		budgetAmount: z.number().finite().positive(),
+		budgetAmount: z
+			.number()
+			.finite()
+			.positive()
+			.describe(
+				"Budget in the artist's commercial currency (major units; use only exact minor units).",
+			),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
 		endDate: IsoCalendarDateSchema.optional(),
-		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
+		expectedCurrentBudgetAmount: z
+			.number()
+			.finite()
+			.positive()
+			.describe(
+				"Current budget in the artist's commercial currency (major units).",
+			)
+			.optional(),
 		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
@@ -434,11 +447,25 @@ export const DynamoiUpdateCampaignInputSchema = z
 				`Set only after the client explicitly accepts: “${prospectiveFundingConsentCopy}”`,
 			)
 			.optional(),
-		budgetAmount: z.number().finite().positive().optional(),
+		budgetAmount: z
+			.number()
+			.finite()
+			.positive()
+			.describe(
+				"Budget in the artist's commercial currency (major units; use only exact minor units).",
+			)
+			.optional(),
 		campaignId: z.string().uuid(),
 		clientRequestId: ClientRequestIdSchema,
 		endDate: IsoCalendarDateSchema.optional(),
-		expectedCurrentBudgetAmount: z.number().finite().positive().optional(),
+		expectedCurrentBudgetAmount: z
+			.number()
+			.finite()
+			.positive()
+			.describe(
+				"Current budget in the artist's commercial currency (major units).",
+			)
+			.optional(),
 		expectedCurrentEndDate: IsoCalendarDateSchema.optional(),
 		expectedCurrentStatus: ExpectedCampaignStatusSchema,
 		locationTargets: z
@@ -645,7 +672,13 @@ export const DynamoiLaunchCampaignInputSchema = z
 			.optional(),
 
 		// Budget
-		budgetAmount: z.number().finite().positive(),
+		budgetAmount: z
+			.number()
+			.finite()
+			.positive()
+			.describe(
+				"Budget in the artist's commercial currency (major units; use only exact minor units).",
+			),
 		budgetSplits: z.record(
 			z.enum(["META", "GOOGLE"]),
 			z.number().int().min(0).max(100),

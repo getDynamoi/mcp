@@ -9,6 +9,13 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Daily funding consent v3.** The consent constants are now
+  `managed-ads-prospective-daily-v3` with new copy and hash. A launch or resume
+  of a `DAILY` campaign funds the rest of today and all of tomorrow (Pacific
+  time) in one charge, then each following Pacific day up to one hour before
+  it starts. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
+  and `update_budget`) refuse the v2 values, so clients pinned to v2 must
+  update. Campaigns that accepted v2 keep renewing under v2.
 - **Channel results.** `dynamoi_get_campaign` `channelResults` gains a `pending` status for windows YouTube has not delivered yet, reporting the day loaded data runs through instead of zeros.
 
 ## [1.0.1] - 2026-09-23

@@ -518,8 +518,8 @@ describe("mcp/tools phase 2 definitions", () => {
 	test("update budget schema accepts idempotency and expected-state guards", () => {
 		const parsed = DynamoiUpdateCampaignInputSchema.parse({
 			acceptedConsentCopyHash:
-				"06bbd517d58f345a767be9aaeb59f4959d11c6db16e7d07cb889f3ce7950f805",
-			acceptedConsentVersion: "managed-ads-prospective-daily-v2",
+				"53647786746f962c91f5cad78d8bba531c478109041b2808a4a81efbe380abf1",
+			acceptedConsentVersion: "managed-ads-prospective-daily-v3",
 			action: "update_budget",
 			authorizeAutomaticDailyFunding: true,
 			budgetAmount: 250,
