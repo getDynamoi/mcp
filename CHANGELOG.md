@@ -7,6 +7,15 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`dynamoi_manage_youtube_draft`** (full profile). Inspect an artist's open
+  YouTube draft after an interrupted launch, or discard it when the user
+  explicitly asks. Discard requires `expectedUpdatedAt` from inspect and
+  cannot be undone. The full profile now has 29 tools.
+- **`.mcp.json`** at the repository root, so clients and directories that
+  read it can connect to `https://dynamoi.com/mcp`.
+
 ### Changed
 
 - **Daily funding consent v4.** The consent constants are now

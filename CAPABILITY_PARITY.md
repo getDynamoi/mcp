@@ -2,13 +2,13 @@
 
 ## Release truth
 
-The 1.0.0 source (September 23, 2026) does **not** implement 100% dashboard,
+The current source does **not** implement 100% dashboard,
 iOS, Android and MCP workflow parity. Universal client registration and full
 catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The package registers 28 tools. The directory profile serves 18 of them: the
+The package registers 29 tools. The directory profile serves 18 of them: the
 review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
 picks the profile from the verified OAuth client ID; `/mcp/directory` always
 serves the directory profile. Every other authenticated client on `/mcp`
@@ -24,7 +24,7 @@ only discovery methods, the public `dynamoi_about` tool and the
 | --- | --- | --- |
 | Account/artist orientation | Account overview, roster and single-artist reads | Organization invites/roles, full artist settings and account deletion |
 | Smart Links | Spotify ingestion, list/detail, description, artist theme/pixels, per-link analytics and theme previews | Full studio/availability controls, every field, aggregate analytics and promotion request workflow |
-| Campaigns | List/detail, provider analytics, readiness, existing-asset launch, pause/resume and eligible single-provider budgets | Draft state machines, source uploads, creative generation/selection/approval, screening, existing targeting edits and multi-provider budgets |
+| Campaigns | List/detail, provider analytics, readiness, existing-asset launch, YouTube draft inspect/discard, pause/resume and eligible single-provider budgets | Draft state machines, source uploads, creative generation/selection/approval, screening, existing targeting edits and multi-provider budgets |
 | Analytics | Campaign-provider rollups and per-link analytics | Feature.fm audience, Soundcharts playlists, growth audit and artist-wide Smart Link aggregation |
 | Connections | Meta and YouTube browser OAuth handoffs and status reads | Headless provider login, owner selection or bypass of ownership verification |
 | Distribution | Five scored requirements, application state and explicit adult-attested application submission for manual review | Agreement execution, release intake/catalog, rights/splits, royalties, tax, payout and takedown workflows |

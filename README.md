@@ -159,7 +159,7 @@ signed in, not from anything the client claims about itself.
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
 | **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 18 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
-| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 28 tools, plus the Dynamoi prompts and reference resources |
+| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 29 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
 OAuth scopes, and the user's role must allow access to the artist, campaign,
@@ -195,6 +195,7 @@ start an action with an outside provider.
 | `dynamoi_list_media_assets` | Uploaded images and videos that a launch can reuse | Reads | Full |
 | `dynamoi_launch_campaign` | Launch a Smart Campaign or YouTube campaign | Changes data | Full |
 | `dynamoi_update_campaign` | Pause, resume, or change a campaign's budget or end date | Changes data | Full |
+| `dynamoi_manage_youtube_draft` | Inspect an interrupted YouTube launch draft, or discard it when the user asks | Changes data | Full |
 | `dynamoi_start_meta_connection` | Start the Facebook Page and Instagram connection in the browser | Changes data | Full |
 | `dynamoi_start_youtube_channel_link` | Start the YouTube channel connection in the browser | Changes data | Full |
 | `dynamoi_shop_get_quote` | Estimate a one-off YouTube promotion | Reads | Full |
