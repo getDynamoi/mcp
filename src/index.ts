@@ -17,11 +17,6 @@ export {
 } from "./server/about";
 export type { ChannelResults } from "./server/channel-results-schema";
 export { ChannelResultsSchema } from "./server/channel-results-schema";
-export type { YouTubeStrategyGuide } from "./server/youtube-strategy-guide";
-export {
-	buildYouTubeStrategyGuide,
-	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
-} from "./server/youtube-strategy-guide";
 export type { Phase3Adapter } from "./server/create-server";
 export {
 	createDynamoiMcpServer,
@@ -104,6 +99,21 @@ export {
 	ToolFormatSchema,
 } from "./server/tools";
 export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
+export {
+	type DynamoiGetYouTubeChannelDataInput,
+	DynamoiGetYouTubeChannelDataInputSchema,
+	type GetYouTubeChannelDataData,
+	YOUTUBE_CHANNEL_DATA_DEFAULT_LIMIT,
+	YOUTUBE_CHANNEL_DATASETS,
+	type YouTubeChannelDataset,
+	YouTubeChannelDataSchema,
+	YouTubeChannelDatasetSchema,
+} from "./server/youtube-channel-data-schema";
+export type { YouTubeStrategyGuide } from "./server/youtube-strategy-guide";
+export {
+	buildYouTubeStrategyGuide,
+	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
+} from "./server/youtube-strategy-guide";
 export { handleMcpHttpRequest } from "./transport/http";
 export type {
 	AccessRole,

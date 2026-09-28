@@ -9,10 +9,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`dynamoi_get_youtube_channel_data`.** A read-only tool for the artist's observed YouTube channel data, one dataset per call: channel, video, country, traffic source (paid views are traffic source `ADVERTISING`, all else organic), search term, subscribed status, device, operating system, playback location, content type and the video catalog. Each response lists coverage (days YouTube has not delivered are unknown, never zero), the data lag, and the artist's YouTube campaigns with strategy and dates. It pages with `nextCursor` and refuses a channel that needs reconnecting. It is in the directory profile. The full profile now has 30 tools and the directory profile 19.
+- **Continued views.** Campaign analytics for YouTube campaigns (`dynamoi_get_campaign` `analytics`) add `adNetworkReportedContinuedViews`: the ad network's own estimate of viewers who kept watching the artist's videos after the ad. It includes the promoted-video watch and is not YouTube's organic view count.
 - **`dynamoi_manage_youtube_draft`** (full profile). Inspect an artist's open
   YouTube draft after an interrupted launch, or discard it when the user
   explicitly asks. Discard requires `expectedUpdatedAt` from inspect and
-  cannot be undone. The full profile now has 29 tools.
+  cannot be undone.
 - **`.mcp.json`** at the repository root, so clients and directories that
   read it can connect to `https://dynamoi.com/mcp`.
 

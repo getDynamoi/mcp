@@ -542,8 +542,9 @@ describe("createDynamoiMcpServer", () => {
 			const result = await client.listTools();
 			const toolNames = result.tools.map((tool) => tool.name);
 
-			// The 17 review-safe tools plus the public About tool.
-			expect(toolNames).toHaveLength(18);
+			// The 18 review-safe tools plus the public About tool.
+			expect(toolNames).toHaveLength(19);
+			expect(toolNames).toContain("dynamoi_get_youtube_channel_data");
 			expect(toolNames).toContain("dynamoi_about");
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
 			expect(toolNames).toContain(

@@ -67,6 +67,7 @@ Common workflows:
   dynamoi_list_campaigns to resolve missing or ambiguous identity, then read the
   resolved resource.
 - Artist performance summary: dynamoi_get_artist_analytics with granularity=DAILY when requested. If that response already includes the strongest campaign, do not call more analytics tools.
+- YouTube channel data science (trends, videos, countries, traffic sources, paid versus organic views, revenue): dynamoi_get_youtube_channel_data, one dataset per call, paging with nextCursor. It is observed channel data, not campaign attribution.
 - Diagnose stuck campaign: dynamoi_get_campaign → dynamoi_get_platform_status →
   propose next steps
 - Pause/resume: dynamoi_get_campaign (confirm) → dynamoi_update_campaign with action=pause or action=resume; a resume that needs card funding also requires the funding-consent fields (see the tool description).
@@ -113,7 +114,10 @@ Principles:
 - For an identified campaign, call dynamoi_get_campaign directly. Use
   dynamoi_list_campaigns to resolve a missing or ambiguous campaign, and use
   dynamoi_get_artist_analytics when the user asks for artist performance.
-  These tools are read-only.
+  For analysis of the artist's own YouTube channel (trends, videos, countries,
+  traffic sources, paid versus organic views, revenue), use
+  dynamoi_get_youtube_channel_data; it is observed channel data, not campaign
+  attribution. These tools are read-only.
 - YouTube campaigns each have a strategy with its own goal. Before judging results, read the strategyGuide that dynamoi_get_campaign returns (or dynamoi://youtube/campaign-strategies). Say "the ad network" (Google's, serving on YouTube), "paid views" (channel views YouTube credits to advertising) and "organic views" (all other channel views). Use strategy labels such as "Revenue Optimization" with users, not keys such as ADSENSE_ROI.
 - For music distribution, use dynamoi_get_distribution_application to explain the exact
   five requirements and current application status. Use dynamoi_apply_for_distribution

@@ -1,5 +1,6 @@
 import * as z from "zod/v4";
 import { ChannelResultsSchema } from "./channel-results-schema";
+import { YouTubeChannelDataSchema } from "./youtube-channel-data-schema";
 
 const ResultErrorCodeSchema = z.enum([
 	"ACCOUNT_READ_ONLY",
@@ -532,6 +533,9 @@ export const GetCampaignReadinessOutputEnvelopeSchema =
 			SummaryWarningsActionsOutputSchema,
 		]),
 	);
+
+export const GetYouTubeChannelDataOutputEnvelopeSchema =
+	createOutputEnvelopeSchema(YouTubeChannelDataSchema);
 
 export const CreateSmartLinkFromSpotifyOutputEnvelopeSchema =
 	createOutputEnvelopeSchema(CreateSmartLinkFromSpotifyDataOutputSchema);

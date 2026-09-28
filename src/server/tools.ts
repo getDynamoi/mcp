@@ -10,6 +10,7 @@ import {
 	AnyOutputEnvelopeSchema,
 	GetCampaignOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
+	GetYouTubeChannelDataOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
 	ManageYoutubeDraftOutputEnvelopeSchema,
 	UpdateCampaignOutputEnvelopeSchema,
@@ -21,6 +22,7 @@ import {
 	ToolFormatSchema as SharedToolFormatSchema,
 	UserIntentSummarySchema,
 } from "./shared-schemas";
+import { DynamoiGetYouTubeChannelDataInputSchema } from "./youtube-channel-data-schema";
 import {
 	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
 	YouTubeStrategyKeySchema,
@@ -885,6 +887,17 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		readOnlyHint: true,
 		schema: DynamoiGetArtistAnalyticsInputSchema,
 		title: "Get Artist Analytics",
+	},
+	{
+		description:
+			"Use this for data science on an artist's own connected YouTube channel: daily rows straight from the YouTube Analytics warehouse, paged. Pick one dataset: channel_daily (views, watch time, subscribers gained and lost, likes, shares, playlist starts, estimated revenue, ad revenue, gross revenue, monetized playbacks, CPM and playback-based CPM), video_daily (per-video metrics with titles; filter with videoIds), country_daily, traffic_source_daily, search_term_daily (YouTube search terms for the whole channel), subscribed_status_daily, device_daily, operating_system_daily, playback_location_daily, creator_content_type_daily, or video_catalog (video titles and publish dates). Paid views are traffic_source_daily rows with source ADVERTISING (trafficClass=paid); every other source is organic. Data is observed on the channel, not attributed to any campaign; compare periods yourself and use the campaigns block (dates, strategy, promoted videos) as context. YouTube data arrives about 2-3 days late and revenue can lag further: check coverage before comparing, and treat placeholderDays and missingDays as unknown, never zero. Not available yet: audience demographics, per-video traffic sources and per-video search terms. Needs a connected channel; a channel that must be reconnected is refused. Returns no ad spend. Before judging a campaign's strategy, read the strategyGuide from dynamoi_get_campaign. Page with nextCursor; format=summary returns only the summary and coverage.",
+		destructiveHint: false,
+		name: "dynamoi_get_youtube_channel_data",
+		openWorldHint: false,
+		outputSchema: GetYouTubeChannelDataOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetYouTubeChannelDataInputSchema,
+		title: "Get YouTube Channel Data",
 	},
 	{
 		description:

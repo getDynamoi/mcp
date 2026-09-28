@@ -87,6 +87,7 @@ import {
 	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
+import type { GetYouTubeChannelDataData } from "./youtube-channel-data-schema";
 
 type DynamoiToolSecurityScheme =
 	| { scopes: string[]; type: "oauth2" }
@@ -170,6 +171,16 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 		releaseTitle: z.string().optional(),
 		theme: z.string().optional(),
 	}).passthrough(),
+	dynamoi_get_youtube_channel_data: z
+		.object({
+			artistId: z.string().optional(),
+			channelName: z.string().nullable().optional(),
+			dataset: z.string().optional(),
+			nextCursor: z.string().optional(),
+			rowCount: z.number().optional(),
+			summary: z.string().optional(),
+		})
+		.passthrough(),
 	dynamoi_list_artists: z
 		.object({
 			artists: z.array(DescriptiveEntitySchema).optional(),
@@ -398,6 +409,9 @@ export type Phase3Adapter = {
 	getSmartLinkArtistSettings(
 		input: unknown,
 	): Promise<ResultEnvelope<SmartLinkSettingsData>>;
+	getYouTubeChannelData(
+		input: unknown,
+	): Promise<ResultEnvelope<GetYouTubeChannelDataData>>;
 	updateSmartLink(
 		input: unknown,
 	): Promise<
@@ -671,6 +685,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_get_platform_status: (adapter, input) =>
 		adapter.getPlatformStatus(input),
 	dynamoi_get_smart_link: (adapter, input) => adapter.getSmartLink(input),
+	dynamoi_get_youtube_channel_data: (adapter, input) =>
+		adapter.getYouTubeChannelData(input),
 	dynamoi_launch_campaign: (adapter, input) => adapter.launchCampaign(input),
 	dynamoi_list_artists: (adapter, input) => adapter.listArtists(input),
 	dynamoi_list_available_countries: (adapter, input) =>

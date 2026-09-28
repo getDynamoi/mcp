@@ -159,7 +159,7 @@ signed in, not from anything the client claims about itself.
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
 | **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 18 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
-| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 29 tools, plus the Dynamoi prompts and reference resources |
+| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 30 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
 OAuth scopes, and the user's role must allow access to the artist, campaign,
@@ -180,6 +180,7 @@ start an action with an outside provider.
 | `dynamoi_list_campaigns` | An artist's campaigns, with type and status filters | Reads | Both |
 | `dynamoi_get_campaign` | One campaign, with optional analytics, delivery status, and countries | Reads | Both |
 | `dynamoi_get_artist_analytics` | Artist-level analytics across campaigns | Reads | Both |
+| `dynamoi_get_youtube_channel_data` | Observed YouTube channel data by dataset, with coverage and campaign dates | Reads | Both |
 | `dynamoi_get_platform_status` | Spotify, Meta, and YouTube connection status and setup blockers | Reads | Both |
 | `dynamoi_get_distribution_application` | The five distribution requirements and application status | Reads | Both |
 | `dynamoi_apply_for_distribution` | Submit a distribution application for manual review | Changes data | Both |

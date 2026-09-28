@@ -36,6 +36,7 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	],
 	dynamoi_get_platform_status: ["dynamoi:read", "dynamoi:platform.read"],
 	dynamoi_get_smart_link: ["dynamoi:read"],
+	dynamoi_get_youtube_channel_data: ["dynamoi:read"],
 	dynamoi_launch_campaign: ["dynamoi:read", "dynamoi:campaign.launch"],
 	dynamoi_list_artists: ["dynamoi:read"],
 	dynamoi_list_available_countries: ["dynamoi:read"],

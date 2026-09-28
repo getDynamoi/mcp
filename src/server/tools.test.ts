@@ -71,7 +71,7 @@ describe("mcp/tools phase 1 definitions", () => {
 			...PHASE_3_TOOL_DEFINITIONS,
 			...PHASE_4_TOOL_DEFINITIONS,
 		];
-		expect(publicTools.length).toBeLessThanOrEqual(23);
+		expect(publicTools.length).toBeLessThanOrEqual(24);
 		const toolNames = publicTools.map((tool) => tool.name);
 		expect(toolNames).toContain("dynamoi_start_meta_connection");
 		expect(toolNames).not.toContain("dynamoi_start_subscription_checkout");
