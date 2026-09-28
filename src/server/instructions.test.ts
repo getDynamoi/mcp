@@ -48,6 +48,15 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		);
 	});
 
+	// Mirrors the USD row of MANAGED_ADS_CATALOG in
+	// packages/web-shared/src/lib/domains/billing/managed-ads-plan-contract.ts
+	// (minDaily, minDaily * 5, youtubeMinTotal).
+	test("states the enforced USD budget minimums", () => {
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			"Budget minimums: $10/day (daily), $50 total (Smart Campaign), $75 total (YouTube).",
+		);
+	});
+
 	test("documents the full-profile Shop checkout boundary", () => {
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
 			"dynamoi_shop_get_quote → explicit user confirmation → dynamoi_shop_create_checkout",

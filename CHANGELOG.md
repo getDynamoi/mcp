@@ -18,6 +18,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`.mcp.json`** at the repository root, so clients and directories that
   read it can connect to `https://dynamoi.com/mcp`.
 
+### Fixed
+
+- **YouTube budget minimum.** The server instructions said agents could
+  launch a YouTube campaign with a $50 total budget. The enforced minimum is
+  $75 total.
+
 ### Changed
 
 - **Daily funding consent v4.** The consent constants are now
