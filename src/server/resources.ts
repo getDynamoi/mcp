@@ -90,7 +90,7 @@ export function registerDynamoiResources(
 					},
 					youtubeCampaigns: {
 						meaning:
-							"Google Ads geo targets for YouTube campaign deployment and localization.",
+							"The ad network's geo targets for YouTube campaign deployment and localization.",
 						source: "GOOGLE_ADS_COUNTRIES",
 						tool: "dynamoi_list_available_countries",
 						toolInput: { campaignType: "YOUTUBE" },

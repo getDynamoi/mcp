@@ -31,8 +31,17 @@ describe("YouTube strategy guide", () => {
 	});
 
 	test("uses ad network, paid and organic view vocabulary", () => {
-		const text = JSON.stringify(buildYouTubeCampaignStrategiesGuide());
-		expect(text).not.toContain("Google Ads");
+		const guide = buildYouTubeCampaignStrategiesGuide();
+		// The vocabulary line is the only place that may mention "Google Ads",
+		// and only to tell agents not to repeat it.
+		const { adNetwork, ...rest } = guide.vocabulary;
+		expect(adNetwork).toContain("say 'the ad network'");
+		expect(adNetwork).toContain("you may name Google once");
+		expect(adNetwork).toContain("do not repeat 'Google Ads'");
+		expect(JSON.stringify({ ...guide, vocabulary: rest })).not.toContain(
+			"Google Ads",
+		);
+		const text = JSON.stringify(guide);
 		expect(text.toLowerCase()).not.toContain("follow-on");
 		expect(text).toContain("Google's ad network");
 		const { vocabulary } = buildYouTubeCampaignStrategiesGuide();

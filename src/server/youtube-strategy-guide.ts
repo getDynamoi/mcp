@@ -141,7 +141,7 @@ const STRATEGY_ENTRIES = {
 
 const VOCABULARY = {
 	adNetwork:
-		"Dynamoi YouTube campaigns run on Google's ad network and serve on YouTube. Call it 'the ad network'.",
+		"Dynamoi YouTube campaigns run on Google's ad network and serve on YouTube. When reporting to users, say 'the ad network' (you may name Google once); do not repeat 'Google Ads'.",
 	adNetworkReportedContinuedViews:
 		"The ad network's own estimate of viewers who kept watching the artist's videos after the ad. It includes the promoted-video watch and is not YouTube's count; use it to understand what the ad network optimizes toward, never as organic views.",
 	organicLift:

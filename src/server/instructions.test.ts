@@ -77,6 +77,19 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 	});
 });
 
+describe("ad network vocabulary", () => {
+	for (const [name, instructions] of [
+		["MCP", DYNAMOI_MCP_INSTRUCTIONS],
+		["ChatGPT", DYNAMOI_CHATGPT_APP_INSTRUCTIONS],
+	] as const) {
+		test(`${name} instructions steer agents to say "the ad network"`, () => {
+			expect(instructions).toContain(
+				'When reporting to users, say "the ad network" (you may name Google once; do not repeat "Google Ads"',
+			);
+		});
+	}
+});
+
 describe("DYNAMOI_CHATGPT_APP_INSTRUCTIONS", () => {
 	test("uses targeted reads when the request already identifies a resource", () => {
 		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(

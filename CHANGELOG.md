@@ -18,6 +18,14 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`.mcp.json`** at the repository root, so clients and directories that
   read it can connect to `https://dynamoi.com/mcp`.
 
+### Changed
+
+- **"The ad network" vocabulary.** Server instructions and the YouTube
+  strategy guide now tell agents to say "the ad network" when reporting to
+  users (Google may be named once; do not repeat "Google Ads"). Summary text
+  shows the Google platform as "Ad network" and the geo target ID column as
+  "Geo Target ID". Enum values, field names and JSON keys are unchanged.
+
 ### Fixed
 
 - **YouTube budget minimum.** The server instructions said agents could
