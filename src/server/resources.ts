@@ -2,6 +2,10 @@ import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import type { Phase3Adapter } from "./create-server";
 import { registerPlaybookResources } from "./playbook-resources";
+import {
+	buildYouTubeCampaignStrategiesGuide,
+	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
+} from "./youtube-strategy-guide";
 
 export function registerDynamoiResources(
 	server: McpServer,
@@ -30,7 +34,7 @@ export function registerDynamoiResources(
 							},
 							youtube: {
 								dailyUsd: 10,
-								note: "Google Ads for YouTube channel growth",
+								note: "Google's ad network for YouTube channel growth",
 								totalUsd: 50,
 							},
 						},
@@ -348,6 +352,26 @@ export function registerDynamoiResources(
 							"ENDED",
 						],
 					}),
+					uri: uri.href,
+				},
+			],
+		}),
+	);
+
+	server.registerResource(
+		"youtube-campaign-strategies",
+		YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
+		{
+			description:
+				"How each YouTube campaign strategy works: its goal, what the ad network optimizes for, how to judge results, paid vs organic views, the playlist waterfall, and when results are fair to judge.",
+			mimeType: "application/json",
+			title: "YouTube Campaign Strategies",
+		},
+		async (uri) => ({
+			contents: [
+				{
+					mimeType: "application/json",
+					text: JSON.stringify(buildYouTubeCampaignStrategiesGuide()),
 					uri: uri.href,
 				},
 			],

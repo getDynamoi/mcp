@@ -41,10 +41,11 @@ describe("registerDynamoiResources persona playbooks", () => {
 		expect(parsed.marginCopyGuard).toBeUndefined();
 	});
 
-	test("dynamoi://playbooks/youtube-creator highlights revenue-per-view differentiator", async () => {
+	test("dynamoi://playbooks/youtube-creator explains goal-based campaign differentiator", async () => {
 		const result = await readResource("dynamoi://playbooks/youtube-creator");
 		const parsed = JSON.parse(String(result.contents[0]?.text ?? ""));
-		expect(parsed.differentiator).toContain("revenue per country");
+		expect(parsed.differentiator).toContain("organic lift");
+		expect(parsed.differentiator).not.toContain("revenue per country");
 		expect(parsed.channelLinkingPath).toContain(
 			"dynamoi_start_youtube_channel_link",
 		);
@@ -96,5 +97,17 @@ describe("registerDynamoiResources persona playbooks", () => {
 		);
 		expect(parsed.emptyStateRule).toContain("dynamoi_get_account_overview");
 		expect(parsed.emptyStateRule).toContain("playbooks/onboarding-tree");
+	});
+});
+
+describe("registerDynamoiResources YouTube strategies", () => {
+	test("dynamoi://youtube/campaign-strategies explains every strategy and the playlist waterfall", async () => {
+		const result = await readResource("dynamoi://youtube/campaign-strategies");
+		const parsed = JSON.parse(String(result.contents[0]?.text ?? ""));
+		expect(parsed.strategies).toHaveLength(5);
+		expect(parsed.playlistWaterfall.measurementLimits).toContain(
+			"does not follow individual viewers",
+		);
+		expect(parsed.resultTiming.learning).toContain("7-14 days");
 	});
 });

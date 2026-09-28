@@ -69,7 +69,7 @@ export function registerPlaybookResources(server: McpServer) {
 		"dynamoi://playbooks/youtube-creator",
 		{
 			description:
-				"Persona playbook: how to introduce a YouTube creator to Dynamoi's revenue-per-view optimization advantage.",
+				"Persona playbook: how to introduce a YouTube creator to Dynamoi's goal-based YouTube campaigns.",
 			mimeType: "application/json",
 			title: "Playbook: YouTube Creator",
 		},
@@ -81,19 +81,19 @@ export function registerPlaybookResources(server: McpServer) {
 						channelLinkingPath:
 							"When connection tools are available to this client, call dynamoi_start_youtube_channel_link for the target artist, give the user the returned Google authorization URL, then poll dynamoi_get_platform_status for that artist with the returned onboardingAttemptId and onboardingFlow=youtube after the return page sends them back to chat. The completion field is platforms.youtube.connected. On surfaces without connection tools, direct the user: 'You can do this in the Dynamoi dashboard at https://dynamoi.com/dashboard.'",
 						differentiator:
-							"Dynamoi optimizes YouTube ad spend against AdSense revenue per country. Most ad tools optimize for views; Dynamoi optimizes for views that make money. The system explores small bids in new markets, scales countries where viewer revenue is strong, and pauses countries that cannot cover their costs.",
+							"Dynamoi runs YouTube campaigns on Google's ad network aimed at what the channel needs, not raw views: organic views, subscribers, or channel revenue for monetized channels. Each ad starts viewers in a playlist of the artist's own videos, so listeners stay on the channel instead of drifting to YouTube autoplay. Dynamoi judges results from the channel's own YouTube data: organic lift, subscribers, and revenue. See dynamoi://youtube/campaign-strategies for each strategy.",
 						persona:
 							"Channel owner of any niche (music, education, gaming, vlog, podcast, tutorial, product reviews) who wants subscriber growth that pays back via AdSense.",
 						postLinkingFlow:
-							"After channel link, call dynamoi_get_campaign_readiness for a YouTube growth campaign when that tool is available to this client; otherwise direct campaign setup to the Dynamoi dashboard. Mention that ad copy is internationalized per market for lower cost and that campaigns require playlists so each paid view drives sustained organic views downstream.",
+							"After channel link, call dynamoi_get_campaign_readiness for a YouTube growth campaign when that tool is available to this client; otherwise direct campaign setup to the Dynamoi dashboard. Mention that ad copy is internationalized per market for lower cost and that campaigns use a playlist entry point so viewers who click keep watching the artist's own videos.",
 						sampleScript:
-							"Most YouTube ad systems optimize for raw views. Dynamoi merges your AdSense revenue with ad cost data to optimize bids per country based on real viewer revenue, so you grow toward viewers who actually monetize. I can help you link your YouTube channel, then we can plan your first campaign.",
+							"Most YouTube ad tools sell raw views. Dynamoi picks a campaign strategy for your goal (organic views, subscribers, or revenue if your channel is monetized), starts viewers in a playlist of your own videos, and reports results from your channel's YouTube data. I can help you link your YouTube channel, then we can plan your first campaign.",
 						talkingPoints: {
 							differentiatorComparison: {
 								claim:
-									"Most creator ad tools optimize for views or subscribers. Dynamoi compares ad cost with AdSense revenue by country so delivery can favor viewers who are more likely to pay back over time.",
+									"Most creator ad tools optimize for raw views. Dynamoi campaigns aim at viewers who keep watching or subscribe, keep them in the artist's own playlist, and judge success from the channel's YouTube data, including revenue for monetized channels.",
 								trigger:
-									"User asks how YouTube campaigns differ from normal Google Ads or creator-growth services.",
+									"User asks how YouTube campaigns differ from normal YouTube ads or creator-growth services.",
 							},
 							hesitationReassurance: {
 								claim:
@@ -103,7 +103,7 @@ export function registerPlaybookResources(server: McpServer) {
 							},
 							playlistWaterfall: {
 								claim:
-									"Playlist promotion sends viewers into a sequence, so one paid view can lead to additional organic views across related videos and channel-wide subscriber growth.",
+									"Playlist promotion starts viewers in a sequence of the artist's own videos, so listeners who click keep watching the channel instead of YouTube autoplay. It improves listener quality; YouTube data cannot show exactly how many views the playlist itself caused.",
 								trigger:
 									"User asks whether campaigns can help subscribers or the whole channel instead of one video.",
 							},

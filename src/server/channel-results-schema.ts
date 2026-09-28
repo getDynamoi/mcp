@@ -73,6 +73,12 @@ export const ChannelResultsSchema = z.discriminatedUnion("status", [
 			status: z.literal("available"),
 			trafficSources: z
 				.object({
+					// Views YouTube credits to advertising vs every other source,
+					// summed from the traffic-source rows below. Null when no day in
+					// the window has traffic-source data; partial coverage is
+					// coverage.trafficSourceDaysWithData days.
+					organicViews: z.number().nullable(),
+					paidViews: z.number().nullable(),
 					provenance: ProvenanceSchema,
 					rows: z.array(
 						z

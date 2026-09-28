@@ -21,6 +21,14 @@ import {
 	ToolFormatSchema as SharedToolFormatSchema,
 	UserIntentSummarySchema,
 } from "./shared-schemas";
+import {
+	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
+	YouTubeStrategyKeySchema,
+} from "./youtube-strategy-guide";
+
+const YouTubeStrategySchema = YouTubeStrategyKeySchema.describe(
+	`YouTube campaign strategy. Labels for users: CHEAPEST_VIEWS = Maximize Views, ORGANIC_VIEWS = Organic Views, SUBSCRIBERS = Subscriber Growth, ORGANIC_VIEWS_AND_SUBSCRIBERS = Organic Views + Subscribers (default for non-monetized channels), ADSENSE_ROI = Revenue Optimization (monetized channels only). Read ${YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI} before recommending or changing one.`,
+);
 
 export const DateRangeSchema = SharedDateRangeSchema;
 export const ToolFormatSchema = SharedToolFormatSchema;
@@ -273,15 +281,7 @@ export const DynamoiGetCampaignReadinessInputSchema = z
 		useAiGeneratedCopy: z.boolean().optional(),
 		youtubeEntries: YouTubeEntriesSchema.optional(),
 		youtubePlaylistId: z.string().trim().min(1).max(128).optional(),
-		youtubeStrategy: z
-			.enum([
-				"CHEAPEST_VIEWS",
-				"ORGANIC_VIEWS",
-				"SUBSCRIBERS",
-				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
-				"ADSENSE_ROI",
-			])
-			.optional(),
+		youtubeStrategy: YouTubeStrategySchema.optional(),
 		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
 	})
 	.strict()
@@ -484,15 +484,7 @@ export const DynamoiUpdateCampaignInputSchema = z
 			.optional(),
 		optimizeForOrganicViews: z.boolean().optional(),
 		optimizeForSubscribers: z.boolean().optional(),
-		strategy: z
-			.enum([
-				"CHEAPEST_VIEWS",
-				"ORGANIC_VIEWS",
-				"SUBSCRIBERS",
-				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
-				"ADSENSE_ROI",
-			])
-			.optional(),
+		strategy: YouTubeStrategySchema.optional(),
 		userIntentSummary: UserIntentSummarySchema,
 	})
 	.strict()
@@ -705,15 +697,7 @@ export const DynamoiLaunchCampaignInputSchema = z
 		youtubeEntries: YouTubeEntriesSchema.optional(),
 		// YouTube content (same choices as the app's YouTube campaign setup)
 		youtubePlaylistId: z.string().trim().min(1).max(128).optional(),
-		youtubeStrategy: z
-			.enum([
-				"CHEAPEST_VIEWS",
-				"ORGANIC_VIEWS",
-				"SUBSCRIBERS",
-				"ORGANIC_VIEWS_AND_SUBSCRIBERS",
-				"ADSENSE_ROI",
-			])
-			.optional(),
+		youtubeStrategy: YouTubeStrategySchema.optional(),
 		youtubeVideoId: z.string().trim().min(1).max(128).optional(),
 	})
 	.strict()
@@ -882,7 +866,7 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 	},
 	{
 		description:
-			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. Set includeAnalytics=true for paid delivery, includeChannelResults=true for observed YouTube organic channel results (never attributed to the campaign), includeDeploymentStatus=true for delivery/deployment blockers, and includeCountries=true only when the full country list is needed. Do not use this for a campaign list; use dynamoi_list_campaigns instead. After a successful launch or campaign mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
+			"Use this when the user wants full details for one campaign, including budget, targeting, platform status, and next actions. YouTube campaigns return youtubeStrategy and strategyGuide: read the guide's goal and judgeBy before interpreting results. Set includeAnalytics=true for paid delivery, includeChannelResults=true for observed YouTube channel results with paid and organic views (never attributed to the campaign), includeDeploymentStatus=true for delivery/deployment blockers, and includeCountries=true only when the full country list is needed. Do not use this for a campaign list; use dynamoi_list_campaigns instead. After a successful launch or campaign mutation, prefer format=summary when you need a follow-up read to relay the final answer.",
 		destructiveHint: false,
 		name: "dynamoi_get_campaign",
 		openWorldHint: false,

@@ -21,7 +21,7 @@ const DYNAMOI_ABOUT_SMART_LINKS_BULLET =
 	"- **Free Smart Links** — create and manage Smart Links and artist hubs from Spotify artist, album, or track URLs at no cost. Link analytics, custom themes, validated pixel IDs, and team seats are included. High-popularity or unverifiable artist links may stay unpublished in verification hold until Dynamoi can verify the client relationship.";
 
 const DYNAMOI_ABOUT_YOUTUBE_BULLET =
-	"- **YouTube campaigns** — managed Google Ads campaigns for YouTube channel growth. Dynamoi optimizes ad spend against AdSense revenue per country, so delivery favors audiences that actually monetize.";
+	"- **YouTube campaigns** — managed campaigns on Google's ad network for YouTube channel growth. Each campaign follows a strategy (Maximize Views, Organic Views, Subscriber Growth, Organic Views + Subscribers, or Revenue Optimization for monetized channels) and is judged from the channel's own YouTube data. Every strategy except Maximize Views starts viewers in a playlist of the artist's own videos.";
 
 const DYNAMOI_ABOUT_DISTRIBUTION_GATE =
 	"Dynamoi scores five requirements before an application can be submitted — including an established audience (at least 10,000 monthly Spotify listeners) and identity verification — and approval is not guaranteed.";

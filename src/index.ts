@@ -17,6 +17,11 @@ export {
 } from "./server/about";
 export type { ChannelResults } from "./server/channel-results-schema";
 export { ChannelResultsSchema } from "./server/channel-results-schema";
+export type { YouTubeStrategyGuide } from "./server/youtube-strategy-guide";
+export {
+	buildYouTubeStrategyGuide,
+	YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
+} from "./server/youtube-strategy-guide";
 export type { Phase3Adapter } from "./server/create-server";
 export {
 	createDynamoiMcpServer,
