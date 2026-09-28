@@ -2,7 +2,13 @@ import { describe, expect, test } from "bun:test";
 import {
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_VERSION,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_VERSION,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+	isCurrentProspectiveBudgetFundingConsent,
+	isRenewableProspectiveBudgetFundingConsent,
 } from "../consent";
 import {
 	DynamoiOpenAiFetchInputSchema,
@@ -24,6 +30,7 @@ import {
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
 	DynamoiManageYoutubeDraftInputSchema,
+	DynamoiResumeCampaignInputSchema,
 	DynamoiUpdateBudgetInputSchema,
 	DynamoiUpdateCampaignInputSchema,
 	PHASE_1_TOOL_DEFINITIONS,
@@ -515,11 +522,27 @@ describe("mcp/tools phase 2 definitions", () => {
 		).toThrow();
 	});
 
+	test("update schema refuses the superseded v3 consent values", () => {
+		expect(
+			DynamoiUpdateCampaignInputSchema.safeParse({
+				acceptedConsentCopyHash:
+					"53647786746f962c91f5cad78d8bba531c478109041b2808a4a81efbe380abf1",
+				acceptedConsentVersion: "managed-ads-prospective-daily-v3",
+				action: "update_budget",
+				authorizeAutomaticDailyFunding: true,
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				clientRequestId: "11111111-1111-4111-8111-111111111111",
+				userIntentSummary: "Increase after checking campaign performance.",
+			}).success,
+		).toBe(false);
+	});
+
 	test("update budget schema accepts idempotency and expected-state guards", () => {
 		const parsed = DynamoiUpdateCampaignInputSchema.parse({
 			acceptedConsentCopyHash:
-				"53647786746f962c91f5cad78d8bba531c478109041b2808a4a81efbe380abf1",
-			acceptedConsentVersion: "managed-ads-prospective-daily-v3",
+				"e40485780d7b025c7a10bde969a25eecdcb0b4ebf1783251440e870fd8e10a60",
+			acceptedConsentVersion: "managed-ads-prospective-daily-v4",
 			action: "update_budget",
 			authorizeAutomaticDailyFunding: true,
 			budgetAmount: 250,
@@ -641,6 +664,83 @@ describe("mcp/tools phase 3 definitions", () => {
 
 		expect(parsed.endDate).toBeUndefined();
 		expect(parsed.spotifyUrl).toBeUndefined();
+	});
+
+	describe("new funding authorizations accept only the current consent pair", () => {
+		const consentPairs = [
+			{
+				accepted: false,
+				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_COPY_HASH,
+				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_VERSION,
+				name: "v2 pair",
+			},
+			{
+				accepted: false,
+				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH,
+				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_VERSION,
+				name: "v3 pair",
+			},
+			{
+				accepted: false,
+				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH,
+				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+				name: "current version with a wrong hash",
+			},
+			{
+				accepted: true,
+				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+				name: "current v4 pair",
+			},
+		];
+
+		for (const pair of consentPairs) {
+			test(`${pair.accepted ? "accepts" : "refuses"} the ${pair.name}`, () => {
+				expect(
+					isCurrentProspectiveBudgetFundingConsent({
+						copyHash: pair.copyHash,
+						copyVersion: pair.copyVersion,
+					}),
+				).toBe(pair.accepted);
+				expect(
+					DynamoiResumeCampaignInputSchema.safeParse({
+						acceptedConsentCopyHash: pair.copyHash,
+						acceptedConsentVersion: pair.copyVersion,
+						authorizeAutomaticDailyFunding: true,
+						campaignId: "00000000-0000-0000-0000-000000000000",
+						clientRequestId: "11111111-1111-4111-8111-111111111111",
+						userIntentSummary: "Resume the paused campaign.",
+					}).success,
+				).toBe(pair.accepted);
+				expect(
+					DynamoiLaunchCampaignInputSchema.safeParse({
+						acceptedConsentCopyHash: pair.copyHash,
+						acceptedConsentVersion: pair.copyVersion,
+						artistId: "00000000-0000-0000-0000-000000000000",
+						authorizeAutomaticDailyFunding: true,
+						budgetAmount: 50,
+						budgetSplits: { GOOGLE: 0, META: 100 },
+						budgetType: "DAILY",
+						campaignType: "SMART_CAMPAIGN",
+						clientRequestId: "11111111-1111-4111-8111-111111111111",
+						contentTitle: "Song",
+						contentType: "TRACK",
+						mediaAssetIds: ["00000000-0000-0000-0000-000000000000"],
+					}).success,
+				).toBe(pair.accepted);
+			});
+		}
+
+		test("superseded pairs stay renewable for campaigns that accepted them", () => {
+			for (const pair of consentPairs) {
+				expect(
+					isRenewableProspectiveBudgetFundingConsent({
+						copyHash: pair.copyHash,
+						copyVersion: pair.copyVersion,
+					}),
+				).toBe(pair.name !== "current version with a wrong hash");
+			}
+		});
 	});
 
 	test("launch campaign schema rejects impossible calendar end dates", () => {
