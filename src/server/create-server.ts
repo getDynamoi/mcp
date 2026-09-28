@@ -712,6 +712,37 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	search: (adapter, input) => adapter.openAiSearch(input),
 } satisfies Record<DynamoiToolName, DynamoiToolDispatcher>;
 
+/** Longest a tool response waits for the host's observer before answering. */
+const DEFAULT_OBSERVER_TIMEOUT_MS = 3000;
+
+/**
+ * Runs the host observer without letting it change or delay a tool result.
+ * Throws, rejections and hangs are all absorbed: a hung observer is abandoned
+ * after the timeout and any late rejection is swallowed, so it can never
+ * become an unhandled rejection or a second outcome.
+ */
+async function runObserverBounded(
+	observe: () => Promise<void> | void,
+	timeoutMs: number,
+): Promise<void> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const observed = (async () => {
+		try {
+			await observe();
+		} catch {
+			// Observability must never change a tool result.
+		}
+	})();
+	const timedOut = new Promise<void>((resolve) => {
+		timer = setTimeout(resolve, timeoutMs);
+	});
+	try {
+		await Promise.race([observed, timedOut]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 function snapshotForObserver(value: unknown) {
 	try {
 		return structuredClone(value);
@@ -916,11 +947,15 @@ export function createDynamoiMcpServer(options: {
 		result?: unknown;
 		toolName: string;
 	}) => Promise<void> | void;
+	/** Bounds how long a tool response waits for `onToolCall`. */
+	observerTimeoutMs?: number;
 	oauthScopes?: readonly string[];
 	toolProfile?: DynamoiMcpToolProfile;
 	websiteUrl?: string;
 }): McpServer {
 	const toolProfile = options.toolProfile ?? "directory";
+	const observerTimeoutMs =
+		options.observerTimeoutMs ?? DEFAULT_OBSERVER_TIMEOUT_MS;
 	const server = new McpServer(
 		{
 			name: "dynamoi",
@@ -1018,26 +1053,27 @@ export function createDynamoiMcpServer(options: {
 						outputSchema: def.outputSchema,
 						toolName: def.name,
 					});
-					try {
-						await options.onToolCall?.({
-							durationMs: Date.now() - startedAt,
-							result: snapshotForObserver(finalized.structuredContent),
-							toolName: def.name,
-						});
-					} catch {
-						// Observability must never change a tool result.
-					}
+					await runObserverBounded(
+						() =>
+							options.onToolCall?.({
+								durationMs: Date.now() - startedAt,
+								result: snapshotForObserver(finalized.structuredContent),
+								toolName: def.name,
+							}),
+						observerTimeoutMs,
+					);
 					return finalized;
 				} catch (error) {
-					try {
-						await options.onToolCall?.({
-							durationMs: Date.now() - startedAt,
-							error: snapshotForObserver(error),
-							toolName: def.name,
-						});
-					} catch {
-						// Preserve the dispatcher failure when observability also fails.
-					}
+					// Preserve the dispatcher failure when observability also fails.
+					await runObserverBounded(
+						() =>
+							options.onToolCall?.({
+								durationMs: Date.now() - startedAt,
+								error: snapshotForObserver(error),
+								toolName: def.name,
+							}),
+						observerTimeoutMs,
+					);
 					throw error;
 				}
 			},

@@ -42,6 +42,12 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Bounded observer.** A hung `onToolCall` observer no longer delays a tool
+  result. The server waits up to `observerTimeoutMs` (default 3000) and then
+  answers, absorbing any late rejection. Observer failures still never change
+  the result.
+- **Directory catalog count.** The README now states the directory profile's
+  19 tools (17 Dynamoi tools plus `search` and `fetch`).
 - **YouTube budget minimum.** The server instructions said agents could
   launch a YouTube campaign with a $50 total budget. The enforced minimum is
   $75 total.

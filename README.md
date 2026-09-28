@@ -158,7 +158,7 @@ signed in, not from anything the client claims about itself.
 
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
-| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 18 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
+| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 19 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
 | **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 30 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its

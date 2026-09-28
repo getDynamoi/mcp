@@ -25,6 +25,9 @@ async function withFixture(
 	options: {
 		adapterMethod?: string;
 		arguments?: Record<string, unknown>;
+		/** Replaces the recording observer, e.g. to simulate a hung sink. */
+		observer?: Observer;
+		observerTimeoutMs?: number;
 	} = {},
 ): Promise<void> {
 	const observations: Observation[] = [];
@@ -45,12 +48,15 @@ async function withFixture(
 	});
 	const server = createDynamoiMcpServer({
 		adapter,
-		onToolCall(observation) {
-			observations.push(structuredClone(observation));
-			if (observerThrows) {
-				throw new Error("Simulated telemetry failure");
-			}
-		},
+		observerTimeoutMs: options.observerTimeoutMs,
+		onToolCall:
+			options.observer ??
+			((observation) => {
+				observations.push(structuredClone(observation));
+				if (observerThrows) {
+					throw new Error("Simulated telemetry failure");
+				}
+			}),
 		toolProfile: profile,
 	});
 	const client = new Client({
@@ -450,6 +456,110 @@ for (const profile of ["full", "directory"] as const) {
 				},
 				true,
 			);
+		});
+
+		test("hung observer cannot delay or change a successful tool result", async () => {
+			const started = Date.now();
+			await withFixture(
+				profile,
+				success,
+				async ({ client }) => {
+					const result = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					expect(result.isError).not.toBe(true);
+					expect(result.structuredContent).toEqual(success);
+					expect(Date.now() - started).toBeLessThan(5000);
+				},
+				false,
+				{
+					observer: () => new Promise<void>(() => undefined),
+					observerTimeoutMs: 50,
+				},
+			);
+		});
+
+		test("hung observer cannot delay or mask an output validation error", async () => {
+			await withFixture(
+				profile,
+				{ status: "success" },
+				async ({ client }) => {
+					const result = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					expect(result.isError).toBe(true);
+					expect(result.structuredContent).toMatchObject({
+						kind: "validation",
+						status: "error",
+					});
+				},
+				false,
+				{
+					observer: () => new Promise<void>(() => undefined),
+					observerTimeoutMs: 50,
+				},
+			);
+		});
+
+		test("hung observer cannot mask a dispatcher failure", async () => {
+			await withFixture(
+				profile,
+				success,
+				async ({ client }) => {
+					const result = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					expect(result.isError).toBe(true);
+					expect(result.content).toEqual([
+						{
+							text: "Unexpected fixture adapter call: listArtists",
+							type: "text",
+						},
+					]);
+				},
+				false,
+				{
+					adapterMethod: "fixtureMethodThatMustNotRun",
+					observer: () => new Promise<void>(() => undefined),
+					observerTimeoutMs: 50,
+				},
+			);
+		});
+
+		test("observer rejecting after the timeout is not an unhandled rejection", async () => {
+			const unhandled: unknown[] = [];
+			const record = (reason: unknown) => {
+				unhandled.push(reason);
+			};
+			process.on("unhandledRejection", record);
+			try {
+				await withFixture(
+					profile,
+					success,
+					async ({ client }) => {
+						const result = await client.callTool({
+							arguments: {},
+							name: "dynamoi_list_artists",
+						});
+						expect(result.structuredContent).toEqual(success);
+						await new Promise((resolve) => setTimeout(resolve, 150));
+					},
+					false,
+					{
+						observer: async () => {
+							await new Promise((resolve) => setTimeout(resolve, 100));
+							throw new Error("Late telemetry failure");
+						},
+						observerTimeoutMs: 20,
+					},
+				);
+			} finally {
+				process.off("unhandledRejection", record);
+			}
+			expect(unhandled).toEqual([]);
 		});
 
 		test("throwing observer cannot mask an output validation error", async () => {
