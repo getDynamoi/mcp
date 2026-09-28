@@ -41,7 +41,7 @@ ${DYNAMOI_ABOUT_INTRO}
 ${DYNAMOI_ABOUT_SMART_LINKS_BULLET}
 - **Managed Smart Campaigns** — Dynamoi runs Meta ad campaigns that promote Spotify tracks, albums, and playlists.
 ${DYNAMOI_ABOUT_YOUTUBE_BULLET}
-- **Music distribution** — an opt-in product that delivers releases to 100+ stores including Spotify, Apple Music, Amazon Music, YouTube Music, TikTok, Deezer, and Tidal. The artist keeps 90% of Net Receipts (Dynamoi keeps 10%), there are no upfront release fees, and Content ID is included. Optional publishing administration is available to distribution clients for 10% of Net Receipts. ${DYNAMOI_ABOUT_DISTRIBUTION_GATE}
+- **Music distribution** — an opt-in product that delivers releases to 100+ stores including Spotify, Apple Music, Amazon Music, YouTube Music, TikTok, Deezer, and Tidal. The artist keeps 90% of Net Receipts (Dynamoi keeps 10%), and there are no upfront release fees. Optional publishing administration is available to distribution clients for 10% of Net Receipts. ${DYNAMOI_ABOUT_DISTRIBUTION_GATE}
 - **YouTube promotion Shop** — one-off YouTube promotion purchases without a subscription, for users who do not want managed advertising.
 
 ${DYNAMOI_ABOUT_CAMPAIGN_NOTE}
