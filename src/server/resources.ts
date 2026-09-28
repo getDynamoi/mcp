@@ -363,7 +363,7 @@ export function registerDynamoiResources(
 		YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
 		{
 			description:
-				"How each YouTube campaign strategy works: its goal, what the ad network optimizes for, how to judge results, paid vs organic views, the playlist waterfall, and when results are fair to judge.",
+				"How each YouTube campaign strategy works: its goal, what the ad network optimizes for, how to judge results, advertising-tagged vs other-source views, campaign-period vs organic lift, the playlist waterfall, and when results are fair to judge.",
 			mimeType: "application/json",
 			title: "YouTube Campaign Strategies",
 		},

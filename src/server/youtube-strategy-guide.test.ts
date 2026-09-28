@@ -30,7 +30,7 @@ describe("YouTube strategy guide", () => {
 		expect(buildYouTubeStrategyGuide("LEGACY_UNKNOWN")).toBeNull();
 	});
 
-	test("uses ad network, paid and organic view vocabulary", () => {
+	test("uses ad network, advertising-source and organic lift vocabulary", () => {
 		const guide = buildYouTubeCampaignStrategiesGuide();
 		// The vocabulary line is the only place that may mention "Google Ads",
 		// and only to tell agents not to repeat it.
@@ -45,8 +45,22 @@ describe("YouTube strategy guide", () => {
 		expect(text.toLowerCase()).not.toContain("follow-on");
 		expect(text).toContain("Google's ad network");
 		const { vocabulary } = buildYouTubeCampaignStrategiesGuide();
-		expect(vocabulary.paidViews).toContain("ADVERTISING");
-		expect(vocabulary.organicViews).toContain("except advertising");
+		expect(vocabulary.advertisingSourceViews).toContain("ADVERTISING");
+		expect(vocabulary.otherSourceViews).toContain("not organic");
+		expect(vocabulary.campaignPeriodLift).toContain("mostly ad sessions");
+		expect(vocabulary.organicLift).toContain("persists after spend stops");
+		expect(vocabulary.organicLift).toContain("YT_SEARCH");
+		expect(vocabulary.organicLift).toContain("are organic proof");
+		expect(vocabulary.viewsPerAdClick).toContain("playlist waterfall signal");
+		expect(guide.playlistWaterfall.measurement).toContain("Views per ad click");
+		expect(Object.keys(vocabulary)).not.toContain("paidViews");
+		expect(Object.keys(vocabulary)).not.toContain("organicViews");
+		for (const key of ["ORGANIC_VIEWS", "ORGANIC_VIEWS_AND_SUBSCRIBERS"]) {
+			const entry = buildYouTubeStrategyGuide(key);
+			expect(entry?.judgeBy.join(" ")).toContain("Campaign-period lift");
+			expect(entry?.judgeBy.join(" ")).toContain("Views per ad click");
+			expect(entry?.misleadingSignals.join(" ")).toContain("not organic proof");
+		}
 	});
 
 	test("describes Revenue Optimization without claiming real-time revenue bidding", () => {

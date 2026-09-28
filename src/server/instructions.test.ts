@@ -87,6 +87,14 @@ describe("ad network vocabulary", () => {
 				'When reporting to users, say "the ad network" (you may name Google once; do not repeat "Google Ads"',
 			);
 		});
+		test(`${name} instructions do not call every non-advertising view organic`, () => {
+			expect(instructions).toContain("campaign-period lift");
+			expect(instructions).toContain("organic lift");
+			expect(instructions).toContain(
+				"Never call all non-ADVERTISING views organic",
+			);
+			expect(instructions).not.toContain('"paid views"');
+		});
 	}
 });
 

@@ -73,12 +73,15 @@ export const ChannelResultsSchema = z.discriminatedUnion("status", [
 			status: z.literal("available"),
 			trafficSources: z
 				.object({
-					// Views YouTube credits to advertising vs every other source,
-					// summed from the traffic-source rows below. Null when no day in
-					// the window has traffic-source data; partial coverage is
+					// Views YouTube tags with the ADVERTISING source vs every other
+					// source, summed from the traffic-source rows below. "Other" is
+					// not organic: ad clicks that land in a playlist are mostly
+					// credited to PLAYLIST or SUBSCRIBER, so other-source views
+					// include ad sessions. Null when no day in the window has
+					// traffic-source data; partial coverage is
 					// coverage.trafficSourceDaysWithData days.
-					organicViews: z.number().nullable(),
-					paidViews: z.number().nullable(),
+					advertisingSourceViews: z.number().nullable(),
+					otherSourceViews: z.number().nullable(),
 					provenance: ProvenanceSchema,
 					rows: z.array(
 						z
@@ -90,6 +93,18 @@ export const ChannelResultsSchema = z.discriminatedUnion("status", [
 							.strict(),
 					),
 					scope: z.literal("channel-date-aggregate"),
+				})
+				.strict(),
+			// Playlist waterfall signal: channel views divided by ad clicks, over
+			// only the days that have both loaded channel views and ad clicks.
+			// Null value when no day qualifies or ad clicks could not be read.
+			viewsPerAdClick: z
+				.object({
+					adClicks: z.number().nullable(),
+					days: z.number(),
+					signal: z.literal("playlist-waterfall"),
+					value: z.number().nullable(),
+					views: z.number().nullable(),
 				})
 				.strict(),
 		})

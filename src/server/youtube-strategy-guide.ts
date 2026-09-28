@@ -25,12 +25,18 @@ type YouTubeStrategyGuideEntry = {
 	requirements: string;
 };
 
+const CAMPAIGN_PERIOD_LIFT_SIGNAL =
+	"Campaign-period lift: channel views above the pre-campaign baseline while the campaign runs. These are mostly ad sessions, because ad click-throughs into the playlist appear as PLAYLIST and SUBSCRIBER traffic.";
 const ORGANIC_LIFT_SIGNAL =
-	"Organic lift: organic views above the channel's pre-campaign baseline.";
+	"Organic lift: growth in sources the ads do not touch (YT_SEARCH, RELATED_VIDEO suggested views, browse features and similar), plus lift that persists after spend stops.";
+const VIEWS_PER_AD_CLICK_SIGNAL =
+	"Views per ad click (the playlist waterfall signal): channel views divided by ad clicks, over days that have both.";
 const CHEAP_VIEWS_MISLEAD =
-	"A low cost per click or per paid view with no organic lift is a miss, not a win.";
+	"A low cost per click or per ad network view with no organic lift is a miss, not a win.";
 const CONTINUED_VIEWS_MISLEAD =
-	"Ad network-reported continued views are the ad network's own estimate. They include the promoted-video watch and are not YouTube's organic view count.";
+	"Ad network-reported continued views are the ad network's own estimate. They include the promoted-video watch and are not organic proof.";
+const TRAFFIC_SOURCE_MISLEAD =
+	"YouTube traffic sources are not organic proof: PLAYLIST and SUBSCRIBER views during the campaign are mostly ad sessions, and only a small share of ad-driven views is tagged ADVERTISING.";
 
 const STRATEGY_ENTRIES = {
 	ADSENSE_ROI: {
@@ -38,10 +44,11 @@ const STRATEGY_ENTRIES = {
 			"Viewers it predicts will keep watching the artist's videos after the ad (its continued-views goal, the same as Organic Views). The ad network does not see the channel's revenue while it bids; Dynamoi judges revenue afterwards from YouTube data.",
 		bestFor:
 			"Monetized channels that want channel revenue to grow faster than campaign spend.",
-		goal: "Grow the channel's YouTube ad revenue from organic views the campaign brings.",
+		goal: "Grow the channel's YouTube ad revenue from the views the campaign brings.",
 		judgeBy: [
 			"Channel revenue during the campaign compared with its pre-campaign baseline and with campaign spend as shown in Dynamoi.",
 			"Revenue per 1,000 monetized playbacks by country and by video.",
+			CAMPAIGN_PERIOD_LIFT_SIGNAL,
 			ORGANIC_LIFT_SIGNAL,
 		],
 		key: "ADSENSE_ROI",
@@ -49,6 +56,7 @@ const STRATEGY_ENTRIES = {
 		misleadingSignals: [
 			"Cheap views or clicks from viewers who do not earn are a miss, not a win.",
 			"Revenue for the latest 2-3 days is incomplete; YouTube also revises its revenue estimates.",
+			TRAFFIC_SOURCE_MISLEAD,
 			CONTINUED_VIEWS_MISLEAD,
 		],
 		placements:
@@ -59,18 +67,17 @@ const STRATEGY_ENTRIES = {
 	CHEAPEST_VIEWS: {
 		adNetworkOptimizesFor:
 			"The most video ad views for the budget, as a fixed-length video campaign.",
-		bestFor:
-			"A launch push or a one-off view target for a single video.",
+		bestFor: "A launch push or a one-off view target for a single video.",
 		goal: "Show the promoted video to as many viewers as possible for the budget.",
 		judgeBy: [
-			"Paid views and cost per paid view against the budget and end date.",
-			"Watch time per paid view, to check viewers actually watched.",
+			"Ad network-reported views and cost per view against the budget and end date.",
+			"Watch time per ad network view, to check viewers actually watched.",
 		],
 		key: "CHEAPEST_VIEWS",
 		label: "Maximize Views",
 		misleadingSignals: [
 			"Weak organic lift or few subscribers are expected: this strategy does not aim for them.",
-			"Many paid views come from ads shown before or during other videos, so they can carry less watch time than in-feed views.",
+			"Many ad network views come from ads shown before or during other videos, so they can carry less watch time than in-feed views.",
 		],
 		placements:
 			"All YouTube video placements, including ads that play before or during other videos.",
@@ -82,15 +89,21 @@ const STRATEGY_ENTRIES = {
 			"Viewers it predicts will keep watching the artist's videos after the ad (its continued-views goal).",
 		bestFor:
 			"Channels that want ongoing views of their catalog, not just the promoted video.",
-		goal: "Grow the channel's ongoing organic views by reaching viewers who keep watching after the ad.",
+		goal: "Grow the channel's ongoing views by reaching viewers who keep watching after the ad, and look for lift that lasts beyond the spend.",
 		judgeBy: [
+			CAMPAIGN_PERIOD_LIFT_SIGNAL,
 			ORGANIC_LIFT_SIGNAL,
+			VIEWS_PER_AD_CLICK_SIGNAL,
 			"Watch time, playlist starts and views per playlist start.",
-			"Cost per click or per paid view only as a secondary efficiency check.",
+			"Cost per click or per ad network view only as a secondary efficiency check.",
 		],
 		key: "ORGANIC_VIEWS",
 		label: "Organic Views",
-		misleadingSignals: [CHEAP_VIEWS_MISLEAD, CONTINUED_VIEWS_MISLEAD],
+		misleadingSignals: [
+			CHEAP_VIEWS_MISLEAD,
+			TRAFFIC_SOURCE_MISLEAD,
+			CONTINUED_VIEWS_MISLEAD,
+		],
 		placements:
 			"In-feed YouTube placements: home feed, watch-next and search results.",
 		requirements: "A playlist entry point is required.",
@@ -100,9 +113,11 @@ const STRATEGY_ENTRIES = {
 			"Both continued watching after the ad and new subscribers, balanced by the ad network.",
 		bestFor:
 			"Most channels that are not monetized yet; this is Dynamoi's default for them.",
-		goal: "Grow organic views and subscribers together.",
+		goal: "Grow views and subscribers together, and look for lift that lasts beyond the spend.",
 		judgeBy: [
+			CAMPAIGN_PERIOD_LIFT_SIGNAL,
 			ORGANIC_LIFT_SIGNAL,
+			VIEWS_PER_AD_CLICK_SIGNAL,
 			"Net subscribers (gained minus lost) compared with the pre-campaign baseline.",
 			"Watch time and playlist starts.",
 		],
@@ -111,6 +126,7 @@ const STRATEGY_ENTRIES = {
 		misleadingSignals: [
 			CHEAP_VIEWS_MISLEAD,
 			"Subscribers gained without subscribers lost overstates growth.",
+			TRAFFIC_SOURCE_MISLEAD,
 			CONTINUED_VIEWS_MISLEAD,
 		],
 		placements:
@@ -143,15 +159,19 @@ const VOCABULARY = {
 	adNetwork:
 		"Dynamoi YouTube campaigns run on Google's ad network and serve on YouTube. When reporting to users, say 'the ad network' (you may name Google once); do not repeat 'Google Ads'.",
 	adNetworkReportedContinuedViews:
-		"The ad network's own estimate of viewers who kept watching the artist's videos after the ad. It includes the promoted-video watch and is not YouTube's count; use it to understand what the ad network optimizes toward, never as organic views.",
+		"The ad network's own estimate of viewers who kept watching the artist's videos after the ad. It includes the promoted-video watch and is not YouTube's count; use it to understand what the ad network optimizes toward, never as organic views or organic proof.",
+	advertisingSourceViews:
+		"Channel views YouTube tags with traffic source ADVERTISING. It undercounts ad-driven views: an ad click that lands in a playlist is credited mostly to PLAYLIST and SUBSCRIBER, not ADVERTISING.",
+	campaignPeriodLift:
+		"Channel views above the pre-campaign baseline during the campaign. They are mostly ad sessions, because ad click-throughs into the playlist appear as PLAYLIST and SUBSCRIBER traffic. It shows what the campaign period delivered, not what the channel keeps.",
 	organicLift:
-		"Organic views above the channel's pre-campaign baseline. The comparison, not the raw total, shows campaign impact.",
-	organicViews:
-		"Every other channel view: all traffic sources except advertising.",
-	paidViews:
-		"Channel views YouTube credits to advertising (traffic source ADVERTISING).",
+		"Growth in sources the ads do not touch (YT_SEARCH, RELATED_VIDEO suggested views, browse features and similar), plus lift that persists after spend stops. The comparison with the pre-campaign baseline, not the raw total, shows it. Neither YouTube traffic sources nor the ad network's continued views are organic proof.",
+	otherSourceViews:
+		"Every channel view not tagged ADVERTISING. It is not organic: it includes ad sessions credited to PLAYLIST and SUBSCRIBER.",
 	strategyNames:
 		"Use the strategy label with users (for example 'Revenue Optimization'); use the key (for example ADSENSE_ROI) only in tool calls.",
+	viewsPerAdClick:
+		"Channel views divided by ad clicks from campaign analytics, over the campaign window's days that have both. It is the playlist waterfall signal: how many views each ad click produces once playback continues through the playlist. It is not attributed per viewer.",
 } as const;
 
 const PLAYLIST_WATERFALL = {
@@ -161,8 +181,10 @@ const PLAYLIST_WATERFALL = {
 		"Similar-artist videos further down the playlist are only an optional idea the artist decides on.",
 		"Do not claim that every stream earns revenue.",
 	],
+	measurement:
+		"Views per ad click (channel views divided by ad clicks, over days that have both) measures the waterfall. Ad clicks that land in a playlist are credited mostly to PLAYLIST and SUBSCRIBER, so the ADVERTISING traffic source shows only a small share of ad-driven views, and other-source views are not organic.",
 	measurementLimits:
-		"YouTube data reports totals by day, video and traffic source. It does not follow individual viewers from video to video, so no data source proves how many views the playlist itself caused. Report playlist starts, views per playlist start and organic lift; do not claim exact playlist-caused views.",
+		"YouTube data reports totals by day, video and traffic source. It does not follow individual viewers from video to video, so no data source proves how many views the playlist itself caused. Report playlist starts, views per playlist start, views per ad click, campaign-period lift and organic lift; do not claim exact playlist-caused views.",
 	mechanism:
 		"Except Maximize Views, each campaign promotes a video as the entry point into a playlist of the artist's own videos. After a viewer clicks, playback continues through that playlist instead of YouTube autoplay choosing unrelated videos.",
 	purpose:

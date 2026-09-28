@@ -9,7 +9,8 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **`dynamoi_get_youtube_channel_data`.** A read-only tool for the artist's observed YouTube channel data, one dataset per call: channel, video, country, traffic source (paid views are traffic source `ADVERTISING`, all else organic), search term, subscribed status, device, operating system, playback location, content type and the video catalog. Each response lists coverage (days YouTube has not delivered are unknown, never zero), the data lag, and the artist's YouTube campaigns with strategy and dates. It pages with `nextCursor` and refuses a channel that needs reconnecting. It is in the directory profile. The full profile now has 30 tools and the directory profile 19.
+- **Views per ad click.** `dynamoi_get_campaign` `channelResults.viewsPerAdClick` is the playlist waterfall signal: channel views divided by ad clicks from campaign analytics, over only the days in the window that have both. It is null when ad clicks are unavailable or no day qualifies.
+- **`dynamoi_get_youtube_channel_data`.** A read-only tool for the artist's observed YouTube channel data, one dataset per call: channel, video, country, traffic source (views YouTube tags `ADVERTISING` versus every other source, which is not organic proof), search term, subscribed status, device, operating system, playback location, content type and the video catalog. Each response lists coverage (days YouTube has not delivered are unknown, never zero), the data lag, and the artist's YouTube campaigns with strategy and dates. It pages with `nextCursor` and refuses a channel that needs reconnecting. It is in the directory profile. The full profile now has 30 tools and the directory profile 19.
 - **Continued views.** Campaign analytics for YouTube campaigns (`dynamoi_get_campaign` `analytics`) add `adNetworkReportedContinuedViews`: the ad network's own estimate of viewers who kept watching the artist's videos after the ad. It includes the promoted-video watch and is not YouTube's organic view count.
 - **`dynamoi_manage_youtube_draft`** (full profile). Inspect an artist's open
   YouTube draft after an interrupted launch, or discard it when the user
@@ -20,6 +21,19 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Honest view labels for YouTube campaigns.** YouTube credits ad clicks that
+  land in a playlist mostly to PLAYLIST and SUBSCRIBER, not ADVERTISING, so
+  "everything but ADVERTISING is organic" counted ad sessions as organic.
+  `dynamoi_get_campaign` `channelResults.trafficSources` now reports
+  `advertisingSourceViews` (YouTube-tagged ADVERTISING) and `otherSourceViews`
+  instead of `paidViews` and `organicViews`, and the summary says other-source
+  views are not organic proof. The strategy guide separates campaign-period
+  lift (views above the pre-campaign baseline, mostly ad sessions) from
+  organic lift (growth in sources the ads do not touch, or lift that persists
+  after spend stops), and says neither YouTube traffic sources nor the ad
+  network's continued views are organic proof. Server instructions use the
+  same vocabulary. The `trafficClass` row field of `dynamoi_get_youtube_channel_data`
+  is unchanged, but its description now says `organic` only groups sources.
 - **"The ad network" vocabulary.** Server instructions and the YouTube
   strategy guide now tell agents to say "the ad network" when reporting to
   users (Google may be named once; do not repeat "Google Ads"). Summary text
