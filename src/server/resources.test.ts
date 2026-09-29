@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport, McpServer } from "@modelcontextprotocol/server";
+import { USD_BUDGET_MINIMUMS } from "./budget-minimums";
 import type { Phase3Adapter } from "./create-server";
+import { DYNAMOI_MCP_INSTRUCTIONS } from "./instructions";
 import { registerDynamoiResources } from "./resources";
 
 function buildStubAdapter(): Phase3Adapter {
@@ -109,5 +111,23 @@ describe("registerDynamoiResources YouTube strategies", () => {
 			"does not follow individual viewers",
 		);
 		expect(parsed.resultTiming.learning).toContain("7-14 days");
+	});
+});
+
+describe("registerDynamoiResources pricing", () => {
+	test("dynamoi://platform/pricing publishes the enforced budget minimums", async () => {
+		const result = await readResource("dynamoi://platform/pricing");
+		const parsed = JSON.parse(String(result.contents[0]?.text ?? ""));
+		expect(parsed.budgetMinimums.smartCampaign).toMatchObject({
+			dailyUsd: 10,
+			totalUsd: 50,
+		});
+		expect(parsed.budgetMinimums.youtube).toMatchObject({
+			dailyUsd: 10,
+			totalUsd: 75,
+		});
+		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
+			`Budget minimums: $${USD_BUDGET_MINIMUMS.smartCampaign.dailyUsd}/day (daily), $${USD_BUDGET_MINIMUMS.smartCampaign.totalUsd} total (Smart Campaign), $${USD_BUDGET_MINIMUMS.youtube.totalUsd} total (YouTube).`,
+		);
 	});
 });

@@ -1,5 +1,6 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
+import { USD_BUDGET_MINIMUMS } from "./budget-minimums";
 import type { Phase3Adapter } from "./create-server";
 import { registerPlaybookResources } from "./playbook-resources";
 import {
@@ -28,14 +29,14 @@ export function registerDynamoiResources(
 					text: JSON.stringify({
 						budgetMinimums: {
 							smartCampaign: {
-								dailyUsd: 10,
+								dailyUsd: USD_BUDGET_MINIMUMS.smartCampaign.dailyUsd,
 								note: "Meta Ads for Spotify promotion",
-								totalUsd: 50,
+								totalUsd: USD_BUDGET_MINIMUMS.smartCampaign.totalUsd,
 							},
 							youtube: {
-								dailyUsd: 10,
+								dailyUsd: USD_BUDGET_MINIMUMS.youtube.dailyUsd,
 								note: "Google's ad network for YouTube channel growth",
-								totalUsd: 50,
+								totalUsd: USD_BUDGET_MINIMUMS.youtube.totalUsd,
 							},
 						},
 						includes:
