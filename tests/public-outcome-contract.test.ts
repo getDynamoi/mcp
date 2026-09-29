@@ -25,6 +25,9 @@ async function withFixture(
 	options: {
 		adapterMethod?: string;
 		arguments?: Record<string, unknown>;
+		authorizeToolCall?: Parameters<
+			typeof createDynamoiMcpServer
+		>[0]["authorizeToolCall"];
 		/** Replaces the recording observer, e.g. to simulate a hung sink. */
 		observer?: Observer;
 		observerTimeoutMs?: number;
@@ -48,6 +51,7 @@ async function withFixture(
 	});
 	const server = createDynamoiMcpServer({
 		adapter,
+		authorizeToolCall: options.authorizeToolCall,
 		observerTimeoutMs: options.observerTimeoutMs,
 		onToolCall:
 			options.observer ??
@@ -560,6 +564,111 @@ for (const profile of ["full", "directory"] as const) {
 				process.off("unhandledRejection", record);
 			}
 			expect(unhandled).toEqual([]);
+		});
+
+		test("each invocation is observed once, in order, with its own result", async () => {
+			await withFixture(
+				profile,
+				success,
+				async ({ client, adapterCalls, observations }) => {
+					const first = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					const preview = await client.callTool({
+						arguments: { artistName: "Fixture Artist", releaseTitle: "Single" },
+						name: "dynamoi_preview_smart_link_themes",
+					});
+					const second = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					expect(adapterCalls).toEqual(["listArtists", "listArtists"]);
+					expect(observations.map((entry) => entry.toolName)).toEqual([
+						"dynamoi_list_artists",
+						"dynamoi_preview_smart_link_themes",
+						"dynamoi_list_artists",
+					]);
+					expect(observations.map((entry) => entry.result)).toEqual([
+						first.structuredContent,
+						preview.structuredContent,
+						second.structuredContent,
+					]);
+				},
+			);
+		});
+
+		test("concurrent invocations are observed once each", async () => {
+			await withFixture(
+				profile,
+				success,
+				async ({ client, adapterCalls, observations }) => {
+					const results = await Promise.all(
+						Array.from({ length: 5 }, () =>
+							client.callTool({ arguments: {}, name: "dynamoi_list_artists" }),
+						),
+					);
+					expect(results.every((result) => !result.isError)).toBe(true);
+					expect(adapterCalls).toHaveLength(5);
+					expect(observations).toHaveLength(5);
+					for (const observation of observations) {
+						expect(observation.toolName).toBe("dynamoi_list_artists");
+						expect(observation.result).toEqual(success);
+						expect(observation.durationMs).toBeGreaterThanOrEqual(0);
+					}
+				},
+			);
+		});
+
+		test("unknown tools and schema-invalid input never reach dispatch or the observer", async () => {
+			await withFixture(
+				profile,
+				success,
+				async ({ client, adapterCalls, observations }) => {
+					const unknown = await client
+						.callTool({ arguments: {}, name: "dynamoi_not_a_tool" })
+						.catch(() => ({ isError: true }));
+					expect(unknown.isError).toBe(true);
+					const invalid = await client
+						.callTool({ arguments: {}, name: "dynamoi_get_campaign" })
+						.catch(() => ({ isError: true }));
+					expect(invalid.isError).toBe(true);
+					expect(adapterCalls).toHaveLength(0);
+					expect(observations).toHaveLength(0);
+				},
+			);
+		});
+
+		test("a call denied by scope returns the denial without dispatch or a tool observation", async () => {
+			const denial = {
+				content: [
+					{ text: "Additional scope required.", type: "text" as const },
+				],
+				isError: true,
+			};
+			const authorized: string[] = [];
+			await withFixture(
+				profile,
+				success,
+				async ({ client, adapterCalls, observations }) => {
+					const result = await client.callTool({
+						arguments: {},
+						name: "dynamoi_list_artists",
+					});
+					expect(result.isError).toBe(true);
+					expect(result.content).toEqual(denial.content);
+					expect(authorized).toEqual(["dynamoi_list_artists"]);
+					expect(adapterCalls).toHaveLength(0);
+					expect(observations).toHaveLength(0);
+				},
+				false,
+				{
+					authorizeToolCall: (toolName) => {
+						authorized.push(toolName);
+						return denial;
+					},
+				},
+			);
 		});
 
 		test("throwing observer cannot mask an output validation error", async () => {
