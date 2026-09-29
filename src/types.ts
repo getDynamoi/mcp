@@ -451,6 +451,17 @@ export type GetCampaignSummaryData = {
 };
 
 export type GetCampaignAnalyticsJsonData = {
+	/**
+	 * YouTube campaigns only, and only when the ad network reported it. The ad
+	 * network's own estimate of viewers who kept watching the artist's videos
+	 * after the ad; it includes the promoted-video watch and is not YouTube's
+	 * organic view count. `daily` appears with DAILY granularity.
+	 */
+	adNetworkReportedContinuedViews?: {
+		daily?: Array<{ date: string; views: number }>;
+		note: string;
+		total: number;
+	};
 	campaignId: string;
 	contentTitle: string;
 	status: CampaignDisplayStatus;
