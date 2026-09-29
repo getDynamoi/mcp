@@ -48,13 +48,14 @@ describe("DYNAMOI_MCP_INSTRUCTIONS", () => {
 		);
 	});
 
-	// Mirrors the USD row of MANAGED_ADS_CATALOG in
-	// packages/web-shared/src/lib/domains/billing/managed-ads-plan-contract.ts
-	// (minDaily, minDaily * 5, youtubeMinTotal).
-	test("states the enforced USD budget minimums", () => {
+	// The USD minimums live in the pricing resource; the instructions must send
+	// agents to the selected artist's response so a fixed USD example is never
+	// read as a limit in another currency.
+	test("defers budget minimums to the selected artist's response", () => {
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
-			"Budget minimums: $10/day (daily), $50 total (Smart Campaign), $75 total (YouTube).",
+			"Read budget minimums and caps from the selected artist’s readiness or budget-policy response. Fixed USD examples are not limits for other currencies.",
 		);
+		expect(DYNAMOI_MCP_INSTRUCTIONS).not.toContain("Budget minimums: $");
 	});
 
 	test("documents the full-profile Shop checkout boundary", () => {

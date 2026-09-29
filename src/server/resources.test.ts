@@ -126,8 +126,14 @@ describe("registerDynamoiResources pricing", () => {
 			dailyUsd: 10,
 			totalUsd: 75,
 		});
+		expect(parsed.budgetMinimums.smartCampaign.dailyUsd).toBe(
+			USD_BUDGET_MINIMUMS.smartCampaign.dailyUsd,
+		);
+		expect(parsed.budgetMinimums.youtube.totalUsd).toBe(
+			USD_BUDGET_MINIMUMS.youtube.totalUsd,
+		);
 		expect(DYNAMOI_MCP_INSTRUCTIONS).toContain(
-			`Budget minimums: $${USD_BUDGET_MINIMUMS.smartCampaign.dailyUsd}/day (daily), $${USD_BUDGET_MINIMUMS.smartCampaign.totalUsd} total (Smart Campaign), $${USD_BUDGET_MINIMUMS.youtube.totalUsd} total (YouTube).`,
+			"Read budget minimums and caps from the selected artist’s readiness or budget-policy response.",
 		);
 	});
 });
