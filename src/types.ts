@@ -469,11 +469,7 @@ export type GetCampaignAnalyticsJsonData = {
 	totals: {
 		impressions: number;
 		clicks: number;
-		/**
-		 * Summed spend. Platform analytics are USD-only by contract; `null`
-		 * when a platform reported a different currency — a total is never
-		 * summed across currencies or relabeled into one.
-		 */
+		/** Summed spend. Platform analytics are USD-only by contract. */
 		spend: MoneyDisplay | null;
 		cpc: MoneyDisplay | null;
 		cpm: MoneyDisplay | null;
@@ -483,13 +479,11 @@ export type GetCampaignAnalyticsJsonData = {
 		platform: "META" | "GOOGLE";
 		impressions: number;
 		clicks: number;
-		/** `null` when the platform reported a non-USD currency. */
 		spend: MoneyDisplay | null;
 		daily?: Array<{
 			date: string;
 			impressions: number;
 			clicks: number;
-			/** `null` when the platform reported a non-USD currency. */
 			spend: MoneyDisplay | null;
 		}>;
 	}>;
