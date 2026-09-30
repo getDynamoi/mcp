@@ -56,6 +56,14 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Daily funding consent v5.** The consent constants are now
+  `managed-ads-prospective-daily-v5`. The copy drops the funding time zone
+  from v4 ("(Pacific time)"); the funding terms are unchanged and get a new
+  hash. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
+  and `update_budget`) refuse the v4, v3 and v2 values, so clients pinned to
+  them must update. The v4 constants are exported as
+  `PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_*`. Campaigns that accepted v2, v3
+  or v4 keep renewing under the consent they accepted.
 - **Daily funding consent v4.** The consent constants are now
   `managed-ads-prospective-daily-v4` with shorter copy and a new hash. The
   copy names the payment method, says credits and campaign funds apply first,

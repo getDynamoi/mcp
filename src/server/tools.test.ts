@@ -1,14 +1,18 @@
 import { describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import {
+	isCurrentProspectiveBudgetFundingConsent,
+	isRenewableProspectiveBudgetFundingConsent,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_VERSION,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_VERSION,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH,
+	PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
-	isCurrentProspectiveBudgetFundingConsent,
-	isRenewableProspectiveBudgetFundingConsent,
 } from "../consent";
 import {
 	DynamoiOpenAiFetchInputSchema,
@@ -538,11 +542,27 @@ describe("mcp/tools phase 2 definitions", () => {
 		).toBe(false);
 	});
 
+	test("update schema refuses the superseded v4 consent values", () => {
+		expect(
+			DynamoiUpdateCampaignInputSchema.safeParse({
+				acceptedConsentCopyHash:
+					PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH,
+				acceptedConsentVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION,
+				action: "update_budget",
+				authorizeAutomaticDailyFunding: true,
+				budgetAmount: 250,
+				campaignId: "00000000-0000-0000-0000-000000000000",
+				clientRequestId: "11111111-1111-4111-8111-111111111111",
+				userIntentSummary: "Increase after checking campaign performance.",
+			}).success,
+		).toBe(false);
+	});
+
 	test("update budget schema accepts idempotency and expected-state guards", () => {
 		const parsed = DynamoiUpdateCampaignInputSchema.parse({
 			acceptedConsentCopyHash:
-				"e40485780d7b025c7a10bde969a25eecdcb0b4ebf1783251440e870fd8e10a60",
-			acceptedConsentVersion: "managed-ads-prospective-daily-v4",
+				"14a318c6ef3defc44a13aa4813f0af9d3432db1c2910bada98581e762b35f9e2",
+			acceptedConsentVersion: "managed-ads-prospective-daily-v5",
 			action: "update_budget",
 			authorizeAutomaticDailyFunding: true,
 			budgetAmount: 250,
@@ -682,6 +702,12 @@ describe("mcp/tools phase 3 definitions", () => {
 			},
 			{
 				accepted: false,
+				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH,
+				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION,
+				name: "v4 pair",
+			},
+			{
+				accepted: false,
 				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH,
 				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
 				name: "current version with a wrong hash",
@@ -690,7 +716,7 @@ describe("mcp/tools phase 3 definitions", () => {
 				accepted: true,
 				copyHash: PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 				copyVersion: PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
-				name: "current v4 pair",
+				name: "current v5 pair",
 			},
 		];
 
@@ -730,6 +756,29 @@ describe("mcp/tools phase 3 definitions", () => {
 				).toBe(pair.accepted);
 			});
 		}
+
+		test("each consent hash is the canonical hash of its copy, and v5 names no time zone", () => {
+			const hashOf = (copy: string) =>
+				createHash("sha256").update(JSON.stringify({ copy })).digest("hex");
+			expect(hashOf(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY)).toBe(
+				PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
+			);
+			expect(hashOf(PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY)).toBe(
+				PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH,
+			);
+			expect(PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION).toBe(
+				"managed-ads-prospective-daily-v5",
+			);
+			expect(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY).not.toMatch(
+				/pacific|pst|pdt|time zone/i,
+			);
+			expect(PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY).toBe(
+				PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY.replace(
+					" (Pacific time)",
+					"",
+				),
+			);
+		});
 
 		test("superseded pairs stay renewable for campaigns that accepted them", () => {
 			for (const pair of consentPairs) {
