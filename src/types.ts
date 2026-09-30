@@ -469,7 +469,51 @@ export type GetCampaignAnalyticsJsonData = {
 	totals: {
 		impressions: number;
 		clicks: number;
-		/** Summed spend. Platform analytics are USD-only by contract. */
+		/**
+		 * Summed spend in the artist's currency. `null` when today's exchange
+		 * rate is unavailable; counts stay, and CPC and CPM are then `null` too.
+		 */
+		spend: MoneyDisplay | null;
+		cpc: MoneyDisplay | null;
+		cpm: MoneyDisplay | null;
+		ctr: number | null;
+	};
+	byPlatform?: Array<{
+		platform: "META" | "GOOGLE";
+		impressions: number;
+		clicks: number;
+		/** `null` when today's exchange rate is unavailable. */
+		spend: MoneyDisplay | null;
+		daily?: Array<{
+			date: string;
+			impressions: number;
+			clicks: number;
+			/** `null` when today's exchange rate is unavailable. */
+			spend: MoneyDisplay | null;
+		}>;
+	}>;
+	daily?: Array<{
+		date: string;
+		impressions: number;
+		clicks: number;
+		spend: MoneyDisplay | null;
+	}>;
+	warnings?: string[];
+};
+
+export type GetCampaignAnalyticsSummaryData = {
+	summary: string;
+	warnings?: string[];
+};
+
+export type GetArtistAnalyticsJsonData = {
+	artistId: string;
+	campaignCount: number;
+	dateRange: { start: string; end: string };
+	totals: {
+		impressions: number;
+		clicks: number;
+		/** In the artist's currency; `null` when today's exchange rate is unavailable. */
 		spend: MoneyDisplay | null;
 		cpc: MoneyDisplay | null;
 		cpm: MoneyDisplay | null;
@@ -491,45 +535,7 @@ export type GetCampaignAnalyticsJsonData = {
 		date: string;
 		impressions: number;
 		clicks: number;
-		spend: MoneyDisplay;
-	}>;
-	warnings?: string[];
-};
-
-export type GetCampaignAnalyticsSummaryData = {
-	summary: string;
-	warnings?: string[];
-};
-
-export type GetArtistAnalyticsJsonData = {
-	artistId: string;
-	campaignCount: number;
-	dateRange: { start: string; end: string };
-	totals: {
-		impressions: number;
-		clicks: number;
-		spend: MoneyDisplay;
-		cpc: MoneyDisplay | null;
-		cpm: MoneyDisplay | null;
-		ctr: number | null;
-	};
-	byPlatform?: Array<{
-		platform: "META" | "GOOGLE";
-		impressions: number;
-		clicks: number;
-		spend: MoneyDisplay;
-		daily?: Array<{
-			date: string;
-			impressions: number;
-			clicks: number;
-			spend: MoneyDisplay;
-		}>;
-	}>;
-	daily?: Array<{
-		date: string;
-		impressions: number;
-		clicks: number;
-		spend: MoneyDisplay;
+		spend: MoneyDisplay | null;
 	}>;
 	strongestCampaign?: {
 		campaignId: string;

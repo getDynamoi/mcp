@@ -22,6 +22,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Analytics spend in the account currency.** `dynamoi_get_campaign_analytics`, `dynamoi_get_artist_analytics` and `dynamoi_get_campaign` `analytics` now return spend, CPC and CPM in the account's currency, converted with the latest stored exchange rate. USD accounts are unchanged. If no fresh rate exists for a non-USD account, `spend`, `cpc` and `cpm` are `null` (rendered as an em dash in summaries) with one warning; impressions, clicks and CTR are unaffected. The `spend` fields of `GetArtistAnalyticsJsonData` are now typed `MoneyDisplay | null`, as the campaign type already declared.
 - **Honest view labels for YouTube campaigns.** YouTube credits ad clicks that
   land in a playlist mostly to PLAYLIST and SUBSCRIBER, not ADVERTISING, so
   "everything but ADVERTISING is organic" counted ad sessions as organic.
