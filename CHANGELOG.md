@@ -22,7 +22,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **Analytics spend in the account currency.** `dynamoi_get_campaign_analytics`, `dynamoi_get_artist_analytics` and `dynamoi_get_campaign` `analytics` now return spend, CPC and CPM in the account's currency, converted with the latest stored exchange rate. USD accounts are unchanged. If no fresh rate exists for a non-USD account, `spend`, `cpc` and `cpm` are `null` (rendered as an em dash in summaries) with one warning; impressions, clicks and CTR are unaffected. The `spend` fields of `GetArtistAnalyticsJsonData` are now typed `MoneyDisplay | null`, as the campaign type already declared.
+- **Analytics spend in the artist's currency.** `dynamoi_get_campaign_analytics`, `dynamoi_get_artist_analytics` and `dynamoi_get_campaign` `analytics` now show spend, CPC and CPM in the artist's currency. USD artists are unchanged. When an amount cannot be shown in the artist's currency, `spend`, `cpc` and `cpm` are `null` (rendered as an em dash in summaries) with one warning; impressions, clicks and CTR are unaffected. The `spend` fields of `GetArtistAnalyticsJsonData` are now typed `MoneyDisplay | null`, as the campaign type already declared.
 - **Honest view labels for YouTube campaigns.** YouTube credits ad clicks that
   land in a playlist mostly to PLAYLIST and SUBSCRIBER, not ADVERTISING, so
   "everything but ADVERTISING is organic" counted ad sessions as organic.
@@ -57,9 +57,8 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - **Daily funding consent v5.** The consent constants are now
-  `managed-ads-prospective-daily-v5`. The copy drops the funding time zone
-  from v4 ("(Pacific time)"); the funding terms are unchanged and get a new
-  hash. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
+  `managed-ads-prospective-daily-v5`. The copy drops the funding time zone;
+  the funding terms are unchanged and get a new hash. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
   and `update_budget`) refuse the v4, v3 and v2 values, so clients pinned to
   them must update. The v4 constants are exported as
   `PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_*`. Campaigns that accepted v2, v3
@@ -77,9 +76,8 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   version and hash are exactly the current pair.
 - **Daily funding consent v3.** The consent constants are now
   `managed-ads-prospective-daily-v3` with new copy and hash. A launch or resume
-  of a `DAILY` campaign funds the rest of today and all of tomorrow (Pacific
-  time) in one charge, then each following Pacific day up to one hour before
-  it starts. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
+  of a `DAILY` campaign funds the rest of today and all of tomorrow in
+  one charge, then each following day up to one hour before it starts. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`
   and `update_budget`) refuse the v2 values, so clients pinned to v2 must
   update. Campaigns that accepted v2 keep renewing under v2.
 - **Channel results.** `dynamoi_get_campaign` `channelResults` gains a `pending` status for windows YouTube has not delivered yet, reporting the day loaded data runs through instead of zeros.
