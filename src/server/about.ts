@@ -3,7 +3,7 @@ import type { ResultEnvelope } from "../types";
 import { AnyOutputEnvelopeSchema } from "./output-schemas";
 
 // Company facts mirror the canonical /about page
-// (apps/public-static/src/components/marketing/about-v3/AboutPageV3.astro).
+// (apps/public-static/src/components/marketing/about/AboutPage.astro).
 const DYNAMOI_ABOUT_INTRO =
 	"Dynamoi is a music marketing platform founded in 2021 by Trevor Loucks. It runs managed Meta and YouTube ad campaigns, music distribution, and royalty analytics for independent artists, labels, managers, and YouTube creators, alongside free Smart Links and analytics. An artist can go from a Spotify URL to a shareable release page, a running campaign, or a distribution application in one place: Dynamoi brings the whole artist lifecycle (distribution, campaigns, and royalties) into one system.";
 

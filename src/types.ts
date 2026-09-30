@@ -471,7 +471,8 @@ export type GetCampaignAnalyticsJsonData = {
 		clicks: number;
 		/**
 		 * Summed spend in the artist's currency. `null` when today's exchange
-		 * rate is unavailable; counts stay, and CPC and CPM are then `null` too.
+		 * rate is unavailable or when spend is not reported for this campaign
+		 * (a warning says so); counts stay, and CPC and CPM are then `null` too.
 		 */
 		spend: MoneyDisplay | null;
 		cpc: MoneyDisplay | null;
@@ -482,13 +483,13 @@ export type GetCampaignAnalyticsJsonData = {
 		platform: "META" | "GOOGLE";
 		impressions: number;
 		clicks: number;
-		/** `null` when today's exchange rate is unavailable. */
+		/** `null` when today's exchange rate is unavailable or spend is not reported. */
 		spend: MoneyDisplay | null;
 		daily?: Array<{
 			date: string;
 			impressions: number;
 			clicks: number;
-			/** `null` when today's exchange rate is unavailable. */
+			/** `null` when today's exchange rate is unavailable or spend is not reported. */
 			spend: MoneyDisplay | null;
 		}>;
 	}>;
@@ -513,7 +514,10 @@ export type GetArtistAnalyticsJsonData = {
 	totals: {
 		impressions: number;
 		clicks: number;
-		/** In the artist's currency; `null` when today's exchange rate is unavailable. */
+		/**
+		 * In the artist's currency; `null` when today's exchange rate is unavailable
+		 * or when spend is not reported for the selection (a warning says so).
+		 */
 		spend: MoneyDisplay | null;
 		cpc: MoneyDisplay | null;
 		cpm: MoneyDisplay | null;
