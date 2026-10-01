@@ -7,6 +7,9 @@ export {
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION,
+	TOTAL_BUDGET_FUNDING_CONSENT_COPY,
+	TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	TOTAL_BUDGET_FUNDING_CONSENT_VERSION,
 } from "./consent";
 export {
 	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
@@ -105,8 +108,8 @@ export {
 	type GetYouTubeChannelDataData,
 	YOUTUBE_CHANNEL_DATA_DEFAULT_LIMIT,
 	YOUTUBE_CHANNEL_DATASETS,
-	type YouTubeChannelDataset,
 	YouTubeChannelDataSchema,
+	type YouTubeChannelDataset,
 	YouTubeChannelDatasetSchema,
 } from "./server/youtube-channel-data-schema";
 export type { YouTubeStrategyGuide } from "./server/youtube-strategy-guide";

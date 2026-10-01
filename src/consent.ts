@@ -46,6 +46,33 @@ export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_COPY_HASH =
 	"06bbd517d58f345a767be9aaeb59f4959d11c6db16e7d07cb889f3ce7950f805";
 
 /**
+ * Total-budget campaign funding consent. A total budget is funded one Pacific
+ * day at a time like a daily budget: a launch or resume funds the rest of
+ * today and all of tomorrow, then each following day, never more than the
+ * total budget in all. Client copy only. The checkbox carries the two terms
+ * that matter at the moment of consent (a daily charge to the default payment
+ * method, capped by the total budget); the rest of the charging terms are the
+ * Terms of Service section linked beside it.
+ */
+export const TOTAL_BUDGET_FUNDING_CONSENT_VERSION =
+	"managed-ads-total-daily-v2";
+export const TOTAL_BUDGET_FUNDING_CONSENT_COPY =
+	"Charge my default payment method daily for this campaign, up to my total budget.";
+export const TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH =
+	"e6afbb5d76383f9f336f4924caaf51022c686fa5b77bba4e2f480a1d5a118aed";
+
+/** Whether a client-submitted total-budget consent is exactly the current pair. */
+export function isCurrentTotalBudgetFundingConsent(input: {
+	copyHash: string;
+	copyVersion: string;
+}): boolean {
+	return (
+		input.copyVersion === TOTAL_BUDGET_FUNDING_CONSENT_VERSION &&
+		input.copyHash === TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH
+	);
+}
+
+/**
  * Whether a client-submitted consent is exactly the current (version, hash)
  * pair. New launches and resumes accept only this pair; earlier versions stay
  * renewable for campaigns that already accepted them, but a client must not
@@ -68,6 +95,7 @@ export function isRenewableProspectiveBudgetFundingConsent(input: {
 }): boolean {
 	return (
 		isCurrentProspectiveBudgetFundingConsent(input) ||
+		isCurrentTotalBudgetFundingConsent(input) ||
 		(input.copyVersion === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION &&
 			input.copyHash === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH) ||
 		(input.copyVersion === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_VERSION &&
