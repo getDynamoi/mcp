@@ -41,7 +41,7 @@ const TRAFFIC_SOURCE_MISLEAD =
 const STRATEGY_ENTRIES = {
 	ADSENSE_ROI: {
 		adNetworkOptimizesFor:
-			"Viewers it predicts will keep watching the artist's videos after the ad (its continued-views goal, the same as Organic Views). The ad network does not see the channel's revenue while it bids; Dynamoi judges revenue afterwards from YouTube data.",
+			"Viewers it predicts will keep watching the artist's videos after the ad (its continued-views goal, the same as Watch Time). The ad network does not see the channel's revenue while it bids; Dynamoi judges revenue afterwards from YouTube data.",
 		bestFor:
 			"Monetized channels that want channel revenue to grow faster than campaign spend.",
 		goal: "Grow the channel's YouTube ad revenue from the views the campaign brings.",
@@ -52,7 +52,7 @@ const STRATEGY_ENTRIES = {
 			ORGANIC_LIFT_SIGNAL,
 		],
 		key: "ADSENSE_ROI",
-		label: "Revenue Optimization",
+		label: "Revenue",
 		misleadingSignals: [
 			"Cheap views or clicks from viewers who do not earn are a miss, not a win.",
 			"Revenue for the latest 2-3 days is incomplete; YouTube also revises its revenue estimates.",
@@ -74,7 +74,7 @@ const STRATEGY_ENTRIES = {
 			"Watch time per ad network view, to check viewers actually watched.",
 		],
 		key: "CHEAPEST_VIEWS",
-		label: "Maximize Views",
+		label: "Views",
 		misleadingSignals: [
 			"Weak organic lift or few subscribers are expected: this strategy does not aim for them.",
 			"Many ad network views come from ads shown before or during other videos, so they can carry less watch time than in-feed views.",
@@ -98,7 +98,7 @@ const STRATEGY_ENTRIES = {
 			"Cost per click or per ad network view only as a secondary efficiency check.",
 		],
 		key: "ORGANIC_VIEWS",
-		label: "Organic Views",
+		label: "Watch Time",
 		misleadingSignals: [
 			CHEAP_VIEWS_MISLEAD,
 			TRAFFIC_SOURCE_MISLEAD,
@@ -122,7 +122,7 @@ const STRATEGY_ENTRIES = {
 			"Watch time and playlist starts.",
 		],
 		key: "ORGANIC_VIEWS_AND_SUBSCRIBERS",
-		label: "Organic Views + Subscribers",
+		label: "Channel Growth",
 		misleadingSignals: [
 			CHEAP_VIEWS_MISLEAD,
 			"Subscribers gained without subscribers lost overstates growth.",
@@ -144,7 +144,7 @@ const STRATEGY_ENTRIES = {
 			"Campaign spend per net subscriber.",
 		],
 		key: "SUBSCRIBERS",
-		label: "Subscriber Growth",
+		label: "Subscribers",
 		misleadingSignals: [
 			"View volume: this strategy can trade views for subscribers.",
 			"Subscribers gained without subscribers lost overstates growth.",
@@ -169,7 +169,7 @@ const VOCABULARY = {
 	otherSourceViews:
 		"Every channel view not tagged ADVERTISING. It is not organic: it includes ad sessions credited to PLAYLIST and SUBSCRIBER.",
 	strategyNames:
-		"Use the strategy label with users (for example 'Revenue Optimization'); use the key (for example ADSENSE_ROI) only in tool calls.",
+		"Use the strategy label with users (for example 'Revenue'); use the key (for example ADSENSE_ROI) only in tool calls.",
 	viewsPerAdClick:
 		"Channel views divided by ad clicks from campaign analytics, over the campaign window's days that have both. It is the playlist waterfall signal: how many views each ad click produces once playback continues through the playlist. It is not attributed per viewer.",
 } as const;
@@ -186,7 +186,7 @@ const PLAYLIST_WATERFALL = {
 	measurementLimits:
 		"YouTube data reports totals by day, video and traffic source. It does not follow individual viewers from video to video, so no data source proves how many views the playlist itself caused. Report playlist starts, views per playlist start, views per ad click, campaign-period lift and organic lift; do not claim exact playlist-caused views.",
 	mechanism:
-		"Except Maximize Views, each campaign promotes a video as the entry point into a playlist of the artist's own videos. After a viewer clicks, playback continues through that playlist instead of YouTube autoplay choosing unrelated videos.",
+		"Except the Views strategy, each campaign promotes a video as the entry point into a playlist of the artist's own videos. After a viewer clicks, playback continues through that playlist instead of YouTube autoplay choosing unrelated videos.",
 	purpose:
 		"Keep ad-driven and background listeners on the artist's channel. It improves listener quality; it is not a hidden view multiplier.",
 } as const;

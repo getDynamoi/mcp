@@ -22,6 +22,19 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **YouTube strategy names.** The strategies are now labeled Views, Watch Time,
+  Subscribers, Channel Growth and Revenue (formerly Maximize Views, Organic
+  Views, Subscriber Growth, Organic Views & Subscribers and Revenue
+  Optimization) in tool descriptions, the strategy guide and the About text.
+  The enum values (`CHEAPEST_VIEWS`, `ORGANIC_VIEWS`, `SUBSCRIBERS`,
+  `ORGANIC_VIEWS_AND_SUBSCRIBERS`, `ADSENSE_ROI`) are unchanged.
+- **`update_goals` keeps the strategy in step.** `dynamoi_update_campaign`
+  `update_goals` now stores the matching goal-based strategy
+  (Watch Time, Subscribers or Channel Growth) with the new goals and returns it
+  as `strategy` (null when it is unchanged); Revenue and Views campaigns keep
+  their strategy. The change is
+  recorded in the campaign's strategy history, and archived campaigns are
+  refused.
 - **Analytics spend in the artist's currency.** `dynamoi_get_campaign_analytics`, `dynamoi_get_artist_analytics` and `dynamoi_get_campaign` `analytics` now show spend, CPC and CPM in the artist's currency. USD artists are unchanged. When an amount cannot be shown in the artist's currency, `spend`, `cpc` and `cpm` are `null` (rendered as an em dash in summaries) with one warning; impressions, clicks and CTR are unaffected. The `spend` fields of `GetArtistAnalyticsJsonData` are now typed `MoneyDisplay | null`, as the campaign type already declared.
 - **Honest view labels for YouTube campaigns.** YouTube credits ad clicks that
   land in a playlist mostly to PLAYLIST and SUBSCRIBER, not ADVERTISING, so
@@ -56,6 +69,16 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **Daily funding consent v6.** The consent constants are now
+  `managed-ads-prospective-daily-v6` with one-sentence copy and a new hash:
+  "Charge my default payment method daily for this campaign's budget, until
+  I pause or end it." The rest of the charging terms are the Terms of Service
+  section on automatic daily charges, as for total budgets; the funding terms
+  are unchanged. `dynamoi_launch_campaign` and `dynamoi_update_campaign`
+  (`resume` and `update_budget`) refuse the v5, v4, v3 and v2 values, so
+  clients pinned to them must update. The v5 constants are exported as
+  `PROSPECTIVE_BUDGET_FUNDING_CONSENT_V5_*`. Campaigns that accepted v2, v3,
+  v4 or v5 keep renewing under the consent they accepted.
 - **Daily funding consent v5.** The consent constants are now
   `managed-ads-prospective-daily-v5`. The copy drops the funding time zone;
   the funding terms are unchanged and get a new hash. `dynamoi_launch_campaign` and `dynamoi_update_campaign` (`resume`

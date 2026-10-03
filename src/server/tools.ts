@@ -29,7 +29,7 @@ import {
 } from "./youtube-strategy-guide";
 
 const YouTubeStrategySchema = YouTubeStrategyKeySchema.describe(
-	`YouTube campaign strategy. Labels for users: CHEAPEST_VIEWS = Maximize Views, ORGANIC_VIEWS = Organic Views, SUBSCRIBERS = Subscriber Growth, ORGANIC_VIEWS_AND_SUBSCRIBERS = Organic Views + Subscribers (default for non-monetized channels), ADSENSE_ROI = Revenue Optimization (monetized channels only). Read ${YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI} before recommending or changing one.`,
+	`YouTube campaign strategy. Labels for users: CHEAPEST_VIEWS = Views, ORGANIC_VIEWS = Watch Time, SUBSCRIBERS = Subscribers, ORGANIC_VIEWS_AND_SUBSCRIBERS = Channel Growth (default for non-monetized channels), ADSENSE_ROI = Revenue (monetized channels only). Read ${YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI} before recommending or changing one.`,
 );
 
 export const DateRangeSchema = SharedDateRangeSchema;
@@ -261,7 +261,7 @@ function validateYouTubeEntries(
 	) {
 		ctx.addIssue({
 			code: "custom",
-			message: "Maximize Views campaigns support one promoted video.",
+			message: "Views campaigns support one promoted video.",
 			path: ["youtubeEntries"],
 		});
 	}

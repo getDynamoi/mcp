@@ -294,7 +294,7 @@ The package is ESM-only and built on MCP TypeScript SDK v2
 | --- | --- |
 | `@dynamoi/mcp` | `createDynamoiMcpServer`, `handleMcpHttpRequest`, `getDynamoiToolDefinitions`, `DynamoiMcpToolProfile`, `Phase3Adapter`, tool definition arrays and input schemas, Shop schemas, About exports (`getDynamoiAbout`, `DYNAMOI_ABOUT_*`), result and data types, `DYNAMOI_MCP_VERSION` |
 | `@dynamoi/mcp/auth` | `DYNAMOI_BETTER_AUTH_MCP_SCOPES`, `DYNAMOI_MCP_TOOL_SCOPES`, `buildWwwAuthenticateHeader` |
-| `@dynamoi/mcp/consent` | `PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION`, `PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY`, `PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH` (current v5), the previous v4, v3 and v2 constants, `isCurrentProspectiveBudgetFundingConsent`, and `isRenewableProspectiveBudgetFundingConsent` |
+| `@dynamoi/mcp/consent` | `PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION`, `PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY`, `PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH` (current v6), the previous v5, v4, v3 and v2 constants, `isCurrentProspectiveBudgetFundingConsent`, and `isRenewableProspectiveBudgetFundingConsent` |
 
 A host provides a `Phase3Adapter`, which connects each tool to its own
 services. It also verifies the caller before it serves a request:

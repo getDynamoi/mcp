@@ -21,9 +21,7 @@ describe("YouTube strategy guide", () => {
 				YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI,
 			);
 		}
-		expect(buildYouTubeStrategyGuide("ADSENSE_ROI")?.label).toBe(
-			"Revenue Optimization",
-		);
+		expect(buildYouTubeStrategyGuide("ADSENSE_ROI")?.label).toBe("Revenue");
 	});
 
 	test("returns null for an unknown strategy", () => {
@@ -63,7 +61,7 @@ describe("YouTube strategy guide", () => {
 		}
 	});
 
-	test("describes Revenue Optimization without claiming real-time revenue bidding", () => {
+	test("describes the Revenue strategy without claiming real-time revenue bidding", () => {
 		const entry = buildYouTubeStrategyGuide("ADSENSE_ROI");
 		expect(entry?.adNetworkOptimizesFor).toContain(
 			"does not see the channel's revenue",
