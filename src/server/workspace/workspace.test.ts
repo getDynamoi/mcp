@@ -1,4 +1,5 @@
 import { describe, expect, spyOn, test } from "bun:test";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport, McpServer } from "@modelcontextprotocol/server";
 import { DYNAMOI_MCP_TOOL_SCOPES } from "../../auth/protected-resource";
@@ -316,7 +317,13 @@ describe("artist workspace contract", () => {
 	});
 	test("checked-in browser bundle is reproducible", async () => {
 		const result = Bun.spawn(
-			[process.execPath, "packages/mcp/scripts/build-workspace.cjs", "--check"],
+			[
+				process.execPath,
+				fileURLToPath(
+					new URL("../../../scripts/build-workspace.cjs", import.meta.url),
+				),
+				"--check",
+			],
 			{ stderr: "pipe", stdout: "pipe" },
 		);
 		const error = await new Response(result.stderr).text();
