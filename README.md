@@ -158,8 +158,8 @@ signed in, not from anything the client claims about itself.
 
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
-| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 19 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
-| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 30 tools, plus the Dynamoi prompts and reference resources |
+| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 20 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
+| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 31 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
 OAuth scopes, and the user's role must allow access to the artist, campaign,
@@ -348,3 +348,11 @@ per-request transport.
 | Capability map | [CAPABILITY_PARITY.md](./CAPABILITY_PARITY.md) |
 
 MIT licensed. See [LICENSE](./LICENSE).
+
+## Artist workspace
+
+`dynamoi_open_workspace({})` returns an authorized artist roster and declares a read-only MCP Apps resource with global and thread entrypoints. On supported hosts, browse campaigns and Smart Links, inspect reported metrics, and deliberately share the selected record and artist references with the next conversation turn. Channel observations retain their own window, provenance and coverage; they are not attributed to the campaign. No pricing, checkout or campaign-write controls appear in this workspace. Unsupported hosts retain the ordinary text and tool result.
+
+The existing Smart Link theme preview remains separate. Composer mentions, settings, file viewers and events are not advertised. Local App/AppBridge fixtures establish their tested contract only; actual ChatGPT host support and public approval require separate evidence.
+
+The browser bridge is bundled locally with the compatible MCP Apps v2 SDK; no CDN is needed. `bun scripts/build-workspace.cjs` regenerates the checked-in source bundle and `bun scripts/build-workspace.cjs --check` verifies reproducibility from the package directory. The ordinary package build runs the same owner. Keep the generated script synchronized with its browser/view/data sources.

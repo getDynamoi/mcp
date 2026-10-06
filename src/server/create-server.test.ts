@@ -32,7 +32,10 @@ import {
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
 
+import { WORKSPACE_TOOL_DEFINITION } from "./workspace/tool";
+
 const REGISTERED_TOOL_DEFINITIONS = [
+	WORKSPACE_TOOL_DEFINITION,
 	DYNAMOI_ABOUT_TOOL_DEFINITION,
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
@@ -542,8 +545,8 @@ describe("createDynamoiMcpServer", () => {
 			const result = await client.listTools();
 			const toolNames = result.tools.map((tool) => tool.name);
 
-			// The 18 review-safe tools plus the public About tool.
-			expect(toolNames).toHaveLength(19);
+			// Directory-safe tools including the read-only workspace.
+			expect(toolNames).toHaveLength(20);
 			expect(toolNames).toContain("dynamoi_get_youtube_channel_data");
 			expect(toolNames).toContain("dynamoi_about");
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");

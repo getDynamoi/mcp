@@ -2,6 +2,8 @@ import * as z from "zod/v4";
 
 export const ToolFormatSchema = z.enum(["json", "summary"]);
 
+export const SearchQuerySchema = z.string().trim().max(120);
+
 const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const UserIntentSummarySchema = z.string().trim().max(500).optional();

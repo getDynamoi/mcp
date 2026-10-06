@@ -18,6 +18,7 @@ import {
 import {
 	ClientRequestIdSchema,
 	IsoCalendarDateSchema,
+	SearchQuerySchema,
 	DateRangeSchema as SharedDateRangeSchema,
 	ToolFormatSchema as SharedToolFormatSchema,
 	UserIntentSummarySchema,
@@ -69,7 +70,7 @@ export const DynamoiSearchInputSchema = z
 		format: ToolFormatSchema.optional(),
 		includeArchived: z.boolean().optional(),
 		limit: z.number().int().min(1).max(50).optional(),
-		query: z.string().trim().max(120).optional(),
+		query: SearchQuerySchema.optional(),
 		type: z.enum(["artist", "campaign", "smartlink"]).optional(),
 	})
 	.strict()

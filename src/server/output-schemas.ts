@@ -7,6 +7,7 @@ const ResultErrorCodeSchema = z.enum([
 	"INVALID_SPOTIFY_SOURCE",
 	"CAPABILITY_REQUIRED",
 	"INSUFFICIENT_SCOPE",
+	"TENANT_ACCESS_DENIED",
 	"STATE_CONFLICT",
 	"QUOTE_CHANGED",
 	"RATE_LIMITED",
@@ -386,6 +387,14 @@ export const AnyOutputEnvelopeSchema = createOutputEnvelopeSchema(
 export const GetCampaignOutputEnvelopeSchema = createOutputEnvelopeSchema(
 	z
 		.object({
+			analytics: z
+				.object({
+					countsAvailability: z
+						.enum(["available", "incomplete", "sample", "not_linked"])
+						.optional(),
+				})
+				.passthrough()
+				.optional(),
 			channelResults: ChannelResultsSchema.optional(),
 			summary: z.string(),
 		})

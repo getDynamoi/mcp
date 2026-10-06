@@ -44,6 +44,7 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	dynamoi_list_media_assets: ["dynamoi:read"],
 	dynamoi_list_smart_links: ["dynamoi:read"],
 	dynamoi_manage_youtube_draft: ["dynamoi:read", "dynamoi:campaign.write"],
+	dynamoi_open_workspace: ["dynamoi:read"],
 	dynamoi_preview_smart_link_themes: ["dynamoi:read"],
 	dynamoi_search: ["dynamoi:read"],
 	dynamoi_shop_create_checkout: ["dynamoi:read", "dynamoi:mcp.full"],

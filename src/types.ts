@@ -25,6 +25,7 @@ export type ResultErrorCode =
 	| "INVALID_SPOTIFY_SOURCE"
 	| "CAPABILITY_REQUIRED"
 	| "INSUFFICIENT_SCOPE"
+	| "TENANT_ACCESS_DENIED"
 	| "STATE_CONFLICT"
 	| "QUOTE_CHANGED"
 	| "RATE_LIMITED"
@@ -288,6 +289,7 @@ export type SmartLinkAnalyticsTotals = {
 };
 
 export type GetSmartLinkAnalyticsData = {
+	countsAvailability?: "available" | "incomplete";
 	playLinkId: string;
 	artistId: string;
 	releaseTitle: string;
@@ -451,6 +453,8 @@ export type GetCampaignSummaryData = {
 };
 
 export type GetCampaignAnalyticsJsonData = {
+	/** Count-read completeness; sample identifies the existing demo reader. Independent of spend/status notes. */
+	countsAvailability?: "available" | "incomplete" | "sample" | "not_linked";
 	/**
 	 * YouTube campaigns only, and only when the ad network reported it. The ad
 	 * network's own estimate of viewers who kept watching the artist's videos

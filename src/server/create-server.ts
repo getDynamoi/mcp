@@ -87,6 +87,11 @@ import {
 	PHASE_ONBOARDING_TOOL_DEFINITIONS,
 } from "./tools";
 import { PHASE_3_TOOL_DEFINITIONS } from "./workflow-tools";
+import {
+	registerWorkspaceResource,
+	WORKSPACE_METADATA,
+	WORKSPACE_TOOL_DEFINITION,
+} from "./workspace/tool";
 import type { GetYouTubeChannelDataData } from "./youtube-channel-data-schema";
 
 type DynamoiToolSecurityScheme =
@@ -106,6 +111,7 @@ type DynamoiToolMetadata = {
 	securitySchemes: ReturnType<typeof buildDynamoiToolSecuritySchemes>;
 	ui?: { resourceUri: string };
 	"openai/outputTemplate"?: string;
+	"openai/ui"?: (typeof WORKSPACE_METADATA)["openai/ui"];
 };
 
 type DynamoiToolAnnotations = {
@@ -283,9 +289,11 @@ type DynamoiToolDefinition =
 	| (typeof PHASE_4_TOOL_DEFINITIONS)[number]
 	| (typeof DISTRIBUTION_TOOL_DEFINITIONS)[number]
 	| (typeof SHOP_TOOL_DEFINITIONS)[number]
-	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION;
+	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION
+	| typeof WORKSPACE_TOOL_DEFINITION;
 
 const DYNAMOI_TOOL_DEFINITIONS = [
+	WORKSPACE_TOOL_DEFINITION,
 	DYNAMOI_ABOUT_TOOL_DEFINITION,
 	...PHASE_1_TOOL_DEFINITIONS,
 	...PHASE_ONBOARDING_TOOL_DEFINITIONS,
@@ -331,6 +339,9 @@ export function getDynamoiToolDefinitions(options?: {
 }
 
 export type Phase3Adapter = {
+	openWorkspace(
+		input: unknown,
+	): Promise<ResultEnvelope<import("./workspace/data").WorkspaceData>>;
 	applyForDistribution(
 		input: unknown,
 	): Promise<ResultEnvelope<ApplyForDistributionData>>;
@@ -696,6 +707,7 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_list_smart_links: (adapter, input) => adapter.listSmartLinks(input),
 	dynamoi_manage_youtube_draft: (adapter, input) =>
 		adapter.manageYoutubeDraft(input),
+	dynamoi_open_workspace: (adapter, input) => adapter.openWorkspace(input),
 	dynamoi_preview_smart_link_themes: (_adapter, input) =>
 		Promise.resolve(previewSmartLinkThemes(input)),
 	dynamoi_search: (adapter, input) => adapter.search(input),
@@ -997,6 +1009,9 @@ export function createDynamoiMcpServer(options: {
 			meta["openai/outputTemplate"] = SMART_LINK_THEME_PREVIEW_RESOURCE_URI;
 			meta.ui = { resourceUri: SMART_LINK_THEME_PREVIEW_RESOURCE_URI };
 		}
+		if (def.name === "dynamoi_open_workspace") {
+			Object.assign(meta, WORKSPACE_METADATA);
+		}
 		const annotations: DynamoiToolAnnotations = {
 			destructiveHint: def.destructiveHint,
 			openWorldHint: def.openWorldHint,
@@ -1111,6 +1126,7 @@ export function createDynamoiMcpServer(options: {
 		}),
 	);
 	registerSmartLinkThemePreviewResource(server);
+	registerWorkspaceResource(server);
 
 	if (toolProfile === "full") {
 		registerDynamoiPrompts(server);

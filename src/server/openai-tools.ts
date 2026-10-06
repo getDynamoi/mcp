@@ -1,5 +1,6 @@
 import * as z from "zod/v4";
 import { AnyOutputEnvelopeSchema } from "./output-schemas";
+import { SearchQuerySchema } from "./shared-schemas";
 
 /**
  * OpenAI ChatGPT Connectors / Deep Research spec requires every connector
@@ -35,7 +36,7 @@ export type OpenAiFetchData = {
 
 export const DynamoiOpenAiSearchInputSchema = z
 	.object({
-		query: z.string().trim().min(1).max(500),
+		query: SearchQuerySchema.min(1),
 	})
 	.strict();
 

@@ -10,6 +10,7 @@
 				"package.json",
 				"tsconfig.json",
 				"scripts/build.cjs",
+				"scripts/build-workspace.cjs",
 				"server.json"
 			],
 			"description": "Build @dynamoi/mcp for workspace consumers"

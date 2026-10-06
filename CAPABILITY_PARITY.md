@@ -8,7 +8,7 @@ catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The package registers 30 tools. The directory profile serves 19 of them: the
+The package registers 31 tools. The directory profile serves 20 of them: the
 review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
 picks the profile from the verified OAuth client ID; `/mcp/directory` always
 serves the directory profile. Every other authenticated client on `/mcp`
@@ -56,3 +56,7 @@ standalone SSE subscription channel and no session resumption. CIMD uses the
 `mcp-2026-07-28` metadata profile. Authentication challenges, discovery and
 both protocol eras must still be tested against the deployed edge and origin.
 Do not advertise universal host compatibility without host journey tests.
+
+## Read-only workspace
+
+`dynamoi_open_workspace` exposes a bounded authorized artist roster and an MCP Apps HTML resource with global/thread entrypoints. The view reads existing campaign and Smart Link records through individually registered directory read tools. Selected context is explicit and bounded; only the selected record and artist IDs, displayed name/status and qualified observed results are shared, with no billing fields, raw records or spend. Host support is capability-detected. The existing theme-preview resource is retained. Composer mentions, settings, file viewers, events and public host acceptance are not implemented or claimed.

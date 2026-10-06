@@ -102,6 +102,12 @@ export {
 	ToolFormatSchema,
 } from "./server/tools";
 export { PHASE_3_TOOL_DEFINITIONS } from "./server/workflow-tools";
+export type { WorkspaceData } from "./server/workspace/data";
+export {
+	openWorkspace,
+	WORKSPACE_TOOL_DEFINITION,
+	type WorkspaceReaders,
+} from "./server/workspace/tool";
 export {
 	type DynamoiGetYouTubeChannelDataInput,
 	DynamoiGetYouTubeChannelDataInputSchema,

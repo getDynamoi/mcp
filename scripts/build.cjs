@@ -11,6 +11,7 @@ const packageRoot = path.resolve(__dirname, "..");
 const sourceRoot = path.join(packageRoot, "src");
 const outputRoot = path.join(packageRoot, "dist");
 const watch = process.argv.includes("--watch");
+const { buildWorkspace } = require("./build-workspace.cjs");
 
 async function loadBuildMetadata() {
 	const typescriptPackagePath = Bun.resolveSync(
@@ -66,6 +67,7 @@ function replaceOutput(stagingRoot, nextOutputRoot) {
 }
 
 async function build({ packageVersion, typescriptCli }) {
+	await buildWorkspace();
 	const stagingRoot = mkdtempSync(path.join(packageRoot, ".mcp-build-"));
 	const nextOutputRoot = path.join(stagingRoot, "next");
 	try {
