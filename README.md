@@ -173,6 +173,7 @@ start an action with an outside provider.
 | Tool | What it does | Access | Catalog |
 | --- | --- | --- | --- |
 | `dynamoi_about` | What Dynamoi is and how to start. Works before sign-in. | Reads | Both |
+| `dynamoi_open_workspace` | Open a read-only workspace for the authorized artist roster; supported hosts can browse campaigns and Smart Links | Reads | Both |
 | `dynamoi_get_account_overview` | Signed-in account, access counts and suggested next steps | Reads | Both |
 | `dynamoi_list_artists` | Artist roster, or one artist's profile and readiness | Reads | Both |
 | `dynamoi_search` | Find artists, campaigns, and Smart Links by name | Reads | Both |
