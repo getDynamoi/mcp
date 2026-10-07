@@ -8,7 +8,7 @@ catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The package registers 32 tools. The directory profile serves 20 of them: the
+The package registers 35 tools. The directory profile serves 23 of them: the
 review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
 picks the profile from the verified OAuth client ID; `/mcp/directory` always
 serves the directory profile. Every other authenticated client on `/mcp`
@@ -25,7 +25,7 @@ only discovery methods, the public `dynamoi_about` tool and the
 | Account/artist orientation | Account overview, roster and single-artist reads | Organization invites/roles, full artist settings and account deletion |
 | Smart Links | Spotify ingestion, list/detail, description, artist theme/pixels, per-link analytics and theme previews | Full studio/availability controls, every field, aggregate analytics and promotion request workflow |
 | Campaigns | List/detail, provider analytics, readiness, existing-asset launch, YouTube draft inspect/discard, pause/resume and eligible single-provider budgets | Draft state machines, source uploads, creative generation/selection/approval, screening, existing targeting edits and multi-provider budgets |
-| Analytics | Campaign-provider rollups, per-link analytics and observed YouTube channel data (`dynamoi_get_youtube_channel_data`) | Feature.fm audience, Soundcharts playlists, growth audit and artist-wide Smart Link aggregation |
+| Analytics | Campaign-provider rollups, growth audit (`dynamoi_get_growth_audit`), tracked playlist analytics (`dynamoi_get_playlist_analytics`), streaming audience analytics (`dynamoi_get_audience_analytics`), per-link analytics and observed YouTube channel data (`dynamoi_get_youtube_channel_data`) | Artist-wide Smart Link aggregation |
 | Connections | Meta and YouTube browser OAuth handoffs and status reads | Headless provider login, owner selection or bypass of ownership verification |
 | Distribution | Five scored requirements, application state and explicit adult-attested application submission for manual review | Agreement execution, release intake/catalog, rights/splits, royalties, tax, payout and takedown workflows |
 | Billing and Shop | Managed billing observations and read-only existing-campaign resume funding breakdown (`dynamoi_get_resume_funding`); full-profile Shop quote and unpaid Stripe checkout creation | Managed subscription changes, invoice/funding workflows or agent payment settlement. Shop checkout is not a campaign launch or paid order. |

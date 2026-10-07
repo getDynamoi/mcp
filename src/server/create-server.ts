@@ -2,6 +2,7 @@ import {
 	type CacheHint,
 	type CallToolResult,
 	McpServer,
+	type StandardSchemaWithJSON,
 	type ServerOptions,
 	type Tool,
 } from "@modelcontextprotocol/server";
@@ -235,10 +236,10 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 } as const;
 
 function getAdvertisedToolOutputSchema(options: {
-	canonical: z.ZodType;
+	canonical: z.ZodType & StandardSchemaWithJSON;
 	toolName: string;
 	toolProfile: DynamoiMcpToolProfile;
-}) {
+}): z.ZodType & StandardSchemaWithJSON {
 	if (options.toolProfile !== "directory") {
 		return options.canonical;
 	}
@@ -283,17 +284,17 @@ function getDynamoiToolOAuthScopes(
  */
 export type DynamoiMcpToolProfile = "full" | "directory";
 
-type DynamoiToolDefinition =
-	| typeof DYNAMOI_ABOUT_TOOL_DEFINITION
-	| (typeof PHASE_1_TOOL_DEFINITIONS)[number]
-	| (typeof PHASE_ONBOARDING_TOOL_DEFINITIONS)[number]
-	| (typeof PHASE_2_TOOL_DEFINITIONS)[number]
-	| (typeof PHASE_3_TOOL_DEFINITIONS)[number]
-	| (typeof PHASE_4_TOOL_DEFINITIONS)[number]
-	| (typeof DISTRIBUTION_TOOL_DEFINITIONS)[number]
-	| (typeof SHOP_TOOL_DEFINITIONS)[number]
-	| typeof SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION
-	| typeof WORKSPACE_TOOL_DEFINITION;
+type DynamoiToolRegistrationDescriptor = {
+	description: string;
+	destructiveHint: boolean;
+	idempotentHint?: boolean;
+	name: string;
+	openWorldHint: boolean;
+	outputSchema: z.ZodType & StandardSchemaWithJSON;
+	readOnlyHint: boolean;
+	schema: z.ZodObject<z.ZodRawShape>;
+	title: string;
+};
 
 const DYNAMOI_TOOL_DEFINITIONS = [
 	WORKSPACE_TOOL_DEFINITION,
@@ -306,7 +307,19 @@ const DYNAMOI_TOOL_DEFINITIONS = [
 	...SHOP_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
-] as const satisfies readonly DynamoiToolDefinition[];
+] as const satisfies readonly DynamoiToolRegistrationDescriptor[];
+
+// Keep the public name union separate from the schema-rich source tuple.
+const DYNAMOI_TOOL_NAMES = DYNAMOI_TOOL_DEFINITIONS.map(
+	(definition) => definition.name,
+);
+type DynamoiToolName = (typeof DYNAMOI_TOOL_NAMES)[number];
+type DynamoiToolDefinition = Omit<
+	DynamoiToolRegistrationDescriptor,
+	"name"
+> & {
+	name: DynamoiToolName;
+};
 
 const MUTATING_TOOL_NAMES = new Set<string>(
 	DYNAMOI_TOOL_DEFINITIONS.filter((definition) => !definition.readOnlyHint).map(
@@ -332,7 +345,7 @@ const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 export function getDynamoiToolDefinitions(options?: {
 	toolProfile?: DynamoiMcpToolProfile;
 }): DynamoiToolDefinition[] {
-	const definitions = [...DYNAMOI_TOOL_DEFINITIONS];
+	const definitions: DynamoiToolDefinition[] = [...DYNAMOI_TOOL_DEFINITIONS];
 	// Fail closed: only an explicit full profile gets the whole catalog.
 	if (options?.toolProfile === "full") {
 		return definitions;
@@ -371,6 +384,9 @@ export type Phase3Adapter = {
 	): Promise<
 		ResultEnvelope<GetArtistAnalyticsJsonData | GetArtistAnalyticsSummaryData>
 	>;
+	getGrowthAudit(input: unknown): Promise<ResultEnvelope<unknown>>;
+	getPlaylistAnalytics(input: unknown): Promise<ResultEnvelope<unknown>>;
+	getAudienceAnalytics(input: unknown): Promise<ResultEnvelope<unknown>>;
 	listCampaigns(
 		input: unknown,
 	): Promise<ResultEnvelope<ListCampaignsJsonData | ListCampaignsSummaryData>>;
@@ -441,7 +457,6 @@ export type Phase3Adapter = {
 	): Promise<ResultEnvelope<DynamoiShopCheckoutData>>;
 };
 
-type DynamoiToolName = (typeof DYNAMOI_TOOL_DEFINITIONS)[number]["name"];
 type DynamoiToolDispatcher = (
 	adapter: Phase3Adapter,
 	input: unknown,
@@ -694,16 +709,21 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 		adapter.getCurrentUser(input),
 	dynamoi_get_artist_analytics: (adapter, input) =>
 		adapter.getArtistAnalytics(input),
+	dynamoi_get_audience_analytics: (adapter, input) =>
+		adapter.getAudienceAnalytics(input),
 	dynamoi_get_billing: (adapter, input) => adapter.getBilling(input),
 	dynamoi_get_campaign: (adapter, input) => adapter.getCampaign(input),
 	dynamoi_get_campaign_readiness: (adapter, input) =>
 		adapter.getCampaignReadiness(input),
 	dynamoi_get_distribution_application: (adapter, input) =>
 		adapter.getDistributionApplication(input),
+	dynamoi_get_growth_audit: (adapter, input) => adapter.getGrowthAudit(input),
 	dynamoi_get_platform_status: (adapter, input) =>
 		adapter.getPlatformStatus(input),
 	dynamoi_get_resume_funding: (adapter, input) =>
 		adapter.getResumeFunding(input),
+	dynamoi_get_playlist_analytics: (adapter, input) =>
+		adapter.getPlaylistAnalytics(input),
 	dynamoi_get_smart_link: (adapter, input) => adapter.getSmartLink(input),
 	dynamoi_get_youtube_channel_data: (adapter, input) =>
 		adapter.getYouTubeChannelData(input),

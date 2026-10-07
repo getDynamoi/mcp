@@ -2,8 +2,8 @@ import type * as z from "zod/v4";
 import { AnyOutputEnvelopeSchema } from "./output-schemas";
 
 type OnboardingToolSchemas = {
-	metaConnection: z.ZodType;
-	youtubeChannelLink: z.ZodType;
+	metaConnection: z.ZodObject<z.ZodRawShape>;
+	youtubeChannelLink: z.ZodObject<z.ZodRawShape>;
 };
 
 export function createPhaseOnboardingToolDefinitions(

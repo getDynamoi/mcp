@@ -32,11 +32,14 @@ import {
 } from "./smart-link-tools";
 import {
 	DynamoiGetArtistAnalyticsInputSchema,
+	DynamoiGetAudienceAnalyticsInputSchema,
 	DynamoiGetBillingInputSchema,
 	DynamoiGetCampaignInputSchema,
 	DynamoiGetCampaignReadinessInputSchema,
 	DynamoiGetCurrentUserInputSchema,
+	DynamoiGetGrowthAuditInputSchema,
 	DynamoiGetPlatformStatusInputSchema,
+	DynamoiGetPlaylistAnalyticsInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
 	DynamoiManageYoutubeDraftInputSchema,
@@ -81,9 +84,9 @@ describe("mcp/tools phase 1 definitions", () => {
 			...PHASE_3_TOOL_DEFINITIONS,
 			...PHASE_4_TOOL_DEFINITIONS,
 		];
-		// The requested resume-funding read adds one tool to the 24-tool core catalog.
+		// The requested resume-funding read and insight reads add four tools to the 24-tool core catalog.
 		// Exact cardinality prevents unreviewed catalog growth.
-		expect(publicTools).toHaveLength(25);
+		expect(publicTools).toHaveLength(28);
 		const resumeReads = publicTools.filter(
 			(tool) => tool.name === "dynamoi_get_resume_funding",
 		);
@@ -92,6 +95,39 @@ describe("mcp/tools phase 1 definitions", () => {
 		const toolNames = publicTools.map((tool) => tool.name);
 		expect(toolNames).toContain("dynamoi_start_meta_connection");
 		expect(toolNames).not.toContain("dynamoi_start_subscription_checkout");
+		expect(toolNames).toContain("dynamoi_get_growth_audit");
+		expect(toolNames).toContain("dynamoi_get_playlist_analytics");
+		expect(toolNames).toContain("dynamoi_get_audience_analytics");
+	});
+
+	test("insight reads use narrow artist inputs and an explicit audience range", () => {
+		const artistId = "00000000-0000-0000-0000-000000000000";
+		expect(DynamoiGetGrowthAuditInputSchema.parse({ artistId })).toEqual({
+			artistId,
+		});
+		expect(DynamoiGetPlaylistAnalyticsInputSchema.parse({ artistId })).toEqual({
+			artistId,
+		});
+		expect(
+			DynamoiGetGrowthAuditInputSchema.safeParse({ artistId, range: "30d" })
+				.success,
+		).toBe(false);
+		expect(
+			DynamoiGetPlaylistAnalyticsInputSchema.safeParse({
+				artistId,
+				format: "summary",
+			}).success,
+		).toBe(false);
+		expect(DynamoiGetAudienceAnalyticsInputSchema.parse({ artistId })).toEqual({
+			artistId,
+			range: "30d",
+		});
+		expect(
+			DynamoiGetAudienceAnalyticsInputSchema.safeParse({
+				artistId,
+				range: "all",
+			}).success,
+		).toBe(false);
 	});
 
 	test("read tools include required annotations", () => {

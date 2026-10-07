@@ -546,8 +546,11 @@ describe("createDynamoiMcpServer", () => {
 			const toolNames = result.tools.map((tool) => tool.name);
 
 			// Directory-safe tools including the read-only workspace.
-			expect(toolNames).toHaveLength(20);
+			expect(toolNames).toHaveLength(23);
 			expect(toolNames).toContain("dynamoi_get_youtube_channel_data");
+			expect(toolNames).toContain("dynamoi_get_growth_audit");
+			expect(toolNames).toContain("dynamoi_get_playlist_analytics");
+			expect(toolNames).toContain("dynamoi_get_audience_analytics");
 			expect(toolNames).toContain("dynamoi_about");
 			expect(toolNames).toContain("dynamoi_create_smart_link_from_spotify");
 			expect(toolNames).toContain(

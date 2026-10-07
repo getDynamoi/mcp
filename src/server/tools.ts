@@ -148,6 +148,21 @@ export const DynamoiGetArtistAnalyticsInputSchema = z
 	})
 	.strict();
 
+export const DynamoiGetGrowthAuditInputSchema = z
+	.object({ artistId: z.string().uuid() })
+	.strict();
+
+export const DynamoiGetPlaylistAnalyticsInputSchema = z
+	.object({ artistId: z.string().uuid() })
+	.strict();
+
+export const DynamoiGetAudienceAnalyticsInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		range: z.enum(["7d", "30d", "90d"]).default("30d"),
+	})
+	.strict();
+
 export const DynamoiGetBillingInputSchema = z
 	.object({
 		artistId: z.string().uuid(),
@@ -896,6 +911,39 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		readOnlyHint: true,
 		schema: DynamoiGetArtistAnalyticsInputSchema,
 		title: "Get Artist Analytics",
+	},
+	{
+		description:
+			"Use this when the user asks for an artist's Spotify growth audit, growth score, listener trend, playlist reach, or growth recommendations. The response carries its status, coverage dates, and limitations; preserve unavailable or stale status and do not treat a missing metric as zero. This is Spotify and market insight data, not paid campaign performance.",
+		destructiveHint: false,
+		name: "dynamoi_get_growth_audit",
+		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetGrowthAuditInputSchema,
+		title: "Get Spotify Growth Audit",
+	},
+	{
+		description:
+			"Use this when the user asks about an artist's tracked playlist placements, reach, or playlist movement. The response includes freshness and snapshot dates with the playlist and movement rows. These observed placements are not attributed to a paid campaign.",
+		destructiveHint: false,
+		name: "dynamoi_get_playlist_analytics",
+		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetPlaylistAnalyticsInputSchema,
+		title: "Get Playlist Analytics",
+	},
+	{
+		description:
+			"Use this when the user asks about an artist's streaming audience by country, service, paid/free tier, or daily trend. Choose range=7d, 30d, or 90d; it defaults to 30d. The response comes from audience analytics and preserves the requested date range. If the source is temporarily unavailable, report that instead of treating it as zero audience.",
+		destructiveHint: false,
+		name: "dynamoi_get_audience_analytics",
+		openWorldHint: false,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetAudienceAnalyticsInputSchema,
+		title: "Get Audience Analytics",
 	},
 	{
 		description:
