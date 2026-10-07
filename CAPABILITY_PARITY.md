@@ -8,7 +8,7 @@ catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The package registers 31 tools. The directory profile serves 20 of them: the
+The package registers 32 tools. The directory profile serves 20 of them: the
 review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
 picks the profile from the verified OAuth client ID; `/mcp/directory` always
 serves the directory profile. Every other authenticated client on `/mcp`
@@ -28,7 +28,7 @@ only discovery methods, the public `dynamoi_about` tool and the
 | Analytics | Campaign-provider rollups, per-link analytics and observed YouTube channel data (`dynamoi_get_youtube_channel_data`) | Feature.fm audience, Soundcharts playlists, growth audit and artist-wide Smart Link aggregation |
 | Connections | Meta and YouTube browser OAuth handoffs and status reads | Headless provider login, owner selection or bypass of ownership verification |
 | Distribution | Five scored requirements, application state and explicit adult-attested application submission for manual review | Agreement execution, release intake/catalog, rights/splits, royalties, tax, payout and takedown workflows |
-| Billing and Shop | Managed billing observations; full-profile Shop quote and unpaid Stripe checkout creation | Managed subscription changes, invoice/funding workflows or agent payment settlement. Shop checkout is not a campaign launch or paid order. |
+| Billing and Shop | Managed billing observations and read-only existing-campaign resume funding breakdown (`dynamoi_get_resume_funding`); full-profile Shop quote and unpaid Stripe checkout creation | Managed subscription changes, invoice/funding workflows or agent payment settlement. Shop checkout is not a campaign launch or paid order. |
 
 A real campaign launch, budget edit or pause/resume runs the same shared
 backend functions as web and mobile. Operations that need automatic daily card

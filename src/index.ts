@@ -44,6 +44,7 @@ export {
 	type OpenAiFetchData,
 	type OpenAiSearchData,
 } from "./server/openai-tools";
+export type { GetResumeFundingData } from "./server/output-schemas";
 export {
 	DYNAMOI_SHOP_FULL_SCOPE,
 	DYNAMOI_SHOP_MAX_TARGET_COUNTRY_CODES,
@@ -83,6 +84,7 @@ export {
 	DynamoiGetCurrentUserInputSchema,
 	DynamoiGetOnboardingStatusInputSchema,
 	DynamoiGetPlatformStatusInputSchema,
+	DynamoiGetResumeFundingInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListArtistsInputSchema,
 	DynamoiListAvailableCountriesInputSchema,

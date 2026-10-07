@@ -81,7 +81,14 @@ describe("mcp/tools phase 1 definitions", () => {
 			...PHASE_3_TOOL_DEFINITIONS,
 			...PHASE_4_TOOL_DEFINITIONS,
 		];
-		expect(publicTools.length).toBeLessThanOrEqual(24);
+		// The requested resume-funding read adds one tool to the 24-tool core catalog.
+		// Exact cardinality prevents unreviewed catalog growth.
+		expect(publicTools).toHaveLength(25);
+		const resumeReads = publicTools.filter(
+			(tool) => tool.name === "dynamoi_get_resume_funding",
+		);
+		expect(resumeReads).toHaveLength(1);
+		expect(resumeReads[0]?.readOnlyHint).toBe(true);
 		const toolNames = publicTools.map((tool) => tool.name);
 		expect(toolNames).toContain("dynamoi_start_meta_connection");
 		expect(toolNames).not.toContain("dynamoi_start_subscription_checkout");

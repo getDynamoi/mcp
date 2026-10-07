@@ -10,6 +10,7 @@ import {
 	AnyOutputEnvelopeSchema,
 	GetCampaignOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
+	GetResumeFundingOutputEnvelopeSchema,
 	GetYouTubeChannelDataOutputEnvelopeSchema,
 	ListAvailableCountriesOutputEnvelopeSchema,
 	ManageYoutubeDraftOutputEnvelopeSchema,
@@ -336,6 +337,13 @@ export const DynamoiPauseCampaignInputSchema = z
 		clientRequestId: ClientRequestIdSchema,
 		expectedCurrentStatus: ExpectedCampaignStatusSchema,
 		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
+
+export const DynamoiGetResumeFundingInputSchema = z
+	.object({
+		campaignId: z.string().uuid(),
+		format: ToolFormatSchema.optional(),
 	})
 	.strict();
 
@@ -910,6 +918,17 @@ export const PHASE_1_TOOL_DEFINITIONS = [
 		readOnlyHint: true,
 		schema: DynamoiGetBillingInputSchema,
 		title: "Get Billing",
+	},
+	{
+		description:
+			"Read the existing campaign's resume funding breakdown before requesting funding consent: campaign budget, funded-window coverage, usable credits, immediate charge, payment method, refusal and current consent. Amounts carry their commercial currency and minor-unit exponent. This read never reserves funds, authorizes collection or resumes delivery. A refusal is not a zero-charge approval. Use dynamoi_update_campaign to resume only after explicit user consent when required.",
+		destructiveHint: false,
+		name: "dynamoi_get_resume_funding",
+		openWorldHint: false,
+		outputSchema: GetResumeFundingOutputEnvelopeSchema,
+		readOnlyHint: true,
+		schema: DynamoiGetResumeFundingInputSchema,
+		title: "Get Resume Funding",
 	},
 	{
 		description:

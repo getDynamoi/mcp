@@ -66,7 +66,10 @@ import {
 	DYNAMOI_MCP_INSTRUCTIONS,
 } from "./instructions";
 import type { OpenAiFetchData, OpenAiSearchData } from "./openai-tools";
-import { ResultErrorRecoverySchema } from "./output-schemas";
+import {
+	type GetResumeFundingData,
+	ResultErrorRecoverySchema,
+} from "./output-schemas";
 import { registerDynamoiPrompts } from "./prompts";
 import { registerDynamoiResources } from "./resources";
 import {
@@ -315,6 +318,7 @@ const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_shop_create_checkout",
 	"dynamoi_shop_get_quote",
 	"dynamoi_get_billing",
+	"dynamoi_get_resume_funding",
 	"dynamoi_get_campaign_readiness",
 	"dynamoi_manage_youtube_draft",
 	"dynamoi_launch_campaign",
@@ -373,6 +377,9 @@ export type Phase3Adapter = {
 	getCampaign(
 		input: unknown,
 	): Promise<ResultEnvelope<GetCampaignData | GetCampaignSummaryData>>;
+	getResumeFunding(
+		input: unknown,
+	): Promise<ResultEnvelope<GetResumeFundingData | { summary: string }>>;
 	getBilling(
 		input: unknown,
 	): Promise<ResultEnvelope<GetBillingData | GetBillingSummaryData>>;
@@ -695,6 +702,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 		adapter.getDistributionApplication(input),
 	dynamoi_get_platform_status: (adapter, input) =>
 		adapter.getPlatformStatus(input),
+	dynamoi_get_resume_funding: (adapter, input) =>
+		adapter.getResumeFunding(input),
 	dynamoi_get_smart_link: (adapter, input) => adapter.getSmartLink(input),
 	dynamoi_get_youtube_channel_data: (adapter, input) =>
 		adapter.getYouTubeChannelData(input),

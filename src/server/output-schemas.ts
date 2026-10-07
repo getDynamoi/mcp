@@ -555,3 +555,55 @@ export const CreateSmartLinksFromSpotifyArtistOutputEnvelopeSchema =
 export const ListSmartLinksOutputEnvelopeSchema = createOutputEnvelopeSchema(
 	z.union([ListSmartLinksDataOutputSchema, ListSmartLinksSummaryOutputSchema]),
 );
+
+export const ResumeFundingDataSchema = z.object({
+	appliedCreditsCents: z.number().int().nonnegative(),
+	appliedCreditsMinor: z.number().int().nonnegative().optional(),
+	budgetCents: z.number().int().nonnegative(),
+	budgetMinor: z.number().int().nonnegative().optional(),
+	/** The daily funding consent to show and accept; null when not required. */
+	consent: z
+		.object({
+			copy: z.string().min(1),
+			copyHash: z.string().min(1),
+			version: z.string().min(1),
+		})
+		.nullable(),
+	/** The current funded window already covers this budget. */
+	coveredByFundedWindow: z.boolean(),
+	currency: z.string().length(3),
+	currencyExponent: z.number().int().min(0).max(3).optional(),
+	deliveryWindowCents: z.number().int().nonnegative(),
+	deliveryWindowMinor: z.number().int().nonnegative().optional(),
+	/** The first window: the rest of today plus all of tomorrow. */
+	firstWindow: z.boolean(),
+	formatted: z.object({
+		appliedCredits: z.string(),
+		budget: z.string(),
+		deliveryWindow: z.string(),
+		netImmediateCharge: z.string(),
+	}),
+	isTotal: z.boolean(),
+	netImmediateChargeCents: z.number().int().nonnegative(),
+	netImmediateChargeMinor: z.number().int().nonnegative().optional(),
+	paymentMethod: z
+		.object({
+			brand: z.string().nullable(),
+			displayName: z.string(),
+			last4: z.string().nullable(),
+		})
+		.nullable(),
+	/** The engine would refuse this resume without charging. */
+	refusal: z
+		.enum([
+			"card_collection_closed",
+			"credit_review_required",
+			"payment_method_required",
+		])
+		.nullable(),
+});
+
+export type GetResumeFundingData = z.infer<typeof ResumeFundingDataSchema>;
+export const GetResumeFundingOutputEnvelopeSchema = createOutputEnvelopeSchema(
+	z.union([ResumeFundingDataSchema, z.object({ summary: z.string() })]),
+);
