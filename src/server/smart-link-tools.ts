@@ -13,6 +13,20 @@ import {
 	UserIntentSummarySchema,
 } from "./shared-schemas";
 
+const SmartLinkAnalyticsDateRangeSchema = DateRangeSchema.superRefine(
+	(range, ctx) => {
+		const days =
+			(Date.parse(range.end) - Date.parse(range.start)) / 86_400_000 + 1;
+		if (days > 366) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Smart-link analytics date windows cover at most 366 days",
+				path: ["end"],
+			});
+		}
+	},
+);
+
 const SmartLinkStatusFiltersSchema = {
 	claimStatus: z
 		.enum([
@@ -67,7 +81,7 @@ export const DynamoiListSmartLinksInputSchema = z
 
 const DynamoiGetSmartLinkInputShape = {
 	artistId: z.string().uuid().optional(),
-	dateRange: DateRangeSchema.optional(),
+	dateRange: SmartLinkAnalyticsDateRangeSchema.optional(),
 	format: ToolFormatSchema.optional(),
 	granularity: z.enum(["TOTAL", "DAILY"]).optional(),
 	includeAnalytics: z.boolean().optional(),
@@ -123,7 +137,7 @@ export function parseDynamoiGetSmartLinkInput(rawInput: unknown) {
 
 export const DynamoiGetSmartLinkAnalyticsInputSchema = z
 	.object({
-		dateRange: DateRangeSchema.optional(),
+		dateRange: SmartLinkAnalyticsDateRangeSchema.optional(),
 		format: ToolFormatSchema.optional(),
 		granularity: z.enum(["TOTAL", "DAILY"]).optional(),
 		includeBreakdowns: z.boolean().optional(),

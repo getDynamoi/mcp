@@ -284,8 +284,13 @@ export type GetSmartLinkSummaryData = {
 
 export type SmartLinkAnalyticsTotals = {
 	anonymousVisits: number;
-	streamingServiceClicks: number;
+	streamingServiceClicks: number | null;
+	streamingServiceClickUsers: number | null;
+	uniqueVisitors: number;
 	youtubeVideoPlays: number;
+	youtubeVideoPlayUsers: number;
+	saveFollowEvents: number;
+	saveFollowUsers: number;
 };
 
 export type GetSmartLinkAnalyticsData = {
@@ -295,7 +300,16 @@ export type GetSmartLinkAnalyticsData = {
 	releaseTitle: string;
 	dateRange: { start: string; end: string };
 	totals: SmartLinkAnalyticsTotals;
-	daily?: Array<SmartLinkAnalyticsTotals & { date: string }>;
+	daily?: Array<
+		SmartLinkAnalyticsTotals & {
+			date: string;
+			serviceClickEvidence: "available" | "partial" | "unavailable";
+		}
+	>;
+	serviceClickEvidence: "available" | "partial" | "unavailable";
+	serviceClickCoverage: { fromDate: string; throughDate: string } | null;
+	lastUpdatedAtIso: string | null;
+	uniqueMetricAggregation: "sum_daily_per_link_uniques";
 	breakdowns?: {
 		serviceClicks?: Record<string, number>;
 		countryViews?: Record<string, number>;
