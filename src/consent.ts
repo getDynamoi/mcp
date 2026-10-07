@@ -5,20 +5,20 @@
  * consent, the checkbox carries the term that matters at the moment of
  * consent (a daily charge to the default payment method until the campaign is
  * paused or ended); the rest of the charging terms are the Terms of Service
- * section linked beside it. v6 shortens the v5 copy to one sentence; its
+ * section linked beside it. v7 makes credit-first allocation explicit; its
  * funding and collection terms are identical.
  */
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION =
-	"managed-ads-prospective-daily-v6";
+	"managed-ads-prospective-daily-v7";
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY =
-	"Charge my default payment method daily for this campaign's budget, until I pause or end it.";
+	"Charge my default payment method daily for this campaign's budget, after my available credits, until I pause or end it.";
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH =
-	"b4c2d0b0eef5a3d54165c4225e9b316d473f07f8581b0715f803575fc815557b";
+	"f49b33a4f7e8aa3cc814d5057d03e97eaa0c35a9f3f2bc0315dbd031efa0f356";
 
 /**
  * The previous daily consent, with the same terms as v6 spelled out in the
  * copy. Campaigns that accepted it keep renewing under it; new launches and
- * resumes require v6.
+ * resumes require v7.
  */
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V5_VERSION =
 	"managed-ads-prospective-daily-v5";
@@ -30,7 +30,7 @@ export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V5_COPY_HASH =
 /**
  * The daily consent before v5, with the same terms as v5 plus a funding time
  * zone in the copy. Campaigns that accepted it keep renewing under it; new
- * launches and resumes require v6.
+ * launches and resumes require v7.
  */
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION =
 	"managed-ads-prospective-daily-v4";
@@ -41,7 +41,7 @@ export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_COPY_HASH =
 
 /**
  * The Pacific-day consent, with the same terms as v4. Campaigns that
- * accepted it keep renewing under it; new launches and resumes require v6.
+ * accepted it keep renewing under it; new launches and resumes require v7.
  */
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_VERSION =
 	"managed-ads-prospective-daily-v3";
@@ -52,7 +52,7 @@ export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V3_COPY_HASH =
 
 /**
  * The earlier 24-hour-window daily consent. Campaigns that accepted it keep
- * renewing under its exact terms; new launches and resumes require v6.
+ * renewing under its exact terms; new launches and resumes require v7.
  */
 export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_VERSION =
 	"managed-ads-prospective-daily-v2";
@@ -71,11 +71,11 @@ export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V2_COPY_HASH =
  * Terms of Service section linked beside it.
  */
 export const TOTAL_BUDGET_FUNDING_CONSENT_VERSION =
-	"managed-ads-total-daily-v2";
+	"managed-ads-total-daily-v3";
 export const TOTAL_BUDGET_FUNDING_CONSENT_COPY =
-	"Charge my default payment method daily for this campaign, up to my total budget.";
+	"Charge my default payment method daily for this campaign, after my available credits, up to my total budget.";
 export const TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH =
-	"e6afbb5d76383f9f336f4924caaf51022c686fa5b77bba4e2f480a1d5a118aed";
+	"8bece5f58e0c94b04b35ac1a98f0e8a142ed968bbe34dcc0d51fe52e2c0d75bd";
 
 /** Whether a client-submitted total-budget consent is exactly the current pair. */
 export function isCurrentTotalBudgetFundingConsent(input: {
@@ -104,6 +104,22 @@ export function isCurrentProspectiveBudgetFundingConsent(input: {
 	);
 }
 
+/** Previous exact consent pair; existing receipts remain renewable. */
+export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V6_VERSION =
+	"managed-ads-prospective-daily-v6";
+export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V6_COPY =
+	"Charge my default payment method daily for this campaign's budget, until I pause or end it.";
+export const PROSPECTIVE_BUDGET_FUNDING_CONSENT_V6_COPY_HASH =
+	"b4c2d0b0eef5a3d54165c4225e9b316d473f07f8581b0715f803575fc815557b";
+
+/** Previous exact consent pair; existing receipts remain renewable. */
+export const TOTAL_BUDGET_FUNDING_CONSENT_V2_VERSION =
+	"managed-ads-total-daily-v2";
+export const TOTAL_BUDGET_FUNDING_CONSENT_V2_COPY =
+	"Charge my default payment method daily for this campaign, up to my total budget.";
+export const TOTAL_BUDGET_FUNDING_CONSENT_V2_COPY_HASH =
+	"e6afbb5d76383f9f336f4924caaf51022c686fa5b77bba4e2f480a1d5a118aed";
+
 /** Exact (version, hash) pairs whose accepted campaigns may renew daily. */
 export function isRenewableProspectiveBudgetFundingConsent(input: {
 	copyHash: string;
@@ -112,6 +128,10 @@ export function isRenewableProspectiveBudgetFundingConsent(input: {
 	return (
 		isCurrentProspectiveBudgetFundingConsent(input) ||
 		isCurrentTotalBudgetFundingConsent(input) ||
+		(input.copyVersion === TOTAL_BUDGET_FUNDING_CONSENT_V2_VERSION &&
+			input.copyHash === TOTAL_BUDGET_FUNDING_CONSENT_V2_COPY_HASH) ||
+		(input.copyVersion === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V6_VERSION &&
+			input.copyHash === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V6_COPY_HASH) ||
 		(input.copyVersion === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V5_VERSION &&
 			input.copyHash === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V5_COPY_HASH) ||
 		(input.copyVersion === PROSPECTIVE_BUDGET_FUNDING_CONSENT_V4_VERSION &&
