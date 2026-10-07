@@ -7,6 +7,29 @@ import type {
 } from "./types";
 
 export type GetBillingData = {
+	/** Canonical paid plan evidence; absent on older servers. */
+	plan?:
+		| { state: "NONE" }
+		| {
+				state: "ACTIVE";
+				provider: "APP_STORE" | "GOOGLE_PLAY" | "STRIPE";
+				tier: "starter" | "plus";
+				paidThroughAt: string | null;
+				renewsAt: string | null;
+				cancellation:
+					| { state: "NONE" }
+					| {
+							state: "SCHEDULED";
+							cancelAtUTC: string;
+							cancelAtPeriodEnd: boolean | null;
+							cancellationReason: string | null;
+					  }
+					| {
+							state: "CANCELED";
+							canceledAtUTC: string | null;
+							cancellationReason: string | null;
+					  };
+		  };
 	tier: ArtistTier;
 	billingStatus: BillingStatus;
 	creditBalance: MoneyDisplay | null;
