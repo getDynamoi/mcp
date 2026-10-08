@@ -225,7 +225,9 @@ export function createWorkspaceView(
 	}
 	async function chooseInitialArtist(preserveContext = true) {
 		const selected =
-			preserveContext && shared ? undefined : initialArtist(roster);
+			preserveContext && shared
+				? undefined
+				: initialArtist(roster, rosterCursor);
 		if (selected) {
 			await chooseArtist(selected, !preserveContext);
 		}

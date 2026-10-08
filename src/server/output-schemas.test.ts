@@ -1,8 +1,27 @@
 import { describe, expect, test } from "bun:test";
 import {
+	AnyOutputEnvelopeSchema,
 	GetCampaignReadinessOutputEnvelopeSchema,
 	LaunchCampaignOutputEnvelopeSchema,
 } from "./output-schemas";
+
+test("generic artist analytics envelope retains structured availability", () => {
+	for (const countsAvailability of [
+		"available",
+		"incomplete",
+		"sample",
+		"not_linked",
+	]) {
+		const result = AnyOutputEnvelopeSchema.parse({
+			data: { countsAvailability, totals: { impressions: 0 } },
+			status: "success",
+		});
+		expect(result.data).toHaveProperty(
+			"countsAvailability",
+			countsAvailability,
+		);
+	}
+});
 
 function launchData(budget: Record<string, unknown>) {
 	return {

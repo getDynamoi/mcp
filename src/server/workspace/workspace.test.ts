@@ -7,6 +7,7 @@ import { ChannelResultsSchema } from "../channel-results-schema";
 import { createDynamoiMcpServer, type Phase3Adapter } from "../create-server";
 import { channelFixture } from "./channel-fixture.test-support";
 import {
+	initialArtist,
 	parseDeepLink,
 	projectRecord,
 	publicLink,
@@ -64,6 +65,19 @@ function readerAdapter() {
 	});
 }
 describe("artist workspace contract", () => {
+	test("defers initial selection while another roster page can contain a duplicate", () => {
+		const firstPage = [
+			{ id: artistId, name: "Artist", organizationName: "One" },
+		];
+		expect(initialArtist(firstPage, "next-page")).toBeUndefined();
+		expect(initialArtist(firstPage)).toEqual(firstPage[0]);
+		expect(
+			initialArtist([
+				...firstPage,
+				{ id: "other", name: "Artist", organizationName: "Two" },
+			]),
+		).toBeUndefined();
+	});
 	test("entry accepts only an empty object and requires just the read scope", () => {
 		expect(WORKSPACE_TOOL_DEFINITION.schema.parse({})).toEqual({});
 		expect(

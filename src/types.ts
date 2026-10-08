@@ -526,6 +526,8 @@ export type GetCampaignAnalyticsSummaryData = {
 };
 
 export type GetArtistAnalyticsJsonData = {
+	/** Count-read completeness; sample identifies the existing demo reader. */
+	countsAvailability?: "available" | "incomplete" | "sample" | "not_linked";
 	artistId: string;
 	campaignCount: number;
 	dateRange: { start: string; end: string };
@@ -571,6 +573,8 @@ export type GetArtistAnalyticsJsonData = {
 };
 
 export type GetArtistAnalyticsSummaryData = {
+	/** Count-read completeness; sample identifies the existing demo reader. */
+	countsAvailability?: "available" | "incomplete" | "sample" | "not_linked";
 	summary: string;
 	campaignCount?: number;
 	dateRange?: { start: string; end: string };

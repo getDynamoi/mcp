@@ -409,10 +409,14 @@ export function selectedContext(record: WorkspaceRecord): string {
 	});
 }
 
-/** Duplicate artist names require deliberate selection even when organizations distinguish them. */
+/** Auto-selection requires a complete roster without duplicate names. */
 export function initialArtist(
 	roster: WorkspaceArtist[],
+	rosterCursor?: string,
 ): WorkspaceArtist | undefined {
+	if (rosterCursor) {
+		return undefined;
+	}
 	const names = new Set<string>();
 	for (const artist of roster) {
 		if (names.has(artist.name)) {
