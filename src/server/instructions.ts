@@ -129,7 +129,9 @@ Principles:
   An application starts manual review and never guarantees approval or distributes a release.
 - For free Smart Links, use dynamoi_create_smart_link_from_spotify,
   dynamoi_create_smart_links_from_spotify_artist, dynamoi_list_smart_links,
-  dynamoi_get_smart_link, and dynamoi_update_smart_link.
+  and dynamoi_get_smart_link. Use dynamoi_update_smart_link_description only
+  for one link's public description, or dynamoi_update_smart_link_artist_settings
+  only for artist-level theme and validated pixel settings.
 - When reading Smart Links, set includeAnalytics=true for visit/click analytics and
   includeArtistSettings=true for artist-level theme or pixel settings.
 - Smart Link pixel tools accept validated pixel IDs only. Do not ask for arbitrary

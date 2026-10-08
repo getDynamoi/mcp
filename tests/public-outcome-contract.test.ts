@@ -20,6 +20,7 @@ async function withFixture(
 		client: Client;
 		observations: Observation[];
 		adapterCalls: string[];
+		adapterInputs: unknown[];
 	}) => Promise<void>,
 	observerThrows = false,
 	options: {
@@ -35,13 +36,15 @@ async function withFixture(
 ): Promise<void> {
 	const observations: Observation[] = [];
 	const adapterCalls: string[] = [];
+	const adapterInputs: unknown[] = [];
 	const adapterMethod = options.adapterMethod ?? "listArtists";
 	// The deliberate test-only cast permits malformed provider output injection.
 	// There are no imports of the private adapter, database, or provider clients.
 	const adapter = new Proxy({} as Phase3Adapter, {
 		get(_target, key) {
-			return async () => {
+			return async (input: unknown) => {
 				adapterCalls.push(String(key));
+				adapterInputs.push(structuredClone(input));
 				if (String(key) !== adapterMethod) {
 					throw new Error(`Unexpected fixture adapter call: ${String(key)}`);
 				}
@@ -72,7 +75,7 @@ async function withFixture(
 	try {
 		await server.connect(serverTransport);
 		await client.connect(clientTransport);
-		await body({ adapterCalls, client, observations });
+		await body({ adapterCalls, adapterInputs, client, observations });
 	} finally {
 		await client.close();
 		await server.close();
@@ -693,3 +696,212 @@ for (const profile of ["full", "directory"] as const) {
 		});
 	});
 }
+
+test("directory splits Smart Link update operations and preserves the approved legacy call", async () => {
+	await withFixture(
+		"directory",
+		success,
+		async ({ client, adapterCalls, adapterInputs, observations }) => {
+			const { tools } = await client.listTools();
+			const byName = new Map(tools.map((tool) => [tool.name, tool]));
+			expect(byName.has("dynamoi_update_smart_link_description")).toBe(true);
+			expect(byName.has("dynamoi_update_smart_link_artist_settings")).toBe(
+				true,
+			);
+			expect(byName.has("dynamoi_update_smart_link")).toBe(false);
+			expect(
+				byName.get("dynamoi_update_smart_link_description")?.inputSchema
+					.properties,
+			).not.toHaveProperty("action");
+			expect(
+				byName.get("dynamoi_update_smart_link_artist_settings")?.inputSchema
+					.properties,
+			).not.toHaveProperty("action");
+			for (const name of [
+				"dynamoi_update_smart_link_description",
+				"dynamoi_update_smart_link_artist_settings",
+			]) {
+				expect(byName.get(name)).toMatchObject({
+					_meta: {
+						securitySchemes: [
+							{
+								scopes: ["dynamoi:read", "dynamoi:smart_links.write"],
+								type: "oauth2",
+							},
+						],
+					},
+					annotations: {
+						destructiveHint: true,
+						idempotentHint: true,
+						openWorldHint: true,
+						readOnlyHint: false,
+					},
+				});
+			}
+
+			const descriptionInput = {
+				clientRequestId: "11111111-1111-4111-8111-111111111111",
+				customDescription: "New public description",
+				expectedUpdatedAt: "2026-10-08T12:00:00.000Z",
+				playLinkId: "22222222-2222-4222-8222-222222222222",
+				userIntentSummary:
+					"The user asked to update this Smart Link description.",
+			};
+			const artistSettingsInput = {
+				artistId: "33333333-3333-4333-8333-333333333333",
+				clientRequestId: "44444444-4444-4444-8444-444444444444",
+				theme: "aurora",
+				userIntentSummary:
+					"The user asked to update this artist's Smart Link theme.",
+			};
+			await client.callTool({
+				arguments: descriptionInput,
+				name: "dynamoi_update_smart_link_description",
+			});
+			await client.callTool({
+				arguments: artistSettingsInput,
+				name: "dynamoi_update_smart_link_artist_settings",
+			});
+			const legacy = await client.callTool({
+				arguments: { action: "update_description", ...descriptionInput },
+				name: "dynamoi_update_smart_link",
+			});
+			expect(legacy.structuredContent).toEqual(success);
+			expect(legacy.isError).not.toBe(true);
+			expect(adapterCalls).toEqual([
+				"updateSmartLink",
+				"updateSmartLink",
+				"updateSmartLink",
+			]);
+			expect(adapterInputs).toEqual([
+				{ action: "update_description", ...descriptionInput },
+				{ action: "update_artist_settings", ...artistSettingsInput },
+				{ action: "update_description", ...descriptionInput },
+			]);
+			expect(observations.map((observation) => observation.toolName)).toEqual([
+				"dynamoi_update_smart_link_description",
+				"dynamoi_update_smart_link_artist_settings",
+				"dynamoi_update_smart_link",
+			]);
+
+			const invalidAlias = await client
+				.callTool({
+					arguments: {
+						...descriptionInput,
+						action: "update_artist_settings",
+						artistId: "33333333-3333-4333-8333-333333333333",
+					},
+					name: "dynamoi_update_smart_link_description",
+				})
+				.catch(() => ({ isError: true }));
+			expect(invalidAlias.isError).toBe(true);
+			const invalidArtistSettingsAlias = await client
+				.callTool({
+					arguments: {
+						...artistSettingsInput,
+						action: "update_description",
+						customDescription: "This belongs to the description operation",
+					},
+					name: "dynamoi_update_smart_link_artist_settings",
+				})
+				.catch(() => ({ isError: true }));
+			expect(invalidArtistSettingsAlias.isError).toBe(true);
+			const invalidLegacyAction = await client
+				.callTool({
+					arguments: { ...descriptionInput, action: "publish" },
+					name: "dynamoi_update_smart_link",
+				})
+				.catch(() => ({ isError: true }));
+			expect(invalidLegacyAction.isError).toBe(true);
+			expect(adapterCalls).toHaveLength(3);
+			expect(observations).toHaveLength(3);
+		},
+		false,
+		{ adapterMethod: "updateSmartLink" },
+	);
+});
+
+test("full profile keeps the approved multi-action Smart Link schema", async () => {
+	await withFixture(
+		"full",
+		success,
+		async ({ client, adapterCalls, adapterInputs }) => {
+			const { tools } = await client.listTools();
+			const names = new Set(tools.map((tool) => tool.name));
+			expect(names.has("dynamoi_update_smart_link")).toBe(true);
+			expect(names.has("dynamoi_update_smart_link_description")).toBe(false);
+			expect(names.has("dynamoi_update_smart_link_artist_settings")).toBe(
+				false,
+			);
+			const legacy = tools.find(
+				(tool) => tool.name === "dynamoi_update_smart_link",
+			);
+			expect(legacy?.inputSchema.properties?.action).toMatchObject({
+				enum: ["update_description", "update_artist_settings"],
+			});
+			const result = await client.callTool({
+				arguments: {
+					action: "update_artist_settings",
+					artistId: "33333333-3333-4333-8333-333333333333",
+					clientRequestId: "44444444-4444-4444-8444-444444444444",
+					theme: "aurora",
+					userIntentSummary:
+						"The user asked to update this artist's Smart Link theme.",
+				},
+				name: "dynamoi_update_smart_link",
+			});
+			expect(result.structuredContent).toEqual(success);
+			expect(result.isError).not.toBe(true);
+			expect(adapterCalls).toEqual(["updateSmartLink"]);
+			expect(adapterInputs).toEqual([
+				{
+					action: "update_artist_settings",
+					artistId: "33333333-3333-4333-8333-333333333333",
+					clientRequestId: "44444444-4444-4444-8444-444444444444",
+					theme: "aurora",
+					userIntentSummary:
+						"The user asked to update this artist's Smart Link theme.",
+				},
+			]);
+		},
+		false,
+		{ adapterMethod: "updateSmartLink" },
+	);
+});
+
+test("hidden directory compatibility calls still pass through tool authorization", async () => {
+	const toolName = "dynamoi_update_smart_link";
+	const denial = {
+		content: [{ text: "Additional scope required.", type: "text" as const }],
+		isError: true,
+	};
+	const authorized: string[] = [];
+	await withFixture(
+		"directory",
+		success,
+		async ({ client, adapterCalls, observations }) => {
+			const result = await client.callTool({
+				arguments: {
+					action: "update_description",
+					clientRequestId: "11111111-1111-4111-8111-111111111111",
+					customDescription: "Approved legacy description update",
+					playLinkId: "22222222-2222-4222-8222-222222222222",
+					userIntentSummary: "The user confirmed this description change.",
+				},
+				name: toolName,
+			});
+			expect(result.isError).toBe(true);
+			expect(result.content).toEqual(denial.content);
+			expect(authorized).toEqual([toolName]);
+			expect(adapterCalls).toHaveLength(0);
+			expect(observations).toHaveLength(0);
+		},
+		false,
+		{
+			authorizeToolCall: (calledToolName) => {
+				authorized.push(calledToolName);
+				return calledToolName === toolName ? denial : undefined;
+			},
+		},
+	);
+});

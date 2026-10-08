@@ -8,15 +8,18 @@ catalog access are authorization capabilities, not evidence of workflow parity.
 The canonical catalog owner is `getDynamoiToolDefinitions` in
 `src/server/create-server.ts`; do not maintain a second availability registry here.
 
-The package registers 35 tools. The directory profile serves 23 of them: the
-review-safe catalog for recognized agent-directory clients. On `/mcp`, the host
-picks the profile from the verified OAuth client ID; `/mcp/directory` always
-serves the directory profile. Every other authenticated client on `/mcp`
-gets the full profile, whatever its vendor or client-ID format. Each call still
-requires its own scopes and resource RBAC; the Shop tools also require
-`dynamoi:mcp.full`. Unauthenticated requests get the directory profile, where
-only discovery methods, the public `dynamoi_about` tool and the
-`dynamoi://about` resource work. Everything else is refused.
+The full profile serves 35 tools. The directory profile advertises 24 tools:
+22 Dynamoi operations and the OpenAI Connector `search` and `fetch` tools.
+It uses separate directory-only tools for Smart Link description and artist
+settings updates. The prior combined schema remains callable for compatibility
+requests from already-approved clients. On `/mcp`, the host picks the profile
+from the verified OAuth client ID; `/mcp/directory` always serves the directory
+profile. Every other authenticated client on `/mcp` gets the full profile,
+whatever its vendor or client-ID format. Each call still requires its own
+scopes and resource RBAC; the Shop tools also require `dynamoi:mcp.full`.
+Unauthenticated requests get the directory profile, where only discovery
+methods, the public `dynamoi_about` tool and the `dynamoi://about` resource
+work. Everything else is refused.
 
 ## Implemented boundaries and gaps
 

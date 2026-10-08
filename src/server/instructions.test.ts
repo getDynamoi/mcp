@@ -100,6 +100,18 @@ describe("ad network vocabulary", () => {
 });
 
 describe("DYNAMOI_CHATGPT_APP_INSTRUCTIONS", () => {
+	test("names the single-purpose Smart Link update tools", () => {
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"dynamoi_update_smart_link_description",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
+			"dynamoi_update_smart_link_artist_settings",
+		);
+		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).not.toContain(
+			"dynamoi_update_smart_link with action=",
+		);
+	});
+
 	test("uses targeted reads when the request already identifies a resource", () => {
 		expect(DYNAMOI_CHATGPT_APP_INSTRUCTIONS).toContain(
 			"If the request identifies the artist, campaign,",

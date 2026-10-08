@@ -7,9 +7,9 @@ import {
 	TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH,
 	TOTAL_BUDGET_FUNDING_CONSENT_VERSION,
 } from "../consent";
+import type { GetCampaignReadinessData } from "../readiness-types";
 import { handleMcpHttpRequest } from "../transport/http";
 import { DYNAMOI_MCP_VERSION } from "../version";
-import type { GetCampaignReadinessData } from "../readiness-types";
 import {
 	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
 	DYNAMOI_ABOUT_MARKDOWN,
@@ -643,7 +643,7 @@ describe("createDynamoiMcpServer", () => {
 			const toolNames = result.tools.map((tool) => tool.name);
 
 			// Directory-safe tools including the read-only workspace.
-			expect(toolNames).toHaveLength(23);
+			expect(toolNames).toHaveLength(24);
 			expect(toolNames).toContain("dynamoi_get_youtube_channel_data");
 			expect(toolNames).toContain("dynamoi_get_growth_audit");
 			expect(toolNames).toContain("dynamoi_get_playlist_analytics");

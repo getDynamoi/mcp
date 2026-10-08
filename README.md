@@ -158,7 +158,7 @@ signed in, not from anything the client claims about itself.
 
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
-| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 23 review-safe tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
+| **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 24 review-safe advertised tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
 | **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 35 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
@@ -193,7 +193,9 @@ start an action with an outside provider.
 | `dynamoi_create_smart_links_from_spotify_artist` | Import an artist's catalog as free Smart Links and return the artist hub | Changes data | Both |
 | `dynamoi_list_smart_links` | An artist's Smart Links and public URLs | Reads | Both |
 | `dynamoi_get_smart_link` | One Smart Link, with optional analytics and artist settings | Reads | Both |
-| `dynamoi_update_smart_link` | Update a link description or the artist's theme and pixel settings | Changes data | Both |
+| `dynamoi_update_smart_link_description` | Update one Smart Link's public description | Changes data | Directory |
+| `dynamoi_update_smart_link_artist_settings` | Update an artist's Smart Link theme or validated pixel settings | Changes data | Directory |
+| `dynamoi_update_smart_link` | Prior multi-action schema for description or artist settings | Changes data | Full |
 | `dynamoi_get_billing` | Billing status, credit balance, and promo limits | Reads | Full |
 | `dynamoi_get_resume_funding` | Campaign resume-funding breakdown, refusal, and consent requirements | Reads | Full |
 | `dynamoi_list_available_countries` | Countries a Smart Campaign or YouTube campaign can target | Reads | Full |
@@ -209,6 +211,12 @@ start an action with an outside provider.
 
 Full tool descriptions and input schemas come from `tools/list`, or from
 `getDynamoiToolDefinitions()` in this package.
+
+Previously approved directory clients may continue calling the exact
+`dynamoi_update_smart_link` name with its approved schema. New directory tool
+lists omit that compatibility handler and advertise the two single-purpose
+operations above. Compatibility calls keep the same Smart Link write scope,
+confirmation, account, and domain checks.
 
 ## Money and safety
 

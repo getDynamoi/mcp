@@ -252,6 +252,16 @@ export const DynamoiUpdateSmartLinkArtistSettingsInputSchema = z
 		}
 	});
 
+export const DynamoiUpdateSmartLinkDescriptionInputSchema = z
+	.object({
+		clientRequestId: ClientRequestIdSchema,
+		customDescription: z.string().max(500).nullable(),
+		expectedUpdatedAt: z.string().datetime().optional(),
+		playLinkId: z.string().uuid(),
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict();
+
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
@@ -310,5 +320,33 @@ export const PHASE_4_TOOL_DEFINITIONS = [
 		readOnlyHint: false,
 		schema: DynamoiUpdateSmartLinkInputSchema,
 		title: "Update Smart Link",
+	},
+] as const;
+
+/** Directory-facing operation-specific replacements for the legacy dispatcher. */
+export const SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS = [
+	{
+		description:
+			"Use this when the user wants to update one Smart Link's public description. This tool only changes that link's description; it cannot change artist-level theme or pixel settings and does not publish or unpublish links. Confirm the requested description before calling. A description change may queue background rendering.",
+		destructiveHint: true,
+		idempotentHint: true,
+		name: "dynamoi_update_smart_link_description",
+		openWorldHint: true,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiUpdateSmartLinkDescriptionInputSchema,
+		title: "Update Smart Link Description",
+	},
+	{
+		description:
+			"Use this when the user wants to change artist-level Smart Link theme or validated pixel settings. This tool only changes artist settings; it cannot change a link description or publish or unpublish links. Confirm the requested settings before calling. Theme-only changes switch instantly; pixel changes may queue background rendering.",
+		destructiveHint: true,
+		idempotentHint: true,
+		name: "dynamoi_update_smart_link_artist_settings",
+		openWorldHint: true,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiUpdateSmartLinkArtistSettingsInputSchema,
+		title: "Update Smart Link Artist Settings",
 	},
 ] as const;

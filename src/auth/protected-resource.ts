@@ -37,8 +37,8 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	],
 	dynamoi_get_growth_audit: ["dynamoi:read"],
 	dynamoi_get_platform_status: ["dynamoi:read", "dynamoi:platform.read"],
-	dynamoi_get_resume_funding: ["dynamoi:read", "dynamoi:billing.read"],
 	dynamoi_get_playlist_analytics: ["dynamoi:read"],
+	dynamoi_get_resume_funding: ["dynamoi:read", "dynamoi:billing.read"],
 	dynamoi_get_smart_link: ["dynamoi:read"],
 	dynamoi_get_youtube_channel_data: ["dynamoi:read"],
 	dynamoi_launch_campaign: ["dynamoi:read", "dynamoi:campaign.launch"],
@@ -60,6 +60,14 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	],
 	dynamoi_update_campaign: ["dynamoi:read", "dynamoi:campaign.write"],
 	dynamoi_update_smart_link: ["dynamoi:read", "dynamoi:smart_links.write"],
+	dynamoi_update_smart_link_artist_settings: [
+		"dynamoi:read",
+		"dynamoi:smart_links.write",
+	],
+	dynamoi_update_smart_link_description: [
+		"dynamoi:read",
+		"dynamoi:smart_links.write",
+	],
 	fetch: ["dynamoi:read"],
 	search: ["dynamoi:read"],
 } as const satisfies Record<string, readonly string[]>;

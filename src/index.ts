@@ -24,6 +24,7 @@ export type { Phase3Adapter } from "./server/create-server";
 export {
 	createDynamoiMcpServer,
 	type DynamoiMcpToolProfile,
+	getDynamoiToolCompatibilityDefinitions,
 	getDynamoiToolDefinitions,
 } from "./server/create-server";
 export {
@@ -68,9 +69,11 @@ export {
 	DynamoiGetSmartLinkInputSchema,
 	DynamoiListSmartLinksInputSchema,
 	DynamoiUpdateSmartLinkArtistSettingsInputSchema,
+	DynamoiUpdateSmartLinkDescriptionInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
 	PHASE_4_TOOL_DEFINITIONS,
 	parseDynamoiGetSmartLinkInput,
+	SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS,
 } from "./server/smart-link-tools";
 export {
 	DateRangeSchema,
@@ -86,8 +89,8 @@ export {
 	DynamoiGetGrowthAuditInputSchema,
 	DynamoiGetOnboardingStatusInputSchema,
 	DynamoiGetPlatformStatusInputSchema,
-	DynamoiGetResumeFundingInputSchema,
 	DynamoiGetPlaylistAnalyticsInputSchema,
+	DynamoiGetResumeFundingInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListArtistsInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
@@ -152,8 +155,8 @@ export type {
 	GetCampaignData,
 	GetCampaignDeploymentStatusData,
 	GetCampaignDeploymentStatusSummaryData,
-	GetCampaignReadinessData,
 	GetCampaignReadinessBudgetConstraints,
+	GetCampaignReadinessData,
 	GetCampaignReadinessSummaryData,
 	GetCampaignSummaryData,
 	GetCurrentUserArtistSummary,

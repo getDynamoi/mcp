@@ -2,8 +2,8 @@ import {
 	type CacheHint,
 	type CallToolResult,
 	McpServer,
-	type StandardSchemaWithJSON,
 	type ServerOptions,
+	type StandardSchemaWithJSON,
 	type Tool,
 } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
@@ -84,7 +84,10 @@ import {
 	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
-import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
+import {
+	PHASE_4_TOOL_DEFINITIONS,
+	SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS,
+} from "./smart-link-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -229,6 +232,20 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 		renderQueuedCount: z.number().optional(),
 		renderWarning: z.string().nullable().optional(),
 	}).passthrough(),
+	dynamoi_update_smart_link_artist_settings: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		artistName: z.string().optional(),
+		defaultTheme: z.string().optional(),
+		renderQueuedCount: z.number().optional(),
+		renderWarning: z.string().nullable().optional(),
+	}).passthrough(),
+	dynamoi_update_smart_link_description: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		artistName: z.string().optional(),
+		defaultTheme: z.string().optional(),
+		renderQueuedCount: z.number().optional(),
+		renderWarning: z.string().nullable().optional(),
+	}).passthrough(),
 	fetch: DescriptiveEntitySchema,
 	search: z
 		.object({ results: z.array(DescriptiveEntitySchema).optional() })
@@ -307,6 +324,7 @@ const DYNAMOI_TOOL_DEFINITIONS = [
 	...SHOP_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
+	...SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS,
 ] as const satisfies readonly DynamoiToolRegistrationDescriptor[];
 
 // Keep the public name union separate from the schema-rich source tuple.
@@ -314,10 +332,7 @@ const DYNAMOI_TOOL_NAMES = DYNAMOI_TOOL_DEFINITIONS.map(
 	(definition) => definition.name,
 );
 type DynamoiToolName = (typeof DYNAMOI_TOOL_NAMES)[number];
-type DynamoiToolDefinition = Omit<
-	DynamoiToolRegistrationDescriptor,
-	"name"
-> & {
+type DynamoiToolDefinition = Omit<DynamoiToolRegistrationDescriptor, "name"> & {
 	name: DynamoiToolName;
 };
 
@@ -340,18 +355,46 @@ const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_start_meta_connection",
 	"dynamoi_start_youtube_channel_link",
 	"dynamoi_update_campaign",
+	"dynamoi_update_smart_link",
+]);
+
+const DIRECTORY_ONLY_TOOL_NAMES = new Set<string>([
+	"dynamoi_update_smart_link_artist_settings",
+	"dynamoi_update_smart_link_description",
+]);
+
+const DIRECTORY_COMPATIBILITY_TOOL_NAMES = new Set<string>([
+	"dynamoi_update_smart_link",
 ]);
 
 export function getDynamoiToolDefinitions(options?: {
 	toolProfile?: DynamoiMcpToolProfile;
 }): DynamoiToolDefinition[] {
 	const definitions: DynamoiToolDefinition[] = [...DYNAMOI_TOOL_DEFINITIONS];
-	// Fail closed: only an explicit full profile gets the whole catalog.
+	// The split aliases exist only in the directory catalog; full-profile
+	// clients retain the original approved multi-action schema.
 	if (options?.toolProfile === "full") {
-		return definitions;
+		return definitions.filter(
+			(definition) => !DIRECTORY_ONLY_TOOL_NAMES.has(definition.name),
+		);
 	}
 	return definitions.filter(
 		(definition) => !DIRECTORY_EXCLUDED_TOOL_NAMES.has(definition.name),
+	);
+}
+
+/**
+ * Directory callers may still invoke only this exact prior approved tool name
+ * while clients transition to the advertised single-purpose operations.
+ */
+export function getDynamoiToolCompatibilityDefinitions(options?: {
+	toolProfile?: DynamoiMcpToolProfile;
+}): DynamoiToolDefinition[] {
+	if (options?.toolProfile === "full") {
+		return [];
+	}
+	return DYNAMOI_TOOL_DEFINITIONS.filter((definition) =>
+		DIRECTORY_COMPATIBILITY_TOOL_NAMES.has(definition.name),
 	);
 }
 
@@ -509,6 +552,8 @@ const REVIEWER_WRITE_TOOL_NAMES = new Set([
 	"dynamoi_start_youtube_channel_link",
 	"dynamoi_update_campaign",
 	"dynamoi_update_smart_link",
+	"dynamoi_update_smart_link_artist_settings",
+	"dynamoi_update_smart_link_description",
 ]);
 
 const SHOP_RATE_LIMIT_RETRY_AFTER_SECONDS = {
@@ -625,7 +670,9 @@ function mapKnownErrorRecovery(
 	}
 
 	if (
-		toolName === "dynamoi_update_smart_link" &&
+		(toolName === "dynamoi_update_smart_link" ||
+			toolName === "dynamoi_update_smart_link_description" ||
+			toolName === "dynamoi_update_smart_link_artist_settings") &&
 		message ===
 			"Smart Link changed since it was last read. Read it again before updating."
 	) {
@@ -720,10 +767,10 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 	dynamoi_get_growth_audit: (adapter, input) => adapter.getGrowthAudit(input),
 	dynamoi_get_platform_status: (adapter, input) =>
 		adapter.getPlatformStatus(input),
-	dynamoi_get_resume_funding: (adapter, input) =>
-		adapter.getResumeFunding(input),
 	dynamoi_get_playlist_analytics: (adapter, input) =>
 		adapter.getPlaylistAnalytics(input),
+	dynamoi_get_resume_funding: (adapter, input) =>
+		adapter.getResumeFunding(input),
 	dynamoi_get_smart_link: (adapter, input) => adapter.getSmartLink(input),
 	dynamoi_get_youtube_channel_data: (adapter, input) =>
 		adapter.getYouTubeChannelData(input),
@@ -749,6 +796,16 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 		adapter.startYoutubeChannelLink(input),
 	dynamoi_update_campaign: (adapter, input) => adapter.updateCampaign(input),
 	dynamoi_update_smart_link: (adapter, input) => adapter.updateSmartLink(input),
+	dynamoi_update_smart_link_artist_settings: (adapter, input) =>
+		adapter.updateSmartLink({
+			...(input as Record<string, unknown>),
+			action: "update_artist_settings",
+		}),
+	dynamoi_update_smart_link_description: (adapter, input) =>
+		adapter.updateSmartLink({
+			...(input as Record<string, unknown>),
+			action: "update_description",
+		}),
 	fetch: (adapter, input) => adapter.openAiFetch(input),
 	search: (adapter, input) => adapter.openAiSearch(input),
 } satisfies Record<DynamoiToolName, DynamoiToolDispatcher>;
@@ -1018,8 +1075,16 @@ export function createDynamoiMcpServer(options: {
 		},
 	);
 
+	const advertisedDefinitions = getDynamoiToolDefinitions({ toolProfile });
+	const advertisedNames = new Set(
+		advertisedDefinitions.map((definition) => definition.name),
+	);
+	const definitionsToRegister = [
+		...advertisedDefinitions,
+		...getDynamoiToolCompatibilityDefinitions({ toolProfile }),
+	];
 	const advertisedTools: AdvertisedTool[] = [];
-	for (const def of getDynamoiToolDefinitions({ toolProfile })) {
+	for (const def of definitionsToRegister) {
 		const title = def.title;
 		const dispatcher = DYNAMOI_TOOL_DISPATCHERS[def.name];
 		const idempotentHint =
@@ -1054,22 +1119,24 @@ export function createDynamoiMcpServer(options: {
 			toolName: def.name,
 			toolProfile,
 		});
-		advertisedTools.push({
-			_meta: meta,
-			annotations,
-			description: def.description,
-			inputSchema: toAdvertisedJsonSchema(
-				def.schema,
-				"input",
-			) as Tool["inputSchema"],
-			name: def.name,
-			outputSchema: toAdvertisedJsonSchema(
-				outputSchema,
-				"output",
-			) as Tool["outputSchema"],
-			securitySchemes: meta.securitySchemes,
-			title,
-		});
+		if (advertisedNames.has(def.name)) {
+			advertisedTools.push({
+				_meta: meta,
+				annotations,
+				description: def.description,
+				inputSchema: toAdvertisedJsonSchema(
+					def.schema,
+					"input",
+				) as Tool["inputSchema"],
+				name: def.name,
+				outputSchema: toAdvertisedJsonSchema(
+					outputSchema,
+					"output",
+				) as Tool["outputSchema"],
+				securitySchemes: meta.securitySchemes,
+				title,
+			});
+		}
 		server.registerTool(
 			def.name,
 			{

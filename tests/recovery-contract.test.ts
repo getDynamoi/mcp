@@ -403,4 +403,45 @@ describe("typed recovery envelope contract", () => {
 			status: "error",
 		});
 	});
+
+	test("preserves Smart Link conflict and reviewer recovery for split operations", () => {
+		for (const toolName of [
+			"dynamoi_update_smart_link_description",
+			"dynamoi_update_smart_link_artist_settings",
+		]) {
+			const conflict = asValidatedTextResult({
+				envelope: {
+					kind: "business",
+					message:
+						"Smart Link changed since it was last read. Read it again before updating.",
+					status: "error",
+				},
+				outputSchema: AnyOutputEnvelopeSchema,
+				toolName,
+			});
+			expect(conflict.structuredContent).toMatchObject({
+				code: "STATE_CONFLICT",
+				field: "expectedUpdatedAt",
+				kind: "business",
+				retryable: false,
+				status: "error",
+			});
+
+			const reviewerDenial = asValidatedTextResult({
+				envelope: {
+					kind: "business",
+					message: "Reviewer accounts are read-only in MCP.",
+					status: "error",
+				},
+				outputSchema: AnyOutputEnvelopeSchema,
+				toolName,
+			});
+			expect(reviewerDenial.structuredContent).toMatchObject({
+				code: "ACCOUNT_READ_ONLY",
+				kind: "business",
+				retryable: false,
+				status: "error",
+			});
+		}
+	});
 });
