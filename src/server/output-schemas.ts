@@ -1,5 +1,6 @@
 import * as z from "zod/v4";
 import { ChannelResultsSchema } from "./channel-results-schema";
+import { CampaignFundingPreviewOutputSchema } from "./funding-preview-schema.generated";
 import { YouTubeChannelDataSchema } from "./youtube-channel-data-schema";
 
 const ResultErrorCodeSchema = z.enum([
@@ -308,6 +309,7 @@ const GetCampaignReadinessDataOutputSchema = z
 		artistName: z.string(),
 		blockingIssues: z.array(z.string()),
 		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+		fundingPreview: CampaignFundingPreviewOutputSchema.nullable().optional(),
 		isReady: z.boolean(),
 		missingInputs: z.array(z.string()),
 		normalizedTargeting: NormalizedTargetingOutputSchema,
