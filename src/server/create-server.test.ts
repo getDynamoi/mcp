@@ -2,8 +2,14 @@ import { describe, expect, mock, test } from "bun:test";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import * as z from "zod/v4";
 import { DYNAMOI_BETTER_AUTH_MCP_SCOPES } from "../auth/protected-resource";
+import {
+	TOTAL_BUDGET_FUNDING_CONSENT_COPY,
+	TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH,
+	TOTAL_BUDGET_FUNDING_CONSENT_VERSION,
+} from "../consent";
 import { handleMcpHttpRequest } from "../transport/http";
 import { DYNAMOI_MCP_VERSION } from "../version";
+import type { GetCampaignReadinessData } from "../readiness-types";
 import {
 	DYNAMOI_ABOUT_DIRECTORY_MARKDOWN,
 	DYNAMOI_ABOUT_MARKDOWN,
@@ -164,6 +170,97 @@ describe("createDynamoiMcpServer", () => {
 			expect(result.tools.map((tool) => tool.name).sort()).toEqual(
 				[...expectedToolNames].sort(),
 			);
+		} finally {
+			await client.close();
+		}
+	});
+
+	test("validates registered campaign readiness output with proposal fields", async () => {
+		const readiness: GetCampaignReadinessData = {
+			artistId: "11111111-1111-4111-8111-111111111111",
+			artistName: "A",
+			blockingCodes: ["funding_unavailable"],
+			blockingIssues: ["Campaign funding is unavailable in this currency."],
+			budgetConstraints: {
+				budgetType: "DAILY",
+				currency: "usd",
+				currencyExponent: 2,
+				effectiveDailyBudgetMinor: 5000,
+				maximumBudgetMinor: 100_000,
+				maximumDailyBudgetMinor: 100_000,
+				maximumTotalBudgetMinor: 999_999_999,
+				minimumBudgetMinor: 1000,
+				minimumCampaignDays: 5,
+				minimumDailyBudgetMinor: 1000,
+				minimumEndDate: "2026-10-12",
+				minimumTotalBudgetMinor: 10_000,
+			},
+			campaignType: "SMART_CAMPAIGN",
+			isReady: false,
+			missingInputs: [],
+			normalizedTargeting: { mode: "GLOBAL" },
+			recommendedNextAction: "Resolve blocking issues before launching.",
+			warnings: [],
+		};
+		const readinessWithFundingPreview = {
+			...readiness,
+			fundingPreview: {
+				asOf: "2026-10-07T18:00:00.000Z",
+				availableBalanceMinor: null,
+				consentCopy: TOTAL_BUDGET_FUNDING_CONSENT_COPY,
+				consentCopyHash: TOTAL_BUDGET_FUNDING_CONSENT_COPY_HASH,
+				consentVersion: TOTAL_BUDGET_FUNDING_CONSENT_VERSION,
+				currency: "USD",
+				currencyExponent: 2,
+				firstWindowCardMinor: null,
+				firstWindowCardUpperBoundMinor: 0,
+				firstWindowCreditCoverageMinor: null,
+				firstWindowMinor: 0,
+				fullFlightCardMinor: null,
+				fullFlightCardUpperBoundMinor: null,
+				fullFlightCreditCoverageMinor: null,
+				fullFlightMinor: null,
+				fundingDays: 5,
+				initialWindowCount: 1,
+				nextExpiryAt: null,
+				status: "unavailable",
+				windows: [],
+			},
+		};
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				getCampaignReadiness: async () => ({
+					data: readinessWithFundingPreview,
+					status: "success",
+				}),
+			}),
+			toolProfile: "full",
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+		try {
+			const result = await client.callTool({
+				arguments: {
+					artistId: readiness.artistId,
+					campaignType: "SMART_CAMPAIGN",
+					format: "json",
+				},
+				name: "dynamoi_get_campaign_readiness",
+			});
+			expect(result.isError).toBeUndefined();
+			expect(result.structuredContent).toMatchObject({
+				data: {
+					blockingCodes: ["funding_unavailable"],
+					budgetConstraints: readiness.budgetConstraints,
+					fundingPreview: readinessWithFundingPreview.fundingPreview,
+				},
+				status: "success",
+			});
 		} finally {
 			await client.close();
 		}

@@ -1,4 +1,5 @@
 import * as z from "zod/v4";
+import type { GetCampaignReadinessData } from "../readiness-types";
 import { ChannelResultsSchema } from "./channel-results-schema";
 import { CampaignFundingPreviewOutputSchema } from "./funding-preview-schema.generated";
 import { YouTubeChannelDataSchema } from "./youtube-channel-data-schema";
@@ -303,30 +304,64 @@ const NormalizedTargetingOutputSchema = z.union([
 		.strict(),
 ]);
 
-const GetCampaignReadinessDataOutputSchema = z
-	.object({
-		artistId: z.string(),
-		artistName: z.string(),
-		blockingIssues: z.array(z.string()),
-		campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
-		fundingPreview: CampaignFundingPreviewOutputSchema.nullable().optional(),
-		isReady: z.boolean(),
-		missingInputs: z.array(z.string()),
-		normalizedTargeting: NormalizedTargetingOutputSchema,
-		recommendedNextAction: z.string(),
-		warnings: z.array(z.string()),
-		youtubeEntries: z
-			.array(
-				z
-					.object({
-						playlistId: z.string().nullable().optional(),
-						videoId: z.string(),
-					})
-					.strict(),
-			)
-			.optional(),
-	})
-	.strict();
+type CampaignReadinessOutputWithFundingPreview = GetCampaignReadinessData & {
+	fundingPreview?: z.infer<typeof CampaignFundingPreviewOutputSchema> | null;
+};
+
+const GetCampaignReadinessDataOutputSchema: z.ZodType<CampaignReadinessOutputWithFundingPreview> =
+	z
+		.object({
+			artistId: z.string(),
+			artistName: z.string(),
+			blockingCodes: z.array(
+				z.enum([
+					"budget_policy",
+					"currency_unavailable",
+					"daily_spending_limit",
+					"funding_unavailable",
+					"invalid_end_date",
+					"onboarding",
+					"promo_constraints",
+					"unsupported_content_type",
+				]),
+			),
+			blockingIssues: z.array(z.string()),
+			budgetConstraints: z
+				.object({
+					budgetType: z.enum(["DAILY", "TOTAL"]).nullable(),
+					currency: z.string().length(3),
+					currencyExponent: z.number().int().min(0).max(3),
+					effectiveDailyBudgetMinor: z.number().int().nonnegative().nullable(),
+					maximumBudgetMinor: z.number().int().nonnegative().nullable(),
+					maximumDailyBudgetMinor: z.number().int().nonnegative(),
+					maximumTotalBudgetMinor: z.number().int().nonnegative(),
+					minimumBudgetMinor: z.number().int().nonnegative().nullable(),
+					minimumCampaignDays: z.number().int().positive(),
+					minimumDailyBudgetMinor: z.number().int().nonnegative(),
+					minimumEndDate: z.iso.date(),
+					minimumTotalBudgetMinor: z.number().int().nonnegative(),
+				})
+				.strict()
+				.nullable(),
+			campaignType: z.enum(["SMART_CAMPAIGN", "YOUTUBE"]),
+			fundingPreview: CampaignFundingPreviewOutputSchema.nullable().optional(),
+			isReady: z.boolean(),
+			missingInputs: z.array(z.string()),
+			normalizedTargeting: NormalizedTargetingOutputSchema,
+			recommendedNextAction: z.string(),
+			warnings: z.array(z.string()),
+			youtubeEntries: z
+				.array(
+					z
+						.object({
+							playlistId: z.string().nullable().optional(),
+							videoId: z.string(),
+						})
+						.strict(),
+				)
+				.optional(),
+		})
+		.strict();
 
 const CreateSmartLinkFromSpotifyDataOutputSchema =
 	SmartLinkDetailsOutputSchema.extend({

@@ -52,14 +52,44 @@ export type GetCampaignReadinessData = {
 	artistId: string;
 	artistName: string;
 	campaignType: CampaignType;
+	blockingCodes: CampaignProposalBlockingCode[];
 	isReady: boolean;
 	blockingIssues: string[];
+	budgetConstraints: GetCampaignReadinessBudgetConstraints | null;
 	warnings: string[];
 	missingInputs: string[];
+	youtubeEntries?:
+		| Array<{ playlistId?: string | null | undefined; videoId: string }>
+		| undefined;
 	normalizedTargeting:
 		| { mode: "GLOBAL" }
 		| { mode: "COUNTRIES"; countries: Array<{ code: string; name: string }> };
 	recommendedNextAction: string;
+};
+
+export type CampaignProposalBlockingCode =
+	| "budget_policy"
+	| "currency_unavailable"
+	| "daily_spending_limit"
+	| "funding_unavailable"
+	| "invalid_end_date"
+	| "onboarding"
+	| "promo_constraints"
+	| "unsupported_content_type";
+
+export type GetCampaignReadinessBudgetConstraints = {
+	budgetType: "DAILY" | "TOTAL" | null;
+	currency: string;
+	currencyExponent: number;
+	effectiveDailyBudgetMinor: number | null;
+	maximumBudgetMinor: number | null;
+	maximumDailyBudgetMinor: number;
+	maximumTotalBudgetMinor: number;
+	minimumBudgetMinor: number | null;
+	minimumCampaignDays: number;
+	minimumDailyBudgetMinor: number;
+	minimumEndDate: string;
+	minimumTotalBudgetMinor: number;
 };
 
 export type GetCampaignReadinessSummaryData = {

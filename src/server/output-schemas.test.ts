@@ -124,7 +124,9 @@ describe("YouTube entries in output envelopes", () => {
 			data: {
 				artistId: "a",
 				artistName: "A",
+				blockingCodes: [],
 				blockingIssues: [],
+				budgetConstraints: null,
 				campaignType: "YOUTUBE",
 				isReady: false,
 				missingInputs: [],
