@@ -42,6 +42,7 @@ import {
 	DynamoiGetPlaylistAnalyticsInputSchema,
 	DynamoiLaunchCampaignInputSchema,
 	DynamoiListAvailableCountriesInputSchema,
+	DynamoiListCampaignsInputSchema,
 	DynamoiManageYoutubeDraftInputSchema,
 	DynamoiResumeCampaignInputSchema,
 	DynamoiUpdateBudgetInputSchema,
@@ -64,6 +65,15 @@ function getToolDefinition(
 }
 
 describe("mcp/tools phase 1 definitions", () => {
+	test("campaign status filters accept the projected ENDED state", () => {
+		expect(
+			DynamoiListCampaignsInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				status: "ENDED",
+			}).status,
+		).toBe("ENDED");
+	});
+
 	test("update campaign copy describes both end-date paths and funding consent", () => {
 		const description = getToolDefinition(
 			PHASE_2_TOOL_DEFINITIONS,

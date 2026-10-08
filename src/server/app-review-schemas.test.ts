@@ -19,19 +19,18 @@ describe("mcp app review schemas", () => {
 				status: "active",
 			}),
 		).toThrow();
-		expect(() =>
-			DynamoiListCampaignsInputSchema.parse({
-				artistId: "00000000-0000-0000-0000-000000000000",
-				status: "ENDED",
-			}),
-		).toThrow();
+		const ended = DynamoiListCampaignsInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			status: "ENDED",
+		});
+		expect(ended.status).toBe("ENDED");
 
 		const schema = z.toJSONSchema(DynamoiListCampaignsInputSchema) as {
 			properties?: Record<string, { enum?: string[] }>;
 		};
 		expect(schema.properties?.status?.enum).toContain("ACTIVE");
 		expect(schema.properties?.status?.enum).toContain("READY_FOR_REVIEW");
-		expect(schema.properties?.status?.enum).not.toContain("ENDED");
+		expect(schema.properties?.status?.enum).toContain("ENDED");
 	});
 
 	test("get smart link include flags render as booleans in JSON schema", () => {

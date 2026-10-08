@@ -51,9 +51,7 @@ const ExpectedCampaignStatusEnum = z.enum([
 	"SUBSCRIPTION_PAUSED",
 ]);
 const ExpectedCampaignStatusSchema = ExpectedCampaignStatusEnum.optional();
-const CampaignStatusFilterSchema = ExpectedCampaignStatusEnum.exclude([
-	"ENDED",
-]).optional();
+const CampaignStatusFilterSchema = ExpectedCampaignStatusEnum.optional();
 
 export const DynamoiListArtistsInputSchema = z
 	.object({
