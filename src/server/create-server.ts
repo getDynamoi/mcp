@@ -61,6 +61,11 @@ import {
 	DYNAMOI_ABOUT_TOOL_DEFINITION,
 	getDynamoiAbout,
 } from "./about";
+import {
+	DescriptiveEntitySchema,
+	DynamoiAccountOverviewDescriptiveDataSchema,
+	DynamoiArtistListDescriptiveDataSchema,
+} from "./account-schema.generated";
 import { DISTRIBUTION_TOOL_DEFINITIONS } from "./distribution-tools";
 import {
 	DYNAMOI_CHATGPT_APP_INSTRUCTIONS,
@@ -128,32 +133,8 @@ type DynamoiToolAnnotations = {
 	readOnlyHint: boolean;
 };
 
-const DescriptiveEntitySchema = z
-	.object({
-		id: z.string().optional(),
-		name: z.string().optional(),
-		publicUrl: z.string().optional(),
-		summary: z.string().optional(),
-	})
-	.passthrough();
-
 const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
-	dynamoi_get_account_overview: z
-		.object({
-			artistCount: z.number().optional(),
-			artists: z
-				.object({
-					count: z.number(),
-					summaries: z.array(DescriptiveEntitySchema),
-				})
-				.optional(),
-			organizationCount: z.number().optional(),
-			recommendedNextActions: z.array(z.string()).optional(),
-			state: z.object({}).passthrough().optional(),
-			summary: z.string().optional(),
-			user: z.object({ name: z.string().optional() }).optional(),
-		})
-		.passthrough(),
+	dynamoi_get_account_overview: DynamoiAccountOverviewDescriptiveDataSchema,
 	dynamoi_get_artist_analytics: z
 		.object({
 			artistId: z.string().optional(),
@@ -194,14 +175,7 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 			summary: z.string().optional(),
 		})
 		.passthrough(),
-	dynamoi_list_artists: z
-		.object({
-			artists: z.array(DescriptiveEntitySchema).optional(),
-			nextCursor: z.string().optional(),
-			summary: z.string().optional(),
-			totalCount: z.number().optional(),
-		})
-		.passthrough(),
+	dynamoi_list_artists: DynamoiArtistListDescriptiveDataSchema,
 	dynamoi_list_campaigns: z
 		.object({
 			campaigns: z.array(DescriptiveEntitySchema).optional(),

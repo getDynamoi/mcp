@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-export const ToolFormatSchema = z.enum(["json", "summary"]);
+export { ToolFormatSchema } from "./account-schema.generated";
 
 export const SearchQuerySchema = z.string().trim().max(120);
 

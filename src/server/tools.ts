@@ -4,6 +4,10 @@ import {
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_COPY_HASH as prospectiveFundingConsentCopyHash,
 	PROSPECTIVE_BUDGET_FUNDING_CONSENT_VERSION as prospectiveFundingConsentVersion,
 } from "../consent";
+import {
+	DynamoiGetCurrentUserInputSchema,
+	DynamoiListArtistsInputSchema,
+} from "./account-schema.generated";
 import { createPhaseOnboardingToolDefinitions } from "./onboarding-tool-definitions";
 import { OPENAI_TOOL_DEFINITIONS } from "./openai-tools";
 import {
@@ -30,6 +34,11 @@ import {
 	YouTubeStrategyKeySchema,
 } from "./youtube-strategy-guide";
 
+export {
+	DynamoiGetCurrentUserInputSchema,
+	DynamoiListArtistsInputSchema,
+} from "./account-schema.generated";
+
 const YouTubeStrategySchema = YouTubeStrategyKeySchema.describe(
 	`YouTube campaign strategy. Labels for users: CHEAPEST_VIEWS = Views, ORGANIC_VIEWS = Watch Time, SUBSCRIBERS = Subscribers, ORGANIC_VIEWS_AND_SUBSCRIBERS = Channel Growth (default for non-monetized channels), ADSENSE_ROI = Revenue (monetized channels only). Read ${YOUTUBE_CAMPAIGN_STRATEGIES_RESOURCE_URI} before recommending or changing one.`,
 );
@@ -53,15 +62,6 @@ const ExpectedCampaignStatusEnum = z.enum([
 const ExpectedCampaignStatusSchema = ExpectedCampaignStatusEnum.optional();
 const CampaignStatusFilterSchema = ExpectedCampaignStatusEnum.optional();
 
-export const DynamoiListArtistsInputSchema = z
-	.object({
-		artistId: z.string().uuid().optional(),
-		cursor: z.string().optional(),
-		format: ToolFormatSchema.optional(),
-		limit: z.number().int().min(1).max(50).optional(),
-	})
-	.strict();
-
 export const DynamoiSearchInputSchema = z
 	.object({
 		artistId: z.string().uuid().optional(),
@@ -82,20 +82,6 @@ export const DynamoiSearchInputSchema = z
 			});
 		}
 	});
-
-const DynamoiGetCurrentUserIntentSchema = z.enum([
-	"account_overview",
-	"artist_access_check",
-	"organization_access_check",
-	"platform_connection_check",
-]);
-
-export const DynamoiGetCurrentUserInputSchema = z
-	.object({
-		format: ToolFormatSchema.optional(),
-		intent: DynamoiGetCurrentUserIntentSchema.default("account_overview"),
-	})
-	.strict();
 
 export const DynamoiGetArtistInputSchema = z
 	.object({
