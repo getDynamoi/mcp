@@ -70,7 +70,7 @@ Common workflows:
 - Spotify growth score, recommendations, and listener or playlist-reach trends: dynamoi_get_growth_audit. Keep its status, coverage dates, and limitations with the answer; it is separate from paid campaign performance.
 - Tracked playlist reach, placements, and movement: dynamoi_get_playlist_analytics. Include the returned freshness and snapshot dates; these observations are not campaign attribution.
 - Streaming audience by country, service, paid/free tier, or daily trend: dynamoi_get_audience_analytics, with range=7d, 30d, or 90d. Report source unavailability as unavailable rather than zero audience.
-- YouTube channel data science (trends, videos, countries, traffic sources, advertising-tagged versus other-source views, revenue): dynamoi_get_youtube_channel_data, one dataset per call, paging with nextCursor. It is observed channel data, not campaign attribution.
+- YouTube channel data science (trends, videos, countries, traffic sources, advertising-tagged versus other-source views, revenue): dynamoi_get_youtube_channel_data, one dataset per call, paging with nextCursor. It supports channel analysis, not campaign attribution. Preserve the returned source, coverage, freshness, and synthetic/sample qualifications; do not treat synthetic/sample data as observed channel results, campaign attribution, or actual earnings/payouts. Treat returned ad revenue as estimated revenue, not an AdSense payout.
 - Diagnose stuck campaign: dynamoi_get_campaign → dynamoi_get_platform_status →
   propose next steps
 - Pause/resume: dynamoi_get_campaign (confirm) → dynamoi_update_campaign with action=pause or action=resume; a resume that needs card funding also requires the funding-consent fields (see the tool description).
@@ -119,8 +119,9 @@ Principles:
   dynamoi_get_artist_analytics when the user asks for artist performance.
   For analysis of the artist's own YouTube channel (trends, videos, countries,
   traffic sources, advertising-tagged versus other-source views, revenue), use
-  dynamoi_get_youtube_channel_data; it is observed channel data, not campaign
-  attribution. These tools are read-only.
+  dynamoi_get_youtube_channel_data for channel analysis, not campaign attribution.
+  Preserve the returned source, coverage, freshness, and synthetic/sample qualifications; do not treat synthetic/sample data as observed channel results, campaign attribution, or actual earnings/payouts. Treat returned ad revenue as estimated revenue, not an AdSense payout.
+  These tools are read-only.
 - YouTube campaigns each have a strategy with its own goal. Before judging results, read the strategyGuide that dynamoi_get_campaign returns (or dynamoi://youtube/campaign-strategies). When reporting to users, say "the ad network" (you may name Google once; do not repeat "Google Ads"; it serves on YouTube), "advertising-tagged views" (YouTube's ADVERTISING traffic source, which undercounts ad-driven views), "campaign-period lift" (views above the pre-campaign baseline while the campaign runs, mostly ad sessions) and "organic lift" (growth in sources the ads do not touch, such as search and suggested views, or lift that persists after spend stops). Never call all non-ADVERTISING views organic: ad clicks into a playlist are credited mostly to PLAYLIST and SUBSCRIBER. Use strategy labels such as "Revenue Optimization" with users, not keys such as ADSENSE_ROI.
 - Spotify growth audit, tracked playlist analytics, and streaming audience analytics answer different questions from paid campaign analytics: use dynamoi_get_growth_audit, dynamoi_get_playlist_analytics, and dynamoi_get_audience_analytics for those insight requests, and preserve each response's coverage or freshness evidence.
 - For music distribution, use dynamoi_get_distribution_application to explain the exact

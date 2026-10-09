@@ -82,3 +82,28 @@ describe("dynamoi_get_youtube_channel_data definition", () => {
 		expect(description).not.toContain("dynamoi://");
 	});
 });
+
+describe("advertised YouTube channel data qualifications", () => {
+	for (const toolProfile of ["full", "directory"] as const) {
+		test(`${toolProfile} preserves returned source and sample revenue limitations`, () => {
+			const description =
+				getDynamoiToolDefinitions({ toolProfile }).find(
+					(tool) => tool.name === "dynamoi_get_youtube_channel_data",
+				)?.description ?? "";
+			expect(description).not.toContain("daily rows straight from");
+			expect(description).not.toContain("Data is observed on the channel");
+			expect(description).toContain(
+				"Warehouse data is observed on the channel",
+			);
+			expect(description).toContain(
+				"Preserve the returned source, coverage, freshness, and synthetic/sample qualifications",
+			);
+			expect(description).toContain(
+				"do not treat synthetic/sample data as observed channel results, campaign attribution, or actual earnings/payouts.",
+			);
+			expect(description).toContain(
+				"Treat returned ad revenue as estimated revenue, not an AdSense payout.",
+			);
+		});
+	}
+});

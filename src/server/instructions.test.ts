@@ -136,3 +136,23 @@ describe("DYNAMOI_CHATGPT_APP_INSTRUCTIONS", () => {
 		);
 	});
 });
+
+describe("YouTube channel data qualifications", () => {
+	for (const [name, instructions] of [
+		["MCP", DYNAMOI_MCP_INSTRUCTIONS],
+		["ChatGPT", DYNAMOI_CHATGPT_APP_INSTRUCTIONS],
+	] as const) {
+		test(`${name} preserves channel data evidence and sample limitations`, () => {
+			expect(instructions).not.toContain("observed channel data");
+			expect(instructions).toContain(
+				"Preserve the returned source, coverage, freshness, and synthetic/sample qualifications",
+			);
+			expect(instructions).toContain(
+				"do not treat synthetic/sample data as observed channel results, campaign attribution, or actual earnings/payouts.",
+			);
+			expect(instructions).toContain(
+				"Treat returned ad revenue as estimated revenue, not an AdSense payout.",
+			);
+		});
+	}
+});
