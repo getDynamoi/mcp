@@ -159,7 +159,7 @@ signed in, not from anything the client claims about itself.
 | Catalog | Who gets it | What it includes |
 | --- | --- | --- |
 | **Directory** | Every client on `https://dynamoi.com/mcp/directory` (used by agent-directory listings such as the Dynamoi Claude plugin), the published ChatGPT app on `/mcp`, and requests made before sign-in | 24 review-safe advertised tools: reads, Smart Links, distribution, and About. No billing, campaign launch or campaign changes, platform connection starters, or Shop checkout. |
-| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 35 tools, plus the Dynamoi prompts and reference resources |
+| **Full** | Every other signed-in client on `https://dynamoi.com/mcp`, such as Claude custom connectors, Claude Code, Cursor, VS Code, Gemini CLI, Codex CLI, and custom agents | All 37 tools, plus the Dynamoi prompts and reference resources |
 
 Signing in does not skip permission checks. Every tool call still needs its
 OAuth scopes, and the user's role must allow access to the artist, campaign,
@@ -196,6 +196,8 @@ start an action with an outside provider.
 | `dynamoi_update_smart_link_description` | Update one Smart Link's public description | Changes data | Directory |
 | `dynamoi_update_smart_link_artist_settings` | Update an artist's Smart Link theme or validated pixel settings | Changes data | Directory |
 | `dynamoi_update_smart_link` | Prior multi-action schema for description or artist settings | Changes data | Full |
+| `dynamoi_update_smart_link_release_settings` | Update one Smart Link's release video or destination visibility | Changes data | Full |
+| `dynamoi_update_smart_link_artist_hub_settings` | Update an artist's hub introduction, official profile links or service order | Changes data | Full |
 | `dynamoi_get_billing` | Billing status, credit balance, and promo limits | Reads | Full |
 | `dynamoi_get_resume_funding` | Campaign resume-funding breakdown, refusal, and consent requirements | Reads | Full |
 | `dynamoi_list_available_countries` | Countries a Smart Campaign or YouTube campaign can target | Reads | Full |
@@ -211,6 +213,10 @@ start an action with an outside provider.
 
 Full tool descriptions and input schemas come from `tools/list`, or from
 `getDynamoiToolDefinitions()` in this package.
+
+The full-only Studio tools (`dynamoi_update_smart_link_release_settings` and
+`dynamoi_update_smart_link_artist_hub_settings`) are not part of the approved
+directory contract and are never listed in the directory profile.
 
 Previously approved directory clients may continue calling the exact
 `dynamoi_update_smart_link` name with its approved schema. New directory tool

@@ -20,6 +20,7 @@ import {
 	asTextResult,
 	asValidatedTextResult,
 	createDynamoiMcpServer,
+	getDynamoiToolCompatibilityDefinitions,
 	getDynamoiToolDefinitions,
 	type Phase3Adapter,
 } from "./create-server";
@@ -30,7 +31,10 @@ import {
 	SMART_LINK_THEME_PREVIEW_RESOURCE_URI,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
-import { PHASE_4_TOOL_DEFINITIONS } from "./smart-link-tools";
+import {
+	FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS,
+	PHASE_4_TOOL_DEFINITIONS,
+} from "./smart-link-tools";
 import {
 	PHASE_1_TOOL_DEFINITIONS,
 	PHASE_2_TOOL_DEFINITIONS,
@@ -51,6 +55,7 @@ const REGISTERED_TOOL_DEFINITIONS = [
 	...SHOP_TOOL_DEFINITIONS,
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
+	...FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS,
 ];
 
 function buildStubAdapter(
@@ -1162,5 +1167,200 @@ describe("createDynamoiMcpServer", () => {
 			"11111111-1111-4111-8111-111111111111",
 		);
 		expect(result.structuredContent).toEqual(envelope);
+	});
+});
+
+describe("approved directory Smart Link contracts", () => {
+	const artistId = "11111111-1111-4111-8111-111111111111";
+	const playLinkId = "22222222-2222-4222-8222-222222222222";
+	const compatibility = getDynamoiToolCompatibilityDefinitions({
+		toolProfile: "directory",
+	}).find((tool) => tool.name === "dynamoi_update_smart_link")!;
+	const artist = getDynamoiToolDefinitions({ toolProfile: "directory" }).find(
+		(tool) => tool.name === "dynamoi_update_smart_link_artist_settings",
+	)!;
+	test("keeps exact approved descriptions and legacy refinements", () => {
+		expect(compatibility.description).toBe(
+			"Use this when the user wants to change one Smart Link's public description or update artist-level Smart Link theme/pixel settings. Set action to update_description or update_artist_settings. Public availability is artist-wide in the dashboard; this tool does not publish or unpublish individual links. Theme-only updates switch instantly; description or pixel changes may queue background rendering.",
+		);
+		expect(artist.description).toBe(
+			"Use this when the user wants to change artist-level Smart Link theme or validated pixel settings. This tool only changes artist settings; it cannot change a link description or publish or unpublish links. Confirm the requested settings before calling. Theme-only changes switch instantly; pixel changes may queue background rendering.",
+		);
+		for (const input of [
+			{ action: "update_description", customDescription: null, playLinkId },
+			{ action: "update_artist_settings", artistId, theme: "classic" },
+			{ action: "update_artist_settings", artistId, metaPixelId: null },
+		]) {
+			expect(compatibility.schema.safeParse(input).success).toBe(true);
+		}
+		for (const input of [
+			{ action: "update_description", playLinkId },
+			{ action: "update_description", customDescription: "test" },
+			{ action: "update_artist_settings", artistId },
+			{ action: "update_artist_settings", theme: "classic" },
+			{
+				action: "update_artist_settings",
+				artistId,
+				metaPixelId: "x".repeat(33),
+			},
+		]) {
+			expect(compatibility.schema.safeParse(input).success).toBe(false);
+		}
+		expect(
+			artist.schema.safeParse({ artistId, theme: "classic" }).success,
+		).toBe(true);
+		expect(artist.schema.safeParse({ artistId }).success).toBe(false);
+		expect(
+			getDynamoiToolDefinitions().find((tool) => tool.name === artist.name)
+				?.schema,
+		).toBe(artist.schema);
+	});
+	const extras = [
+		{ hubDescription: "bio" },
+		{ profileLinks: [] },
+		{ servicePriority: [] },
+		{ servicePriorityMode: "fixed" },
+		{ youtubeUrl: null },
+		{ serviceOverrides: [] },
+	];
+	test.each(extras)("rejects directory extensions %j", (extra) => {
+		expect(
+			compatibility.schema.safeParse({
+				action: "update_artist_settings",
+				artistId,
+				theme: "classic",
+				...extra,
+			}).success,
+		).toBe(false);
+		expect(
+			artist.schema.safeParse({ artistId, theme: "classic", ...extra }).success,
+		).toBe(false);
+	});
+	test("full profile keeps the approved schema and moves Studio extensions to full-only tools", () => {
+		const fullTools = getDynamoiToolDefinitions({ toolProfile: "full" });
+		const directoryTools = getDynamoiToolDefinitions({
+			toolProfile: "directory",
+		});
+		const full = fullTools.find((tool) => tool.name === compatibility.name)!;
+		expect(full.schema).toBe(compatibility.schema);
+		for (const input of [
+			{ action: "update_release_settings", playLinkId, youtubeUrl: null },
+			{ action: "update_artist_settings", artistId, hubDescription: "bio" },
+			{ action: "update_artist_settings", artistId, profileLinks: [] },
+		]) {
+			expect(full.schema.safeParse(input).success).toBe(false);
+		}
+		const release = fullTools.find(
+			(tool) => tool.name === "dynamoi_update_smart_link_release_settings",
+		)!;
+		const hub = fullTools.find(
+			(tool) => tool.name === "dynamoi_update_smart_link_artist_hub_settings",
+		)!;
+		expect(
+			release.schema.safeParse({ playLinkId, youtubeUrl: null }).success,
+		).toBe(true);
+		expect(release.schema.safeParse({ playLinkId }).success).toBe(false);
+		expect(
+			hub.schema.safeParse({
+				artistId,
+				hubDescription: "bio",
+				profileLinks: [],
+				servicePriority: [],
+				servicePriorityMode: "fixed",
+			}).success,
+		).toBe(true);
+		expect(hub.schema.safeParse({ artistId, theme: "classic" }).success).toBe(
+			false,
+		);
+		for (const tool of [release, hub]) {
+			expect(tool).toMatchObject({
+				destructiveHint: true,
+				idempotentHint: true,
+				openWorldHint: true,
+				readOnlyHint: false,
+			});
+			expect(directoryTools.some((entry) => entry.name === tool.name)).toBe(
+				false,
+			);
+			expect(
+				getDynamoiToolCompatibilityDefinitions({
+					toolProfile: "directory",
+				}).some((entry) => entry.name === tool.name),
+			).toBe(false);
+		}
+	});
+	test("registered hidden compatibility rejects extensions before adapter dispatch", async () => {
+		let calls = 0;
+		const server = createDynamoiMcpServer({
+			adapter: buildStubAdapter({
+				updateSmartLink: async () => {
+					calls += 1;
+					return {
+						kind: "business",
+						message: "Reached adapter",
+						status: "error",
+					};
+				},
+			}),
+			toolProfile: "directory",
+		});
+		const client = new Client({ name: "test-client", version: "1.0.0" });
+		const [clientTransport, serverTransport] =
+			InMemoryTransport.createLinkedPair();
+		await Promise.all([
+			client.connect(clientTransport),
+			server.connect(serverTransport),
+		]);
+		try {
+			const tools = (await client.listTools()).tools;
+			expect(tools.some((tool) => tool.name === compatibility.name)).toBe(
+				false,
+			);
+			expect(tools.some((tool) => tool.name === artist.name)).toBe(true);
+			for (const name of [compatibility.name, artist.name]) {
+				for (const extra of extras) {
+					const result = await client.callTool({
+						arguments: {
+							artistId,
+							theme: "classic",
+							...(name === compatibility.name
+								? { action: "update_artist_settings" }
+								: {}),
+							...extra,
+						},
+						name,
+					});
+					expect(result.isError).toBe(true);
+				}
+			}
+			expect(
+				(
+					await client.callTool({
+						arguments: {
+							action: "update_release_settings",
+							playLinkId,
+							youtubeUrl: null,
+						},
+						name: compatibility.name,
+					})
+				).isError,
+			).toBe(true);
+			expect(calls).toBe(0);
+			await client.callTool({
+				arguments: {
+					action: "update_description",
+					customDescription: "hello",
+					playLinkId,
+				},
+				name: compatibility.name,
+			});
+			await client.callTool({
+				arguments: { artistId, theme: "classic" },
+				name: artist.name,
+			});
+			expect(calls).toBe(2);
+		} finally {
+			await client.close();
+		}
 	});
 });

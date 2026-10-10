@@ -90,6 +90,7 @@ import {
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 } from "./smart-link-theme-preview";
 import {
+	FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS,
 	PHASE_4_TOOL_DEFINITIONS,
 	SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS,
 } from "./smart-link-tools";
@@ -206,6 +207,16 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 		renderQueuedCount: z.number().optional(),
 		renderWarning: z.string().nullable().optional(),
 	}).passthrough(),
+	dynamoi_update_smart_link_artist_hub_settings: DescriptiveEntitySchema.extend(
+		{
+			artistHub: z.object({}).passthrough().optional(),
+			artistId: z.string().optional(),
+			artistName: z.string().optional(),
+			defaultTheme: z.string().optional(),
+			renderQueuedCount: z.number().optional(),
+			renderWarning: z.string().nullable().optional(),
+		},
+	).passthrough(),
 	dynamoi_update_smart_link_artist_settings: DescriptiveEntitySchema.extend({
 		artistId: z.string().optional(),
 		artistName: z.string().optional(),
@@ -219,6 +230,16 @@ const DIRECTORY_DESCRIPTIVE_DATA_SCHEMAS = {
 		defaultTheme: z.string().optional(),
 		renderQueuedCount: z.number().optional(),
 		renderWarning: z.string().nullable().optional(),
+	}).passthrough(),
+	dynamoi_update_smart_link_release_settings: DescriptiveEntitySchema.extend({
+		artistId: z.string().optional(),
+		customDescription: z.string().nullable().optional(),
+		nextActions: z.array(z.string()).optional(),
+		publishState: z.string().optional(),
+		releaseSettings: z.object({}).passthrough().optional(),
+		releaseTitle: z.string().optional(),
+		renderWarning: z.string().nullable().optional(),
+		theme: z.string().optional(),
 	}).passthrough(),
 	fetch: DescriptiveEntitySchema,
 	search: z
@@ -299,6 +320,7 @@ const DYNAMOI_TOOL_DEFINITIONS = [
 	SMART_LINK_THEME_PREVIEW_TOOL_DEFINITION,
 	...PHASE_4_TOOL_DEFINITIONS,
 	...SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS,
+	...FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS,
 ] as const satisfies readonly DynamoiToolRegistrationDescriptor[];
 
 // Keep the public name union separate from the schema-rich source tuple.
@@ -330,6 +352,8 @@ const DIRECTORY_EXCLUDED_TOOL_NAMES = new Set<string>([
 	"dynamoi_start_youtube_channel_link",
 	"dynamoi_update_campaign",
 	"dynamoi_update_smart_link",
+	"dynamoi_update_smart_link_artist_hub_settings",
+	"dynamoi_update_smart_link_release_settings",
 ]);
 
 const DIRECTORY_ONLY_TOOL_NAMES = new Set<string>([
@@ -468,6 +492,12 @@ export type Phase3Adapter = {
 	): Promise<
 		ResultEnvelope<UpdateSmartLinkData | UpdateSmartLinkArtistSettingsData>
 	>;
+	updateSmartLinkArtistHubSettings(
+		input: unknown,
+	): Promise<ResultEnvelope<UpdateSmartLinkArtistSettingsData>>;
+	updateSmartLinkReleaseSettings(
+		input: unknown,
+	): Promise<ResultEnvelope<UpdateSmartLinkData>>;
 	shopGetQuote(input: unknown): Promise<ResultEnvelope<DynamoiShopQuoteData>>;
 	shopCreateCheckout(
 		input: unknown,
@@ -528,6 +558,8 @@ const REVIEWER_WRITE_TOOL_NAMES = new Set([
 	"dynamoi_update_smart_link",
 	"dynamoi_update_smart_link_artist_settings",
 	"dynamoi_update_smart_link_description",
+	"dynamoi_update_smart_link_artist_hub_settings",
+	"dynamoi_update_smart_link_release_settings",
 ]);
 
 const SHOP_RATE_LIMIT_RETRY_AFTER_SECONDS = {
@@ -646,7 +678,9 @@ function mapKnownErrorRecovery(
 	if (
 		(toolName === "dynamoi_update_smart_link" ||
 			toolName === "dynamoi_update_smart_link_description" ||
-			toolName === "dynamoi_update_smart_link_artist_settings") &&
+			toolName === "dynamoi_update_smart_link_artist_settings" ||
+			toolName === "dynamoi_update_smart_link_artist_hub_settings" ||
+			toolName === "dynamoi_update_smart_link_release_settings") &&
 		message ===
 			"Smart Link changed since it was last read. Read it again before updating."
 	) {
@@ -770,6 +804,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 		adapter.startYoutubeChannelLink(input),
 	dynamoi_update_campaign: (adapter, input) => adapter.updateCampaign(input),
 	dynamoi_update_smart_link: (adapter, input) => adapter.updateSmartLink(input),
+	dynamoi_update_smart_link_artist_hub_settings: (adapter, input) =>
+		adapter.updateSmartLinkArtistHubSettings(input),
 	dynamoi_update_smart_link_artist_settings: (adapter, input) =>
 		adapter.updateSmartLink({
 			...(input as Record<string, unknown>),
@@ -780,6 +816,8 @@ const DYNAMOI_TOOL_DISPATCHERS = {
 			...(input as Record<string, unknown>),
 			action: "update_description",
 		}),
+	dynamoi_update_smart_link_release_settings: (adapter, input) =>
+		adapter.updateSmartLinkReleaseSettings(input),
 	fetch: (adapter, input) => adapter.openAiFetch(input),
 	search: (adapter, input) => adapter.openAiSearch(input),
 } satisfies Record<DynamoiToolName, DynamoiToolDispatcher>;

@@ -60,11 +60,19 @@ export const DYNAMOI_MCP_TOOL_SCOPES = {
 	],
 	dynamoi_update_campaign: ["dynamoi:read", "dynamoi:campaign.write"],
 	dynamoi_update_smart_link: ["dynamoi:read", "dynamoi:smart_links.write"],
+	dynamoi_update_smart_link_artist_hub_settings: [
+		"dynamoi:read",
+		"dynamoi:smart_links.write",
+	],
 	dynamoi_update_smart_link_artist_settings: [
 		"dynamoi:read",
 		"dynamoi:smart_links.write",
 	],
 	dynamoi_update_smart_link_description: [
+		"dynamoi:read",
+		"dynamoi:smart_links.write",
+	],
+	dynamoi_update_smart_link_release_settings: [
 		"dynamoi:read",
 		"dynamoi:smart_links.write",
 	],

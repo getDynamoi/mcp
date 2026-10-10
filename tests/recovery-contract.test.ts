@@ -408,6 +408,8 @@ describe("typed recovery envelope contract", () => {
 		for (const toolName of [
 			"dynamoi_update_smart_link_description",
 			"dynamoi_update_smart_link_artist_settings",
+			"dynamoi_update_smart_link_artist_hub_settings",
+			"dynamoi_update_smart_link_release_settings",
 		]) {
 			const conflict = asValidatedTextResult({
 				envelope: {

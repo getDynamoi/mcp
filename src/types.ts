@@ -242,7 +242,40 @@ export type SmartLinkSummary = {
 	updatedAt: string;
 };
 
+/**
+ * Full-profile readback of the Artist Hub fields the hub settings tool writes.
+ * Never present in the directory profile.
+ */
+export type SmartLinkArtistHubReadback = {
+	hubDescription: string | null;
+	profileLinks: Array<{
+		isHidden: boolean;
+		label: string;
+		service: string;
+		url: string | null;
+	}>;
+	servicePriority: string[];
+	servicePriorityMode: "country" | "fixed";
+};
+
+/**
+ * Full-profile readback of the release fields the release settings tool
+ * writes. Never present in the directory profile.
+ */
+export type SmartLinkReleaseSettingsReadback = {
+	customDescription: string | null;
+	services: Array<{
+		effectiveUrl: string | null;
+		hidden: boolean;
+		label: string;
+		overrideUrl: string | null;
+		service: string;
+	}>;
+	youtubeUrl: string | null;
+};
+
 export type SmartLinkSettingsData = {
+	artistHub?: SmartLinkArtistHubReadback;
 	artistId: string;
 	artistName: string;
 	isEnabled: boolean;
@@ -254,6 +287,7 @@ export type SmartLinkSettingsData = {
 	};
 	availableThemes: SmartLinkTheme[];
 	summary?: string;
+	warnings?: string[];
 };
 
 export type ListSmartLinksData = {
@@ -269,6 +303,7 @@ export type ListSmartLinksSummaryData = {
 
 export type GetSmartLinkData = SmartLinkSummary & {
 	customDescription: string | null;
+	releaseSettings?: SmartLinkReleaseSettingsReadback;
 	originalSpotifyUrl: string | null;
 	nextActions: string[];
 	summary: string;

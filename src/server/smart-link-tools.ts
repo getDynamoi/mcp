@@ -262,6 +262,175 @@ export const DynamoiUpdateSmartLinkDescriptionInputSchema = z
 	})
 	.strict();
 
+const ArtistHubSettingsShape = {
+	hubDescription: z.string().max(500).nullable().optional(),
+	profileLinks: z
+		.array(
+			z
+				.object({
+					isHidden: z.boolean(),
+					service: z.enum([
+						"spotify",
+						"applemusic",
+						"youtube",
+						"instagram",
+						"facebook",
+						"tiktok",
+						"soundcloud",
+						"bandcamp",
+						"deezer",
+						"tidal",
+						"boomplay",
+						"audiomack",
+					]),
+					url: z.string().max(1024).nullable(),
+				})
+				.strict(),
+		)
+		.max(12)
+		.optional(),
+	servicePriority: z.array(z.string().max(32)).max(4).optional(),
+	servicePriorityMode: z.enum(["country", "fixed"]).optional(),
+} as const;
+
+/**
+ * Handler-side superset: the directory schema stays the public contract for
+ * theme/pixel writes and the full-only hub tool adds the hub fields.
+ */
+const ArtistStudioSettingsHandlerInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		googleAdsConversionId: z.string().trim().max(32).nullable().optional(),
+		metaPixelId: z.string().trim().max(32).nullable().optional(),
+		...ArtistHubSettingsShape,
+		theme: SmartLinkThemeSchema.optional(),
+		tiktokPixelId: z.string().trim().max(32).nullable().optional(),
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.theme === undefined &&
+			data.metaPixelId === undefined &&
+			data.tiktokPixelId === undefined &&
+			data.googleAdsConversionId === undefined &&
+			data.hubDescription === undefined &&
+			data.profileLinks === undefined &&
+			data.servicePriority === undefined &&
+			data.servicePriorityMode === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Provide at least one setting to update",
+				path: ["theme"],
+			});
+		}
+	});
+
+export const DynamoiUpdateSmartLinkArtistHubSettingsInputSchema = z
+	.object({
+		artistId: z.string().uuid(),
+		clientRequestId: ClientRequestIdSchema,
+		...ArtistHubSettingsShape,
+		userIntentSummary: UserIntentSummarySchema,
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.hubDescription === undefined &&
+			data.profileLinks === undefined &&
+			data.servicePriority === undefined &&
+			data.servicePriorityMode === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Provide at least one Artist Hub setting to update",
+				path: ["hubDescription"],
+			});
+		}
+	});
+
+export const DynamoiUpdateSmartLinkReleaseSettingsInputSchema = z
+	.object({
+		clientRequestId: ClientRequestIdSchema,
+		customDescription: z.string().max(500).nullable().optional(),
+		expectedUpdatedAt: z.string().datetime().optional(),
+		playLinkId: z.string().uuid(),
+		serviceOverrides: z
+			.array(
+				z
+					.object({
+						hidden: z.boolean(),
+						service: z.string().max(32),
+						url: z.string().max(1024).nullable(),
+					})
+					.strict(),
+			)
+			.max(15)
+			.optional(),
+		userIntentSummary: UserIntentSummarySchema,
+		youtubeUrl: z.string().max(512).nullable().optional(),
+	})
+	.strict()
+	.superRefine((data, ctx) => {
+		if (
+			data.customDescription === undefined &&
+			data.youtubeUrl === undefined &&
+			data.serviceOverrides === undefined
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Provide at least one release setting to update",
+				path: ["customDescription"],
+			});
+		}
+	});
+
+export function parseDynamoiCreateSmartLinksFromSpotifyArtistInput(
+	rawInput: unknown,
+) {
+	return DynamoiCreateSmartLinksFromSpotifyArtistInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiGetSmartLinkAnalyticsInput(rawInput: unknown) {
+	return DynamoiGetSmartLinkAnalyticsInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiCreateSmartLinkFromSpotifyInput(rawInput: unknown) {
+	return DynamoiCreateSmartLinkFromSpotifyInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiListSmartLinksInput(rawInput: unknown) {
+	return DynamoiListSmartLinksInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiGetSmartLinkArtistSettingsInput(rawInput: unknown) {
+	return DynamoiGetSmartLinkArtistSettingsInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiUpdateSmartLinkInput(rawInput: unknown) {
+	return DynamoiUpdateSmartLinkInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiUpdateSmartLinkArtistSettingsInput(
+	rawInput: unknown,
+) {
+	return ArtistStudioSettingsHandlerInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiUpdateSmartLinkArtistHubSettingsInput(
+	rawInput: unknown,
+) {
+	return DynamoiUpdateSmartLinkArtistHubSettingsInputSchema.parse(rawInput);
+}
+
+export function parseDynamoiUpdateSmartLinkReleaseSettingsInput(
+	rawInput: unknown,
+) {
+	return DynamoiUpdateSmartLinkReleaseSettingsInputSchema.parse(rawInput);
+}
+
 export const PHASE_4_TOOL_DEFINITIONS = [
 	{
 		description:
@@ -348,5 +517,33 @@ export const SMART_LINK_UPDATE_OPERATION_TOOL_DEFINITIONS = [
 		readOnlyHint: false,
 		schema: DynamoiUpdateSmartLinkArtistSettingsInputSchema,
 		title: "Update Smart Link Artist Settings",
+	},
+] as const;
+
+/** Full-profile-only Smart Link writes; the directory contract never lists them. */
+export const FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS = [
+	{
+		description:
+			"Use this when the user wants to change the artist-level Smart Link introduction, official profile links or service order. Omitted fields preserve stored values; null explicitly clears supported fields. Theme and pixel changes belong to dynamoi_update_smart_link_artist_settings. Confirm the requested settings before calling. The result includes the saved artistHub readback. A partial save is reported truthfully; read the current introduction, profile links and service order with dynamoi_get_smart_link (artistId, includeArtistSettings=true; see artistHub) before retrying.",
+		destructiveHint: true,
+		idempotentHint: true,
+		name: "dynamoi_update_smart_link_artist_hub_settings",
+		openWorldHint: true,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiUpdateSmartLinkArtistHubSettingsInputSchema,
+		title: "Update Smart Link Artist Hub Settings",
+	},
+	{
+		description:
+			"Use this when the user wants to change one Smart Link's release video or catalog destination visibility. Set any of customDescription, youtubeUrl or serviceOverrides; omitted fields preserve stored values and null explicitly clears supported fields. Public availability is artist-wide in the dashboard; this tool does not publish or unpublish individual links. Confirm the requested settings before calling. The result includes the saved releaseSettings readback; after an ambiguous failure, read it with dynamoi_get_smart_link (playLinkId; see releaseSettings) before retrying. A description or video change may queue background rendering.",
+		destructiveHint: true,
+		idempotentHint: true,
+		name: "dynamoi_update_smart_link_release_settings",
+		openWorldHint: true,
+		outputSchema: AnyOutputEnvelopeSchema,
+		readOnlyHint: false,
+		schema: DynamoiUpdateSmartLinkReleaseSettingsInputSchema,
+		title: "Update Smart Link Release Settings",
 	},
 ] as const;

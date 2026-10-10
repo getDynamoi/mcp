@@ -27,7 +27,10 @@ import {
 import {
 	DynamoiCreateSmartLinkFromSpotifyInputSchema,
 	DynamoiCreateSmartLinksFromSpotifyArtistInputSchema,
+	DynamoiUpdateSmartLinkArtistHubSettingsInputSchema,
 	DynamoiUpdateSmartLinkInputSchema,
+	DynamoiUpdateSmartLinkReleaseSettingsInputSchema,
+	FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS,
 	PHASE_4_TOOL_DEFINITIONS,
 } from "./smart-link-tools";
 import {
@@ -1091,6 +1094,77 @@ describe("mcp/tools phase 4 smart link definitions", () => {
 				script: "<script>alert(1)</script>",
 			}),
 		).toThrow();
+	});
+
+	test("full-only Studio recovery guidance names the real readback tool without touching the directory-shared reader", () => {
+		const guidance = {
+			dynamoi_update_smart_link_artist_hub_settings: "artistHub",
+			dynamoi_update_smart_link_release_settings: "releaseSettings",
+		} as const;
+		for (const definition of FULL_SMART_LINK_STUDIO_TOOL_DEFINITIONS) {
+			expect(definition.description).toContain("dynamoi_get_smart_link");
+			expect(definition.description).toContain(guidance[definition.name]);
+		}
+		const reader = PHASE_4_TOOL_DEFINITIONS.find(
+			(definition) => definition.name === "dynamoi_get_smart_link",
+		);
+		expect(reader?.description).not.toContain("artistHub");
+		expect(reader?.description).not.toContain("releaseSettings");
+	});
+
+	test("full-only Studio tools accept sparse native release and Artist Hub settings", () => {
+		const release = DynamoiUpdateSmartLinkReleaseSettingsInputSchema.parse({
+			playLinkId: "22222222-2222-4222-8222-222222222222",
+			serviceOverrides: [{ hidden: true, service: "spotify", url: null }],
+			youtubeUrl: null,
+		});
+		expect(release.youtubeUrl).toBeNull();
+		expect(Object.hasOwn(release, "customDescription")).toBe(false);
+		expect(() =>
+			DynamoiUpdateSmartLinkReleaseSettingsInputSchema.parse({
+				playLinkId: release.playLinkId,
+			}),
+		).toThrow();
+		const artist = DynamoiUpdateSmartLinkArtistHubSettingsInputSchema.parse({
+			artistId: "00000000-0000-0000-0000-000000000000",
+			hubDescription: null,
+			profileLinks: [
+				{
+					isHidden: false,
+					service: "instagram",
+					url: "https://instagram.com/artist",
+				},
+			],
+			servicePriority: ["spotify"],
+			servicePriorityMode: "fixed",
+		});
+		expect(artist.hubDescription).toBeNull();
+		expect(Object.hasOwn(artist, "metaPixelId")).toBe(false);
+		expect(() =>
+			DynamoiUpdateSmartLinkArtistHubSettingsInputSchema.parse({
+				artistId: "00000000-0000-0000-0000-000000000000",
+				theme: "classic",
+			}),
+		).toThrow();
+		for (const input of [
+			{
+				action: "update_release_settings",
+				playLinkId: release.playLinkId,
+				youtubeUrl: null,
+			},
+			{
+				action: "update_artist_settings",
+				artistId: "00000000-0000-0000-0000-000000000000",
+				hubDescription: null,
+			},
+			{
+				action: "update_description",
+				playLinkId: release.playLinkId,
+				youtubeUrl: null,
+			},
+		]) {
+			expect(() => DynamoiUpdateSmartLinkInputSchema.parse(input)).toThrow();
+		}
 	});
 
 	test("smart link mutation schemas reject unknown properties", () => {

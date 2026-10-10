@@ -821,7 +821,7 @@ test("directory splits Smart Link update operations and preserves the approved l
 	);
 });
 
-test("full profile keeps the approved multi-action Smart Link schema", async () => {
+test("full profile keeps the approved multi-action Smart Link schema and adds separate Studio tools", async () => {
 	await withFixture(
 		"full",
 		success,
@@ -839,6 +839,12 @@ test("full profile keeps the approved multi-action Smart Link schema", async () 
 			expect(legacy?.inputSchema.properties?.action).toMatchObject({
 				enum: ["update_description", "update_artist_settings"],
 			});
+			expect(names.has("dynamoi_update_smart_link_release_settings")).toBe(
+				true,
+			);
+			expect(names.has("dynamoi_update_smart_link_artist_hub_settings")).toBe(
+				true,
+			);
 			const result = await client.callTool({
 				arguments: {
 					action: "update_artist_settings",
@@ -863,6 +869,18 @@ test("full profile keeps the approved multi-action Smart Link schema", async () 
 						"The user asked to update this artist's Smart Link theme.",
 				},
 			]);
+			const rejected = await client.callTool({
+				arguments: {
+					action: "update_release_settings",
+					clientRequestId: "55555555-5555-4555-8555-555555555555",
+					playLinkId: "22222222-2222-4222-8222-222222222222",
+					userIntentSummary: "The user asked to hide the release video.",
+					youtubeUrl: null,
+				},
+				name: "dynamoi_update_smart_link",
+			});
+			expect(rejected.isError).toBe(true);
+			expect(adapterCalls).toEqual(["updateSmartLink"]);
 		},
 		false,
 		{ adapterMethod: "updateSmartLink" },
